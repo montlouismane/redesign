@@ -39,3 +39,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# nested apps (kept local; excluded from root build)
+/adam-reference
+/adam-hud

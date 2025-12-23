@@ -1,36 +1,51 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ADAM Dashboard
 
-## Getting Started
+Next.js 16 App Router dashboard UI for ADAM.
 
-First, run the development server:
+## Run locally
 
 ```bash
+cd C:\Users\andre\adam-dashboard
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Routes
+- `/`: Dashboard (App Router)
+- `/squad`: Squad page
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Key files (start here)
+- `app/page.tsx`: Dashboard UI (Bento layout + overlays)
+- `app/layout.tsx`: Global layout + fonts + `ScrollXReset`
+- `app/globals.css`: Global styles / materials / utilities
+- `app/squad/page.tsx`: Squad page UI
+- `app/squad/AgentDetailModal.tsx`: Squad modal
+- `app/ScrollXReset.tsx`: Lock horizontal scroll guard
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Live data (TapTools equity curve)
 
-## Learn More
+The Portfolio Performance chart now **fetches an equity curve by stake address** via TapTools.
 
-To learn more about Next.js, take a look at the following resources:
+### Env vars
+Create a `.env.local` in the repo root:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+# Server-side (DO NOT expose publicly)
+TAPTOOLS_API_KEY=your_taptools_key
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+# Client-side (safe to expose)
+NEXT_PUBLIC_DEFAULT_STAKE_ADDRESS=stake1...
+```
 
-## Deploy on Vercel
+### How it works
+- The UI (in `app/page.tsx`) calls:
+  - `GET /api/portfolio/equity?address=<stake...>&range=<1H|24H|7D|30D|ALL>&quote=USD`
+- The server route handler proxies TapTools:
+  - `GET https://openapi.taptools.io/api/v1/wallet/value/trended`
+  - Auth header: `x-api-key: <TAPTOOLS_API_KEY>`
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+**Note:** TapTools wallet value trended data is in **4h intervals**; the `1H` tab is synthesized from the most recent segment.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Agent / reasoning backend
+If/when we wire chat + analysis to production, the plan is to call the T backend server-side using an API key.
+Docs: `https://docs.fluxpointstudios.com/t-backend-developer-guide`

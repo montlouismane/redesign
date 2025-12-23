@@ -12,6 +12,10 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+
+    // Nested apps are intentionally excluded from the root build (see tsconfig.json excludes)
+    "adam-reference/**",
+    "adam-hud/**",
   ]),
 ]);
 
