@@ -14,7 +14,17 @@ import {
   Plus,
   Search,
   Wallet,
+  Rocket,
+  ArrowUp,
+  Paperclip,
+  Lightbulb,
+  Minimize2,
+  X,
 } from 'lucide-react';
+
+import { UiStyleToggle } from './UiStyleToggle';
+import { useUiStyle } from './UiStyleProvider';
+import { HudDashboard } from './HudDashboard';
 
 // --- ASSETS & TEXTURES ---
 // Served locally from /public/textures via CSS vars/classes in app/globals.css.
@@ -222,7 +232,7 @@ const BentoCard = ({
       {/* Bronze rim ring */}
       <div aria-hidden className="absolute inset-0 pointer-events-none z-20 p-[2px] rounded-[22px] copperRim" />
       {/* Inner stroke */}
-      <div aria-hidden className="absolute inset-[2px] rounded-[20px] pointer-events-none z-20 border border-white/5" />
+      <div aria-hidden className="absolute inset-[2px] rounded-[20px] pointer-events-none z-20 ui-panel-inset-stroke" />
 
       {/* adam-tab-edge-fix: mask the rim over the copper (back) section so it reads as recessed/behind */}
       {isTabbedHeader ? (
@@ -236,7 +246,7 @@ const BentoCard = ({
       ) : null}
 
       {/* PANEL SURFACE */}
-      <div className="absolute inset-0 bg-[linear-gradient(180deg,#2B3340_0%,#1B2029_60%,#10141B_100%)] opacity-95 z-0"></div>
+      <div aria-hidden className="absolute inset-0 ui-bento-surface z-0" />
       <div className="absolute inset-0 bg-repeat opacity-[0.06] mix-blend-overlay pointer-events-none z-0 adamNoiseOverlay"></div>
       <div
         aria-hidden
@@ -288,12 +298,12 @@ const BentoCard = ({
                   <path
                     d="M-2,0.8 H61.6 Q63.4,0.8 64.2,20 L69.2,76 Q70.3,98 72.8,98"
                     fill="none"
-                    stroke="rgba(217,119,6,0.95)"
+                    stroke="rgba(var(--ui-accentHot-rgb),0.92)"
                     strokeWidth="4.2"
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     vectorEffect="non-scaling-stroke"
-                    style={{ filter: 'drop-shadow(0 0 10px rgba(217,119,6,0.65))' }}
+                    style={{ filter: 'drop-shadow(0 0 10px rgba(var(--ui-accentHot-rgb),0.55))' }}
                   />
                   <path
                     d="M-2,0.8 H61.6 Q63.4,0.8 64.2,20 L69.2,76 Q70.3,98 72.8,98"
@@ -320,12 +330,12 @@ const BentoCard = ({
                   <path
                     d="M69,98 H103"
                     fill="none"
-                    stroke="rgba(217,119,6,0.95)"
+                    stroke="rgba(var(--ui-accentHot-rgb),0.92)"
                     strokeWidth="4.2"
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     vectorEffect="non-scaling-stroke"
-                    style={{ filter: 'drop-shadow(0 0 10px rgba(217,119,6,0.65))' }}
+                    style={{ filter: 'drop-shadow(0 0 10px rgba(var(--ui-accentHot-rgb),0.55))' }}
                   />
                   <path
                     d="M69,98 H103"
@@ -342,7 +352,7 @@ const BentoCard = ({
               <path
                 d="M61,0 Q63,0 64,20 L69,76 Q70,100 72,100"
                 fill="none"
-                stroke="rgba(160,100,60,0.85)"
+                stroke="rgba(var(--ui-accent-rgb),0.85)"
                 strokeWidth="2.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -366,7 +376,7 @@ const BentoCard = ({
           {/* Front layer: Slate header with folder lip (full height) */}
           <div
             aria-hidden
-            className="absolute inset-0 bg-[linear-gradient(180deg,#3A4250_0%,#252B36_50%,#1A1F28_100%)]"
+            className="absolute inset-0 ui-bento-front"
             style={{ clipPath: `url(#${frontClipId})` }}
           />
           <div
@@ -378,7 +388,7 @@ const BentoCard = ({
           {/* Header content */}
           <div className="relative h-full flex items-center justify-between px-4">
             <div className="flex items-center gap-2">
-              <div className="h-4 w-1 rounded-full bg-amber-500/70 shadow-[0_0_10px_rgba(217,119,6,0.25)]" />
+              <div className="h-4 w-1 rounded-full bg-[rgba(var(--ui-accentHot-rgb),0.72)] shadow-[0_0_12px_rgba(var(--ui-accentHot-rgb),0.22)]" />
               <span className="text-[16px] font-semibold tracking-[0.04em] text-white/92 leading-none">{title}</span>
             </div>
 
@@ -429,7 +439,7 @@ const BentoCard = ({
           }}
         >
           <div className="flex items-center gap-2">
-            <div className="h-4 w-1 rounded-full bg-amber-500/70 shadow-[0_0_10px_rgba(217,119,6,0.25)]" />
+            <div className="h-4 w-1 rounded-full bg-[rgba(var(--ui-accentHot-rgb),0.72)] shadow-[0_0_12px_rgba(var(--ui-accentHot-rgb),0.22)]" />
             {variant === 'roster' && <Search size={14} className="text-amber-300/90" />}
             <span className="text-[14px] font-semibold tracking-[0.04em] text-white/90 leading-none">{title}</span>
           </div>
@@ -455,7 +465,7 @@ const BentoCard = ({
             ) : null}
           </div>
 
-          <div className="absolute bottom-0 left-0 w-full h-px bg-white/5" />
+          <div className="absolute bottom-0 left-0 w-full h-px ui-divider" />
         </div>
       )}
 
@@ -650,8 +660,16 @@ const RevolutChart = ({ range, address, quote = 'USD' }: RevolutChartProps) => {
   );
 };
 // --- MAIN LAYOUT ---
-export default function FixedDashboard() {
+export default function DashboardPage() {
+  const { style: uiStyle } = useUiStyle();
+  return uiStyle === 'hud' ? <HudDashboard /> : <ClassicDashboard />;
+}
+
+function ClassicDashboard() {
   const [activeTab, setActiveTab] = useState<PortfolioRange>('1H');
+
+  const { style: uiStyle } = useUiStyle();
+  const isHud = uiStyle === 'hud';
 
 
 
@@ -659,11 +677,14 @@ export default function FixedDashboard() {
   const [view, setView] = useState<'dashboard' | 'portfolio' | 'chatFull' | 'settings'>('dashboard');
 
   const [isChatDockOpen, setIsChatDockOpen] = useState(false);
-  const [chatThinking, setChatThinking] = useState(true);
+  const [chatMode, setChatMode] = useState<'auto' | 'fast' | 'thinking'>('auto');
+  const [chatModeOpen, setChatModeOpen] = useState(false);
   const [chatInput, setChatInput] = useState('');
   const [chatMessages, setChatMessages] = useState<{ role: 'user' | 'assistant'; text: string }[]>([
     { role: 'assistant', text: "Hi - I'm Agent T. How can I help?" },
   ]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const fileInputDockRef = useRef<HTMLInputElement>(null);
 
   const chatStarters = [
     'Draft a plan for my new agent',
@@ -683,10 +704,22 @@ export default function FixedDashboard() {
         ...prev,
         {
           role: 'assistant',
-          text: chatThinking ? 'Got it - thinking... (Demo UI only)' : 'Got it. (Demo UI only)',
+          text: chatMode === 'thinking' ? 'Got it - thinking... (Demo UI only)' : chatMode === 'fast' ? 'Got it. (Demo UI only)' : 'Got it. (Demo UI only)',
         },
       ]);
     }, 350);
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    // Handle file upload - for now, just show a message
+    const fileNames = Array.from(files).map((f) => f.name).join(', ');
+    sendChatText(`[File uploaded: ${fileNames}]`);
+    
+    // Reset the input so the same file can be selected again
+    e.target.value = '';
   };
 
   const sendChat = () => sendChatText(chatInput);
@@ -756,14 +789,39 @@ export default function FixedDashboard() {
   ] as const;
 
   return (
-    <div className="h-screen bg-[#070A10] text-slate-200 font-terminal flex flex-col overflow-hidden relative min-w-0">
+    <div className="h-screen bg-[var(--ui-bg0)] text-[var(--ui-text)] font-terminal flex flex-col overflow-hidden relative min-w-0">
       {/* GLOBAL BACKGROUND & LIGHTING */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,_var(--tw-gradient-stops))] from-[#2B3340] via-[#0E1117] to-[#070A10]"></div>
-      <div className="absolute inset-0 bg-repeat opacity-[0.06] mix-blend-overlay pointer-events-none adamNoiseOverlay"></div>
-      <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-amber-500/14 blur-[150px] pointer-events-none"></div>
-
+      {isHud ? (
+        <>
+          <div
+            aria-hidden
+            className="absolute inset-0 bg-[radial-gradient(1200px_800px_at_30%_20%,rgba(var(--ui-accent-rgb),0.10),transparent_55%),radial-gradient(1000px_700px_at_70%_35%,rgba(var(--ui-accentHot-rgb),0.08),transparent_60%),linear-gradient(180deg,var(--ui-bg1),var(--ui-bg0))]"
+          />
+          <div
+            aria-hidden
+            className="absolute inset-0 bg-[radial-gradient(1200px_900px_at_50%_30%,transparent_45%,rgba(0,0,0,0.40)_80%),repeating-linear-gradient(180deg,rgba(255,255,255,0.02)_0px,rgba(255,255,255,0.02)_1px,transparent_2px,transparent_4px)] opacity-90"
+          />
+          <div aria-hidden className="absolute inset-0 bg-repeat opacity-[0.10] mix-blend-overlay pointer-events-none adamNoiseOverlay" />
+        </>
+      ) : (
+        <>
+          <div
+            aria-hidden
+            className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,_var(--tw-gradient-stops))] from-[#2B3340] via-[#0E1117] to-[#070A10]"
+          />
+          <div aria-hidden className="absolute inset-0 bg-repeat opacity-[0.06] mix-blend-overlay pointer-events-none adamNoiseOverlay" />
+          <div aria-hidden className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-amber-500/14 blur-[150px] pointer-events-none" />
+        </>
+      )}
       {/* HEADER */}
-      <header className="h-[10vh] shrink-0 bg-[#0F1115]/60 backdrop-blur-md border-b border-amber-500/15 flex items-center px-[clamp(20px,3vw,64px)] z-50 relative shadow-[0_1px_5px_rgba(0,0,0,0.22)] font-adam-header">
+      <header
+        className={
+          'h-[10vh] shrink-0 backdrop-blur-md flex items-center px-[clamp(20px,3vw,64px)] z-50 relative shadow-[0_1px_5px_rgba(0,0,0,0.22)] font-adam-header ' +
+          (isHud
+            ? 'bg-[rgba(7,7,10,0.72)] border-b border-[rgba(var(--ui-accent-rgb),0.18)]'
+            : 'bg-[#0F1115]/60 border-b border-amber-500/15')
+        }
+      >
         <div className="w-full max-w-[1920px] 2xl:max-w-[2560px] mx-auto h-full grid grid-cols-12 items-center gap-6 min-w-0">
           {/* Brand */}
           <div className="col-span-6 md:col-span-3 flex items-center h-full min-w-0">
@@ -813,8 +871,8 @@ export default function FixedDashboard() {
                     className={
                       'relative uppercase text-[clamp(12px,1.14vw,22px)] font-semibold tracking-[0.12em] transition-colors ' +
                     (isActive
-                      ? 'text-transparent bg-clip-text bg-[linear-gradient(180deg,rgba(255,236,210,0.95),rgba(200,137,93,0.95))] drop-shadow-[0_0_10px_rgba(200,137,93,0.22)]'
-                      : 'text-white/65 hover:text-[rgb(200,137,93)]')
+                      ? 'text-transparent bg-clip-text bg-[linear-gradient(180deg,rgba(var(--ui-accentHot-rgb),0.95),rgba(var(--ui-accent-rgb),0.95))] drop-shadow-[0_0_10px_rgba(var(--ui-accent-rgb),0.22)]'
+                      : 'text-white/65 hover:text-[rgb(var(--ui-accent-rgb))]')
                   }
                 >
                   {item.label}
@@ -823,7 +881,7 @@ export default function FixedDashboard() {
                     className={
                       'absolute -bottom-3 left-0 right-0 h-[2px] rounded-full transition-opacity ' +
                       (isActive
-                        ? 'opacity-100 bg-gradient-to-r from-transparent via-[rgb(200,137,93)] to-transparent shadow-[0_0_14px_rgba(200,137,93,0.55)]'
+                        ? 'opacity-100 bg-gradient-to-r from-transparent via-[rgb(var(--ui-accent-rgb))] to-transparent shadow-[0_0_14px_rgba(var(--ui-accent-rgb),0.55)]'
                         : 'opacity-0')
                     }
                   />
@@ -835,6 +893,7 @@ export default function FixedDashboard() {
 
           {/* Right actions */}
           <div className="col-span-6 md:col-span-3 flex items-center justify-end gap-[clamp(8px,1vw,16px)] min-w-0">
+            <UiStyleToggle className="shrink-0" />
             <button
               type="button"
               className="p-[clamp(8px,0.8vw,12px)] rounded-full hover:bg-white/5 text-white/60 hover:text-white transition-colors"
@@ -1032,7 +1091,15 @@ export default function FixedDashboard() {
               : 'opacity-100 translate-y-0 scale-100 pointer-events-auto')
           }
         >
-          <div aria-hidden className="absolute inset-0 bg-[radial-gradient(circle_at_50%_42%,rgba(0,0,0,0.88)_0%,rgba(0,0,0,0.70)_48%,rgba(0,0,0,0.22)_100%)] backdrop-blur-md" />
+          <div 
+            aria-hidden 
+            className="absolute inset-0 bg-[radial-gradient(circle_at_50%_42%,rgba(0,0,0,0.95)_0%,rgba(0,0,0,0.92)_48%,rgba(0,0,0,0.88)_100%)] backdrop-blur-[40px]"
+            onClick={(e) => {
+              if (e.target === e.currentTarget && view === 'chatFull') {
+                setView('dashboard');
+              }
+            }}
+          />
 
           <div className="relative h-full overflow-y-auto custom-scrollbar px-[12%] pt-[calc(10vh+2%)] pb-[12%]">
             {view === 'portfolio' ? (
@@ -1203,60 +1270,66 @@ export default function FixedDashboard() {
                 <div className="flex items-start justify-between gap-6">
                   <div>
                     <div className="text-2xl font-semibold text-white">Ask Agent T</div>
-                    <div className="text-sm text-white/50 mt-1">
-                      Quick help in the dock, or expand for longer conversations.
-                    </div>
                   </div>
 
-                  <div className="flex items-center gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setChatThinking((v) => !v)}
-                      className={
-                        'px-3 py-2 rounded-full border transition-colors text-xs font-semibold ' +
-                        (chatThinking
-                          ? 'border-amber-300/25 text-amber-200/90 bg-white/5 hover:bg-white/10'
-                          : 'border-white/10 text-white/70 bg-white/5 hover:bg-white/10')
-                      }
-                      aria-pressed={chatThinking}
-                    >
-                      Thinking: {chatThinking ? 'On' : 'Off'}
-                    </button>
-
+                  <div className="flex items-center gap-2">
                     <button
                       type="button"
                       onClick={() => {
                         setView('dashboard');
                         setIsChatDockOpen(true);
                       }}
-                      className="px-4 py-2 rounded-full border border-white/10 text-white/80 bg-white/5 hover:bg-white/10 transition-colors"
+                      className="p-2 rounded-full border border-white/10 text-white/80 bg-white/5 hover:bg-white/10 transition-colors"
+                      aria-label="Minimize"
                     >
-                      Minimize
+                      <Minimize2 size={16} />
                     </button>
 
                     <button
                       type="button"
                       onClick={() => setView('dashboard')}
-                      className="px-4 py-2 rounded-full border border-white/10 text-white/80 bg-white/5 hover:bg-white/10 transition-colors"
+                      className="p-2 rounded-full border border-white/10 text-white/80 bg-white/5 hover:bg-white/10 transition-colors"
+                      aria-label="Close"
                     >
-                      Close
+                      <X size={16} />
                     </button>
                   </div>
                 </div>
 
                 <div className="relative rounded-[22px] overflow-hidden shadow-[0_18px_55px_rgba(0,0,0,0.65)]">
                   <div aria-hidden className="absolute inset-0 p-[2px] rounded-[22px] copperRim" />
-                  <div aria-hidden className="absolute inset-[2px] rounded-[20px] bg-[#0E131C]/88 border border-white/5" />
+                  <div aria-hidden className="absolute inset-[2px] rounded-[20px] bg-[#0E131C]/88 border border-white/5 backdrop-blur-2xl" />
 
-                  <div className="relative h-[min(70vh,640px)] flex flex-col">
+                  {/* T-chat-logo background - barely visible */}
+                  <div aria-hidden className="absolute inset-[2px] rounded-[20px] overflow-hidden pointer-events-none flex items-center justify-center">
+                    <Image
+                      src="/agents/t-chat-logo.svg"
+                      alt=""
+                      width={300}
+                      height={300}
+                      className="object-contain object-center blur-[3px]"
+                      style={{ width: '20%', height: 'auto', opacity: 0.15 }}
+                    />
+                  </div>
+
+                  <div className="relative h-[min(70vh,640px)] flex flex-col z-10">
                     <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-3">
                       {chatMessages.map((m, idx) => (
                         <div
                           key={idx}
-                          className={
-                            'flex ' + (m.role === 'user' ? 'justify-end' : 'justify-start')
-                          }
+                          className={'flex items-start gap-3 ' + (m.role === 'user' ? 'justify-end' : 'justify-start')}
                         >
+                          {m.role === 'assistant' && (
+                            <div className="relative w-8 h-8 rounded-full overflow-hidden border border-amber-400/20 flex-shrink-0 mt-1">
+                              <Image
+                                src="/agents/agent-t-portrait-512.jpg"
+                                alt="Agent T"
+                                width={32}
+                                height={32}
+                                className="object-cover"
+                              />
+                            </div>
+                          )}
                           <div
                             className={
                               'max-w-[78%] rounded-2xl px-4 py-3 text-sm leading-relaxed border ' +
@@ -1271,8 +1344,46 @@ export default function FixedDashboard() {
                       ))}
                     </div>
 
-                    <div className="border-t border-white/10 p-4">
-                      <div className="flex items-center gap-3">
+                    <div className="border-t border-white/10 p-4 space-y-3">
+                      {chatMessages.length <= 1 ? (
+                        <div className="space-y-2">
+                          <div className="text-sm text-white/55">Try one of these:</div>
+                          <div className="grid gap-2">
+                            {chatStarters.map((q) => (
+                              <button
+                                key={q}
+                                type="button"
+                                onClick={() => sendChatText(q)}
+                                className="text-left px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white/80 text-sm transition-colors"
+                              >
+                                {q}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      ) : null}
+
+                      <div className="flex items-center gap-2">
+                        {/* Hidden file input */}
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          multiple
+                          className="hidden"
+                          onChange={handleFileSelect}
+                          accept="*/*"
+                        />
+                        {/* Attach button on left */}
+                        <button
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          className="h-11 w-11 flex items-center justify-center rounded-xl bg-[#0F131B]/80 border border-white/10 text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+                          aria-label="Attach file"
+                        >
+                          <Paperclip size={18} />
+                        </button>
+
+                        {/* Input field */}
                         <input
                           value={chatInput}
                           onChange={(e) => setChatInput(e.target.value)}
@@ -1282,15 +1393,52 @@ export default function FixedDashboard() {
                               sendChat();
                             }
                           }}
-                          placeholder="Ask Agent T..."
-                          className="h-11 flex-1 rounded-xl bg-[#0F131B]/80 border border-white/10 px-3 text-sm text-white/85 placeholder:text-white/30 focus:outline-none focus:border-amber-300/40"
+                          placeholder="What do you want to know?"
+                          className="h-11 flex-1 rounded-xl bg-[#0F131B]/80 border border-white/10 px-4 text-sm text-white/85 placeholder:text-white/30 focus:outline-none focus:border-amber-300/40"
                         />
+
+                        {/* Mode selector */}
+                        <div className="relative">
+                          <button
+                            type="button"
+                            onClick={() => setChatModeOpen((v) => !v)}
+                            className="h-11 px-3 flex items-center gap-2 rounded-xl bg-[#0F131B]/80 border border-white/10 text-white/70 hover:text-white hover:bg-white/10 transition-colors text-sm"
+                          >
+                            {chatMode === 'thinking' ? <Lightbulb size={16} /> : chatMode === 'fast' ? <Rocket size={16} /> : null}
+                            <span className="capitalize">{chatMode}</span>
+                            <ChevronDown size={14} />
+                          </button>
+                          {chatModeOpen && (
+                            <div className="absolute bottom-full right-0 mb-2 w-32 rounded-lg bg-[#0F131B]/95 border border-white/10 shadow-lg overflow-hidden z-50">
+                              {(['auto', 'fast', 'thinking'] as const).map((mode) => (
+                                <button
+                                  key={mode}
+                                  type="button"
+                                  onClick={() => {
+                                    setChatMode(mode);
+                                    setChatModeOpen(false);
+                                  }}
+                                  className={`w-full px-3 py-2 text-left text-sm transition-colors ${
+                                    chatMode === mode
+                                      ? 'bg-white/10 text-white'
+                                      : 'text-white/70 hover:bg-white/5 hover:text-white'
+                                  }`}
+                                >
+                                  <span className="capitalize">{mode}</span>
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Send button (circular with arrow) */}
                         <button
                           type="button"
                           onClick={sendChat}
-                          className="h-11 px-5 rounded-xl copperButtonRaised text-white shadow-[0_10px_24px_rgba(200,137,93,0.25),inset_0_1px_0_rgba(255,255,255,0.22)]"
+                          className="h-11 w-11 flex items-center justify-center rounded-full bg-white/10 border border-white/10 text-white hover:bg-white/20 transition-colors"
+                          aria-label="Send"
                         >
-                          Send
+                          <ArrowUp size={18} />
                         </button>
                       </div>
                     </div>
@@ -1329,19 +1477,10 @@ export default function FixedDashboard() {
       <div
         className={
           'fixed inset-0 z-[90] transition-opacity duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ' +
-          (isChatDockOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none')
+          (isChatDockOpen ? 'opacity-100 pointer-events-none' : 'opacity-0 pointer-events-none')
         }
       >
-        {/* Backdrop */}
-        <button
-          type="button"
-          aria-label="Close chat"
-          onClick={() => setIsChatDockOpen(false)}
-          className={
-            'absolute inset-0 bg-black/45 backdrop-blur-sm transition-opacity duration-500 ' +
-            (isChatDockOpen ? 'opacity-100' : 'opacity-0')
-          }
-        />
+        {/* No backdrop - background remains normal */}
 
         {/* Window (Grok-like fade/scale) */}
         <div
@@ -1351,13 +1490,13 @@ export default function FixedDashboard() {
             'absolute right-[clamp(16px,2.2vw,28px)] bottom-[clamp(16px,2.2vw,28px)] ' +
             'w-[min(460px,92vw)] h-[min(72vh,680px)] origin-bottom-right ' +
             'transition-[opacity,transform,filter] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ' +
-            'will-change-[opacity,transform,filter] ' +
+            'will-change-[opacity,transform,filter] pointer-events-auto ' +
             (isChatDockOpen
               ? 'opacity-100 translate-y-0 scale-100 blur-0'
               : 'opacity-0 translate-y-4 scale-[0.96] blur-[2px]')
           }
         >
-          <div className="relative h-full rounded-[28px] overflow-hidden border border-white/12 bg-white/[0.06] backdrop-blur-2xl shadow-[0_40px_120px_rgba(0,0,0,0.65)]">
+          <div className="relative h-full rounded-[28px] overflow-hidden border border-white/12 bg-[#0E131C]/95 backdrop-blur-xl shadow-[0_40px_120px_rgba(0,0,0,0.65)]">
             {/* Frost gradients */}
             <div
               aria-hidden
@@ -1419,24 +1558,6 @@ export default function FixedDashboard() {
 
               {/* Messages */}
               <div className="flex-1 overflow-y-auto scrollbar-hide px-5 py-4 space-y-3">
-                {chatMessages.length <= 1 ? (
-                  <div className="space-y-2">
-                    <div className="text-[11px] text-white/55">Try one of these:</div>
-                    <div className="grid gap-2">
-                      {chatStarters.map((q) => (
-                        <button
-                          key={q}
-                          type="button"
-                          onClick={() => sendChatText(q)}
-                          className="text-left px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white/80 text-xs transition-colors"
-                        >
-                          {q}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                ) : null}
-
                 {chatMessages.map((m, idx) => (
                   <div key={idx} className={'flex ' + (m.role === 'user' ? 'justify-end' : 'justify-start')}>
                     <div
@@ -1455,22 +1576,45 @@ export default function FixedDashboard() {
 
               {/* Input */}
               <div className="border-t border-white/10 p-4 space-y-2">
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setChatThinking((v) => !v)}
-                    className={
-                      'px-2.5 py-1 rounded-lg border text-[10px] font-medium transition-colors ' +
-                      (chatThinking
-                        ? 'border-amber-300/25 text-amber-200/90 bg-white/5'
-                        : 'border-white/10 text-white/70 bg-white/5')
-                    }
-                  >
-                    Thinking: {chatThinking ? 'On' : 'Off'}
-                  </button>
-                </div>
+                {chatMessages.length <= 1 ? (
+                  <div className="space-y-2">
+                    <div className="text-[11px] text-white/55">Try one of these:</div>
+                    <div className="grid gap-2">
+                      {chatStarters.map((q) => (
+                        <button
+                          key={q}
+                          type="button"
+                          onClick={() => sendChatText(q)}
+                          className="text-left px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white/80 text-xs transition-colors"
+                        >
+                          {q}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
 
                 <div className="flex items-center gap-2">
+                  {/* Hidden file input */}
+                  <input
+                    ref={fileInputDockRef}
+                    type="file"
+                    multiple
+                    className="hidden"
+                    onChange={handleFileSelect}
+                    accept="*/*"
+                  />
+                  {/* Attach button on left */}
+                  <button
+                    type="button"
+                    onClick={() => fileInputDockRef.current?.click()}
+                    className="h-9 w-9 flex items-center justify-center rounded-lg bg-white/5 border border-white/10 text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+                    aria-label="Attach file"
+                  >
+                    <Paperclip size={16} />
+                  </button>
+
+                  {/* Input field */}
                   <input
                     value={chatInput}
                     onChange={(e) => setChatInput(e.target.value)}
@@ -1480,15 +1624,52 @@ export default function FixedDashboard() {
                         sendChat();
                       }
                     }}
-                    placeholder="Ask Agent T..."
+                    placeholder="What do you want to know?"
                     className="h-9 flex-1 rounded-lg bg-white/5 border border-white/10 px-3 text-xs text-white/85 placeholder:text-white/30 focus:outline-none focus:border-amber-300/40"
                   />
+
+                  {/* Mode selector */}
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setChatModeOpen((v) => !v)}
+                      className="h-9 px-2.5 flex items-center gap-1.5 rounded-lg bg-white/5 border border-white/10 text-white/70 hover:text-white hover:bg-white/10 transition-colors text-[10px]"
+                    >
+                      {chatMode === 'thinking' ? <Lightbulb size={12} /> : chatMode === 'fast' ? <Rocket size={12} /> : null}
+                      <span className="capitalize">{chatMode}</span>
+                      <ChevronDown size={10} />
+                    </button>
+                    {chatModeOpen && (
+                      <div className="absolute bottom-full right-0 mb-2 w-28 rounded-lg bg-[#0F131B]/95 border border-white/10 shadow-lg overflow-hidden z-50">
+                        {(['auto', 'fast', 'thinking'] as const).map((mode) => (
+                          <button
+                            key={mode}
+                            type="button"
+                            onClick={() => {
+                              setChatMode(mode);
+                              setChatModeOpen(false);
+                            }}
+                            className={`w-full px-2.5 py-1.5 text-left text-[10px] transition-colors ${
+                              chatMode === mode
+                                ? 'bg-white/10 text-white'
+                                : 'text-white/70 hover:bg-white/5 hover:text-white'
+                            }`}
+                          >
+                            <span className="capitalize">{mode}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Send button (circular with arrow) */}
                   <button
                     type="button"
                     onClick={sendChat}
-                    className="h-9 px-4 rounded-lg copperButtonRaised text-white text-xs shadow-[0_4px_12px_rgba(200,137,93,0.2),inset_0_1px_0_rgba(255,255,255,0.22)]"
+                    className="h-9 w-9 flex items-center justify-center rounded-full bg-white/10 border border-white/10 text-white hover:bg-white/20 transition-colors"
+                    aria-label="Send"
                   >
-                    Send
+                    <ArrowUp size={14} />
                   </button>
                 </div>
               </div>
@@ -1498,24 +1679,26 @@ export default function FixedDashboard() {
       </div>
 
       {/* FLOATING CHAT FAB (Textured) */}
-      <div className="fixed bottom-8 right-8 z-[100]">
-        <button
-          type="button"
-          onClick={() => setIsChatDockOpen(true)}
-          className="w-14 h-14 rounded-full flex items-center justify-center shadow-[0_10px_30px_rgba(217,119,6,0.4),inset_0_1px_0_rgba(255,255,255,0.4)] border-[1px] border-amber-400/10 hover:scale-110 transition-transform group copperButtonRaised"
-          aria-label="Talk to Agent T"
-        >
-          <div className="relative w-[50px] h-[50px] rounded-full overflow-hidden border border-black/30 shadow-[inset_0_1px_0_rgba(255,255,255,0.18)]">
-            <Image
-              src="/agents/agent-t-portrait-512.jpg"
-              alt="Agent T"
-              fill
-              sizes="50px"
-              className="object-cover"
-            />
-          </div>
-        </button>
-      </div>
+      {!isChatDockOpen && view !== 'chatFull' && (
+        <div className="fixed bottom-8 right-8 z-[100]">
+          <button
+            type="button"
+            onClick={() => setIsChatDockOpen(true)}
+            className="w-14 h-14 rounded-full flex items-center justify-center shadow-[0_10px_30px_rgba(217,119,6,0.4),inset_0_1px_0_rgba(255,255,255,0.4)] border-[1px] border-amber-400/10 hover:scale-110 transition-transform group copperButtonRaised"
+            aria-label="Talk to Agent T"
+          >
+            <div className="relative w-[50px] h-[50px] rounded-full overflow-hidden border border-black/30 shadow-[inset_0_1px_0_rgba(255,255,255,0.18)]">
+              <Image
+                src="/agents/agent-t-portrait-512.jpg"
+                alt="Agent T"
+                fill
+                sizes="50px"
+                className="object-cover"
+              />
+            </div>
+          </button>
+        </div>
+      )}
     </div>
   );
 }

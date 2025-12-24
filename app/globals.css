@@ -1,28 +1,101 @@
 @import "tailwindcss";
 
+/*
+  UI Style tokens
+  - default is Classic (ADAM copper)
+  - HUD mode is activated by: <html data-ui="hud">
+*/
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --ui-bg0: #070A10;
+  --ui-bg1: #0E1117;
+
+  --ui-text: #ededed;
+  --ui-muted: #a7a7b5;
+
+  /* comma-separated RGB for rgba(...) helpers */
+  --ui-accent-rgb: 200,137,93;
+  --ui-accentHot-rgb: 255,178,74;
+
+  --ui-line: rgba(var(--ui-accent-rgb), 0.28);
+  --ui-lineSoft: rgba(var(--ui-accent-rgb), 0.18);
+  --ui-shadow: rgba(0, 0, 0, 0.65);
+
+  /* Surfaces */
+  --ui-panel-radius: 22px;
+  --ui-panel-surface: linear-gradient(180deg, rgba(43, 51, 64, 0.96) 0%, rgba(27, 32, 41, 0.96) 60%, rgba(16, 20, 27, 0.96) 100%);
+  --ui-panel-border: rgba(255, 255, 255, 0.06);
+  --ui-panel-inset: rgba(255, 255, 255, 0.05);
+  --ui-divider: rgba(255, 255, 255, 0.05);
+
+  /* Bento specifics (dashboard cards) */
+  --ui-bento-surface: var(--ui-panel-surface);
+  --ui-bento-front: linear-gradient(180deg, rgba(58, 66, 80, 0.92) 0%, rgba(37, 43, 54, 0.92) 50%, rgba(26, 31, 40, 0.92) 100%);
+
+  /* Controls */
+  --ui-control-bg: rgba(255, 255, 255, 0.05);
+  --ui-control-bg-hover: rgba(255, 255, 255, 0.10);
+  --ui-control-border: rgba(var(--ui-accent-rgb), 0.22);
+  --ui-control-text: rgba(237, 237, 237, 0.90);
+  --ui-control-muted: rgba(237, 237, 237, 0.55);
+
+  /* Bridge to Tailwind color vars */
+  --background: var(--ui-bg0);
+  --foreground: var(--ui-text);
+
+  /* Font routing */
+  --ui-font-body: var(--font-jetbrains-mono);
+  --ui-font-display: var(--font-adam-header);
+}
+
+:root[data-ui='hud'] {
+  --ui-bg0: #07070a;
+  --ui-bg1: #0b0b10;
+
+  --ui-text: #e8e8ee;
+  --ui-muted: #a7a7b5;
+
+  --ui-accent-rgb: 213,139,106;
+  --ui-accentHot-rgb: 255,178,74;
+
+  --ui-line: rgba(var(--ui-accent-rgb), 0.28);
+  --ui-lineSoft: rgba(var(--ui-accent-rgb), 0.18);
+  --ui-shadow: rgba(0, 0, 0, 0.55);
+
+  /* Surfaces */
+  --ui-panel-surface: linear-gradient(180deg, rgba(var(--ui-accent-rgb), 0.07) 0%, rgba(0, 0, 0, 0.44) 100%);
+  --ui-panel-border: var(--ui-lineSoft);
+  --ui-panel-inset: rgba(var(--ui-accent-rgb), 0.12);
+  --ui-divider: rgba(var(--ui-accentHot-rgb), 0.10);
+
+  /* Bento specifics */
+  --ui-bento-front: linear-gradient(180deg, rgba(var(--ui-accent-rgb), 0.12) 0%, rgba(0, 0, 0, 0.40) 100%);
+
+  /* Controls */
+  --ui-control-bg: rgba(0, 0, 0, 0.18);
+  --ui-control-bg-hover: rgba(0, 0, 0, 0.26);
+  --ui-control-border: rgba(var(--ui-accent-rgb), 0.22);
+  --ui-control-text: rgba(232, 232, 238, 0.92);
+  --ui-control-muted: rgba(167, 167, 181, 0.92);
+
+  --background: var(--ui-bg0);
+  --foreground: var(--ui-text);
+
+  --ui-font-body: var(--font-orbitron);
+  --ui-font-display: var(--font-orbitron);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-jetbrains-mono);
-  --font-mono: var(--font-jetbrains-mono);
+  --font-sans: var(--ui-font-body);
+  --font-mono: var(--ui-font-body);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-html, body {
-  background: #070A10;
-  color: var(--foreground);
-  font-family: var(--font-jetbrains-mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace);
+html,
+body {
+  background: var(--ui-bg0);
+  color: var(--ui-text);
+  font-family: var(--ui-font-body, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace);
   font-variant-numeric: tabular-nums;
   max-width: 100%;
   overflow-x: clip;
@@ -30,15 +103,21 @@ html, body {
 }
 
 @supports not (overflow: clip) {
-  html, body {
+  html,
+  body {
     overflow-x: hidden;
   }
 }
 
-
-/* Header font (loaded via `next/font/local` in `app/layout.tsx`) */
+/* Display font (loaded via `next/font` in `app/layout.tsx`) */
 .font-adam-header {
-  font-family: var(--font-jetbrains-mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace);
+  font-family: var(--ui-font-display, var(--ui-font-body));
+  font-variant-numeric: tabular-nums;
+}
+
+/* Terminal/mono helper */
+.font-terminal {
+  font-family: var(--ui-font-body, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace);
   font-variant-numeric: tabular-nums;
 }
 /* --- ADAM DASHBOARD UTILITIES --- */
@@ -58,7 +137,7 @@ html, body {
 
 .custom-scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: rgba(217, 119, 6, 0.35) transparent;
+  scrollbar-color: rgba(var(--ui-accentHot-rgb), 0.35) transparent;
 }
 .custom-scrollbar::-webkit-scrollbar {
   width: 8px;
@@ -68,12 +147,12 @@ html, body {
   background: transparent;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(217, 119, 6, 0.25);
+  background: rgba(var(--ui-accentHot-rgb), 0.25);
   border-radius: 9999px;
-  border: 1px solid rgba(217, 119, 6, 0.25);
+  border: 1px solid rgba(var(--ui-accentHot-rgb), 0.25);
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(217, 119, 6, 0.4);
+  background: rgba(var(--ui-accentHot-rgb), 0.4);
 }
 /* Hide native scrollbars (we use a subtle "more below" hint instead on some panels) */
 .scrollbar-hide {
@@ -140,7 +219,7 @@ html, body {
 
 /* Copper textured text (for headers/labels) */
 .copperTitle {
-  background-image: linear-gradient(180deg, rgba(255, 235, 200, 0.9), rgba(217, 119, 6, 0.95)),
+  background-image: linear-gradient(180deg, rgba(255, 235, 200, 0.9), rgba(var(--ui-accent-rgb), 0.95)),
     var(--adam-tex-copper-tile);
   background-blend-mode: overlay;
   background-size: cover;
@@ -148,7 +227,7 @@ html, body {
   background-clip: text;
   -webkit-background-clip: text;
   color: transparent;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9), 0 0 12px rgba(217, 119, 6, 0.25);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9), 0 0 12px rgba(var(--ui-accent-rgb), 0.25);
   filter: brightness(1.45) contrast(1.15) saturate(1.25);
 }
 
@@ -199,4 +278,61 @@ html, body {
   background-size: cover;
   background-position: center;
   filter: brightness(0.95) contrast(1.05);
+}
+
+/* --- UI STYLE: shared primitives (token-driven) --- */
+.ui-control {
+  background: var(--ui-control-bg);
+  border: 1px solid var(--ui-control-border);
+  color: var(--ui-control-text);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+.ui-control:hover {
+  background: var(--ui-control-bg-hover);
+}
+.ui-control-muted {
+  color: var(--ui-control-muted);
+}
+
+.ui-bento-surface {
+  background: var(--ui-bento-surface);
+}
+.ui-bento-front {
+  background: var(--ui-bento-front);
+}
+.ui-panel-inset-stroke {
+  border: 1px solid var(--ui-panel-inset);
+}
+.ui-divider {
+  background: var(--ui-divider);
+}
+
+/* HUD overrides for legacy "copper*" helpers (keeps existing JSX intact) */
+:root[data-ui='hud'] .copperRim {
+  background-image:
+    radial-gradient(700px 220px at 22% 0%, rgba(var(--ui-accent-rgb), 0.20), transparent 60%),
+    radial-gradient(520px 240px at 90% 50%, rgba(var(--ui-accentHot-rgb), 0.12), transparent 66%),
+    linear-gradient(180deg, rgba(var(--ui-accentHot-rgb), 0.18) 0%, rgba(var(--ui-accent-rgb), 0.08) 100%);
+  background-blend-mode: screen;
+  filter: brightness(1.05) contrast(1.05) saturate(1.05);
+}
+:root[data-ui='hud'] .copperPlate {
+  background-image: linear-gradient(180deg, rgba(var(--ui-accent-rgb), 0.16) 0%, rgba(0, 0, 0, 0.55) 100%);
+  background-blend-mode: normal;
+  background-size: cover;
+  background-position: center;
+  filter: none;
+}
+:root[data-ui='hud'] .copperButtonRaised {
+  background-image: linear-gradient(180deg, rgba(var(--ui-accentHot-rgb), 0.22) 0%, rgba(var(--ui-accent-rgb), 0.10) 100%);
+  background-size: cover;
+  background-position: center;
+  filter: none;
+}
+:root[data-ui='hud'] .copperButtonPressed {
+  background-image: linear-gradient(180deg, rgba(var(--ui-accentHot-rgb), 0.14) 0%, rgba(var(--ui-accent-rgb), 0.08) 100%);
+  background-size: cover;
+  background-position: center;
+  filter: none;
 }

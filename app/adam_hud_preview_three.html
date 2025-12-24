@@ -1,0 +1,1719 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>ADAM HUD (Expanded Panels + Less Clutter)</title>
+
+    <!-- HUD font (safe to remove if you want fully offline) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700&display=swap" rel="stylesheet" />
+
+    <!--
+      IMPORTANT:
+      Three.js example modules import from the bare specifier "three".
+      Browsers can’t resolve that unless we provide an import map.
+    -->
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+          "three/examples/jsm/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+        }
+      }
+    </script>
+
+    <style>
+      :root{
+        --bg0:#07070a;
+        --bg1:#0b0b10;
+
+        /* Keep our HUD vibe but push a slightly more "copper" dashboard tone */
+        --accent:#d58b6a;        /* copper */
+        --accentHot:#ffb24a;     /* highlight */
+        --danger:#ff3b3b;
+        --ok:#35ff9b;
+
+        --text:#e8e8ee;
+        --muted:#a7a7b5;
+
+        --line: rgba(213,139,106,.28);
+        --lineSoft: rgba(213,139,106,.18);
+        --shadow: rgba(0,0,0,.55);
+
+        --r: 22px;
+        --pad: 18px;
+        --font: "Orbitron", ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+        --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+
+        /* runtime-tuned (state-driven) */
+        --hudGlowBoost: 1.0;
+        --noiseOpacity: 0.10;
+        --noiseBlur: 0.25px;
+        --noiseBrightness: 1.0;
+
+        /* UI tint used for panel glows */
+        --tintR: 213;
+        --tintG: 139;
+        --tintB: 106;
+
+        /* state dot color (separate from tint) */
+        --stateR: 213;
+        --stateG: 139;
+        --stateB: 106;
+
+        /* chart */
+        --gridLine: rgba(255,255,255,.06);
+        --chartA: rgba(255,178,74,.95);
+        --chartB: rgba(213,139,106,.85);
+      }
+
+      *{ box-sizing:border-box; }
+      html,body{ height:100%; }
+      body{
+        margin:0;
+        color:var(--text);
+        font-family:var(--font);
+        background:
+          radial-gradient(1200px 800px at 30% 20%, rgba(213,139,106,.10), transparent 55%),
+          radial-gradient(1000px 700px at 70% 35%, rgba(255,178,74,.08), transparent 60%),
+          linear-gradient(180deg, var(--bg1), var(--bg0));
+        overflow:hidden;
+      }
+
+      /* Three.js canvas */
+      #bg{
+        position:fixed;
+        inset:0;
+        width:100%;
+        height:100%;
+        display:block;
+        z-index:0;
+      }
+
+      /* Noise overlay canvas */
+      #noise{
+        position:fixed;
+        inset:0;
+        width:100%;
+        height:100%;
+        z-index:2;
+        pointer-events:none;
+        opacity: var(--noiseOpacity);
+        filter: blur(var(--noiseBlur)) brightness(var(--noiseBrightness));
+        mix-blend-mode: overlay;
+      }
+
+      .hud{
+        position:relative;
+        z-index:3;
+        height:100%;
+        display:flex;
+        flex-direction:column;
+        padding:18px 18px 12px;
+        gap:14px;
+        background:
+          radial-gradient(1200px 900px at 50% 30%, transparent 45%, rgba(0,0,0,.40) 80%),
+          repeating-linear-gradient(180deg, rgba(255,255,255,.02) 0px, rgba(255,255,255,.02) 1px, transparent 2px, transparent 4px);
+      }
+
+      /* Top bar (simpler, closer to the reference image) */
+      .topbar{
+        position:relative;
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:14px;
+        padding:12px 14px;
+        border-radius:24px;
+        background: linear-gradient(180deg, rgba(var(--tintR),var(--tintG),var(--tintB),.08), rgba(10,10,14,.78));
+        border:1px solid var(--lineSoft);
+        box-shadow: 0 18px 55px var(--shadow), 0 0 0 1px rgba(var(--tintR),var(--tintG),var(--tintB),.05) inset;
+        overflow:hidden;
+      }
+      .topbar::before{
+        content:"";
+        position:absolute;
+        inset:-1px;
+        border-radius:24px;
+        background:
+          radial-gradient(700px 200px at 26% 0%, rgba(var(--tintR),var(--tintG),var(--tintB),.18), transparent 62%),
+          radial-gradient(550px 260px at 82% 40%, rgba(255,178,74,.12), transparent 66%);
+        pointer-events:none;
+        mix-blend-mode:screen;
+        opacity:.8;
+      }
+
+      .brand{ display:flex; align-items:center; gap:12px; position:relative; z-index:1; min-width:210px; }
+      .brandMark{
+        width:38px; height:38px;
+        border-radius:14px;
+        background: linear-gradient(180deg, rgba(var(--tintR),var(--tintG),var(--tintB),.32), rgba(255,178,74,.10));
+        border:1px solid var(--line);
+        box-shadow: 0 0 calc(22px * var(--hudGlowBoost)) rgba(var(--tintR),var(--tintG),var(--tintB),.18);
+        position:relative;
+        overflow:hidden;
+        clip-path: polygon(10% 0, 100% 0, 100% 70%, 92% 100%, 0 100%, 0 26%);
+      }
+      .brandMark::after{
+        content:"";
+        position:absolute;
+        inset:7px;
+        border-radius:12px;
+        border:1px solid rgba(255,178,74,.22);
+        opacity:.75;
+      }
+      .brandName{ font-weight:800; letter-spacing:.18em; }
+      .brandSub{ font-size:11px; color:var(--muted); letter-spacing:.10em; margin-top:2px; }
+      .brandText{ display:flex; flex-direction:column; line-height:1.05; }
+
+      .nav{
+        display:flex;
+        gap:14px;
+        align-items:center;
+        position:relative;
+        z-index:1;
+        flex:1;
+        justify-content:center;
+      }
+      .navLink{
+        border:0;
+        background:transparent;
+        color:rgba(232,232,238,.75);
+        letter-spacing:.14em;
+        font-size:12px;
+        padding:10px 6px;
+        cursor:pointer;
+        position:relative;
+      }
+      .navLink.isActive{ color:var(--text); }
+      .navLink.isActive::after{
+        content:"";
+        position:absolute;
+        left:10px;
+        right:10px;
+        bottom:4px;
+        height:2px;
+        border-radius:99px;
+        background: linear-gradient(90deg, rgba(255,178,74,.0), rgba(255,178,74,.85), rgba(255,178,74,.0));
+        box-shadow: 0 0 calc(18px * var(--hudGlowBoost)) rgba(255,178,74,.18);
+      }
+
+      .topRight{
+        display:flex;
+        align-items:center;
+        gap:10px;
+        position:relative;
+        z-index:1;
+        min-width:280px;
+        justify-content:flex-end;
+      }
+
+      .statePill{
+        display:flex;
+        align-items:center;
+        gap:10px;
+        padding:8px 12px;
+        border-radius:999px;
+        border:1px solid rgba(var(--tintR),var(--tintG),var(--tintB),.22);
+        background: rgba(0,0,0,.22);
+      }
+      .stateDot{
+        width:10px; height:10px;
+        border-radius:999px;
+        background: rgba(var(--stateR),var(--stateG),var(--stateB), .95);
+        box-shadow: 0 0 18px rgba(var(--stateR),var(--stateG),var(--stateB), .32);
+      }
+      .stateLabel{ color:rgba(232,232,238,.92); letter-spacing:.12em; font-size:11px; }
+
+      .btnPrimary, .btnGhost, .btnDanger, .iconBtn{
+        font-family:var(--font);
+        letter-spacing:.10em;
+        cursor:pointer;
+        border-radius:16px;
+        border:1px solid rgba(var(--tintR),var(--tintG),var(--tintB),.22);
+        background: rgba(0,0,0,.18);
+        color:var(--text);
+        padding:10px 12px;
+        transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease, background .12s ease;
+      }
+      .btnPrimary{
+        background: linear-gradient(180deg, rgba(255,178,74,.22), rgba(var(--tintR),var(--tintG),var(--tintB),.10));
+        border-color: rgba(255,178,74,.34);
+        box-shadow: 0 0 calc(24px * var(--hudGlowBoost)) rgba(255,178,74,.12);
+      }
+      .btnPrimary:hover{ transform: translateY(-1px); box-shadow: 0 0 calc(34px * var(--hudGlowBoost)) rgba(255,178,74,.18); }
+      .btnGhost:hover{ transform: translateY(-1px); border-color: rgba(255,178,74,.28); }
+      .btnDanger{ border-color: rgba(255,59,59,.40); background: rgba(255,59,59,.10); }
+      .btnDanger:hover{ transform: translateY(-1px); border-color: rgba(255,59,59,.55); }
+      .btnGhost.sm, .iconBtn.sm{ padding:8px 10px; border-radius:14px; font-size:12px; }
+      .iconBtn{ display:grid; place-items:center; padding:10px; width:44px; }
+      .iconBtn:hover{ transform: translateY(-1px); border-color: rgba(255,178,74,.34); box-shadow:0 0 calc(22px * var(--hudGlowBoost)) rgba(255,178,74,.10); }
+
+      /* Dashboard grid: larger sections, less clutter */
+      .dashboard{
+        display:grid;
+        grid-template-columns: 340px 1fr 380px;
+        grid-template-rows: 1fr 320px;
+        grid-template-areas:
+          "agents performance market"
+          "agents bottom system";
+        gap:14px;
+        min-height:0;
+        flex:1;
+      }
+
+      .panel{
+        position:relative;
+        border-radius: var(--r);
+        padding: var(--pad);
+        background: linear-gradient(180deg, rgba(var(--tintR),var(--tintG),var(--tintB),.07), rgba(0,0,0,.44));
+        border:1px solid var(--lineSoft);
+        box-shadow: 0 18px 55px var(--shadow), 0 0 0 1px rgba(var(--tintR),var(--tintG),var(--tintB),.04) inset;
+        overflow:hidden;
+        min-height:0;
+        clip-path: polygon(18px 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%, 0 18px);
+      }
+      .panel::before{
+        content:"";
+        position:absolute;
+        inset:-1px;
+        border-radius: var(--r);
+        background:
+          radial-gradient(650px 220px at 22% 0%, rgba(var(--tintR),var(--tintG),var(--tintB),.16), transparent 60%),
+          radial-gradient(520px 240px at 90% 50%, rgba(255,178,74,.10), transparent 66%);
+        pointer-events:none;
+        opacity:.8;
+        mix-blend-mode:screen;
+      }
+      .panel::after{
+        content:"";
+        position:absolute;
+        inset:0;
+        pointer-events:none;
+        background:
+          radial-gradient(1000px 700px at 60% 30%, rgba(255,255,255,.03), transparent 60%),
+          repeating-linear-gradient(90deg, rgba(255,255,255,.03) 0px, rgba(255,255,255,.03) 1px, transparent 2px, transparent 8px);
+        opacity:.10;
+      }
+
+      .panelHeader{
+        position:relative;
+        z-index:1;
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:10px;
+        margin-bottom:14px;
+      }
+      .panelTitle{ font-weight:800; letter-spacing:.14em; font-size:14px; }
+      .panelMeta{ display:flex; gap:8px; align-items:center; }
+
+      .expandBtn{
+        border:1px solid rgba(255,178,74,.18);
+        background: rgba(0,0,0,.18);
+        color: rgba(232,232,238,.90);
+        border-radius:12px;
+        padding:8px 10px;
+        cursor:pointer;
+        letter-spacing:.12em;
+        font-family:var(--font);
+        transition: transform .12s ease, border-color .12s ease, box-shadow .12s ease;
+      }
+      .expandBtn:hover{ transform: translateY(-1px); border-color: rgba(255,178,74,.30); box-shadow: 0 0 22px rgba(255,178,74,.10); }
+
+      .pill{
+        display:flex;
+        align-items:center;
+        gap:10px;
+        padding:8px 10px;
+        border-radius:999px;
+        border:1px solid rgba(255,178,74,.16);
+        background: rgba(0,0,0,.20);
+      }
+      .pillLabel{ color:var(--muted); font-size:11px; letter-spacing:.08em; }
+      .pillValue{ font-weight:700; }
+
+      .mono{ font-family:var(--mono); letter-spacing:.02em; }
+      .muted{ color:var(--muted); }
+
+      /* Agents panel */
+      .panelAgents{ grid-area: agents; display:flex; flex-direction:column; min-height:0; }
+      .agentsTop{
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:10px;
+        position:relative;
+        z-index:1;
+        margin-bottom:12px;
+      }
+      .agentsTop .filter{
+        border:1px solid rgba(255,178,74,.14);
+        background: rgba(0,0,0,.18);
+        color: rgba(232,232,238,.85);
+        padding:8px 10px;
+        border-radius:14px;
+        letter-spacing:.10em;
+        font-family:var(--font);
+        cursor:pointer;
+      }
+      .agentList{
+        position:relative;
+        z-index:1;
+        display:flex;
+        flex-direction:column;
+        gap:12px;
+        overflow:auto;
+        padding-right:2px;
+      }
+      .agentItem{
+        display:grid;
+        grid-template-columns: 44px 1fr auto;
+        gap:12px;
+        align-items:center;
+        padding:12px 12px;
+        border-radius:16px;
+        border:1px solid rgba(255,178,74,.14);
+        background: rgba(0,0,0,.18);
+        cursor:pointer;
+        transition: transform .10s ease, border-color .10s ease, box-shadow .10s ease;
+      }
+      .agentItem:hover{ transform: translateY(-1px); border-color: rgba(255,178,74,.26); box-shadow: 0 0 24px rgba(255,178,74,.08); }
+      .agentItem.isActive{ border-color: rgba(255,178,74,.34); background: rgba(255,178,74,.05); }
+      .agentIcon{
+        width:44px; height:44px;
+        border-radius:16px;
+        display:grid;
+        place-items:center;
+        border:1px solid rgba(255,178,74,.20);
+        background: rgba(255,178,74,.06);
+        box-shadow: 0 0 calc(18px * var(--hudGlowBoost)) rgba(255,178,74,.10);
+        font-weight:800;
+      }
+      .agentName{ font-weight:700; letter-spacing:.10em; }
+      .agentSub{ font-size:11px; color:var(--muted); margin-top:4px; letter-spacing:.08em; }
+      .agentRight{ text-align:right; }
+      .agentPnl{ font-weight:700; letter-spacing:.08em; }
+      .agentAum{ font-size:11px; color:var(--muted); margin-top:4px; }
+      .dot{
+        display:inline-block;
+        width:9px; height:9px;
+        border-radius:999px;
+        margin-right:8px;
+        background: rgba(53,255,155,.92);
+        box-shadow: 0 0 14px rgba(53,255,155,.18);
+        transform: translateY(-1px);
+      }
+      .agentFooter{
+        position:relative;
+        z-index:1;
+        display:flex;
+        gap:10px;
+        margin-top:12px;
+      }
+      .agentFooter .btnPrimary, .agentFooter .btnGhost{ flex:1; }
+
+      /* Performance panel */
+      .panelPerformance{ grid-area: performance; }
+      .perfTop{
+        position:relative;
+        z-index:1;
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        gap:10px;
+        margin-bottom:10px;
+      }
+      .seg{
+        display:flex;
+        border:1px solid rgba(255,178,74,.14);
+        border-radius:999px;
+        overflow:hidden;
+        background: rgba(0,0,0,.18);
+      }
+      .segBtn{
+        border:0;
+        background:transparent;
+        color:rgba(232,232,238,.70);
+        padding:9px 12px;
+        font-family:var(--font);
+        letter-spacing:.12em;
+        cursor:pointer;
+        font-size:11px;
+      }
+      .segBtn.isOn{
+        color:var(--text);
+        background: linear-gradient(180deg, rgba(255,178,74,.14), rgba(var(--tintR),var(--tintG),var(--tintB),.06));
+      }
+      .kpis{
+        position:relative;
+        z-index:1;
+        display:flex;
+        gap:10px;
+        flex-wrap:wrap;
+        margin-top:10px;
+      }
+      .kpi{
+        border:1px solid rgba(255,178,74,.12);
+        background: rgba(0,0,0,.16);
+        border-radius:14px;
+        padding:10px 12px;
+        min-width: 160px;
+      }
+      .kpiKey{ color:var(--muted); font-size:10px; letter-spacing:.14em; }
+      .kpiVal{ margin-top:7px; font-weight:800; letter-spacing:.10em; }
+
+      .chartWrap{
+        position:relative;
+        z-index:1;
+        border:1px solid rgba(255,178,74,.12);
+        background: rgba(0,0,0,.12);
+        border-radius:18px;
+        padding:12px;
+        height: 420px; /* bigger, less clutter around */
+        overflow:hidden;
+      }
+      .chartCanvas{
+        width:100%;
+        height:100%;
+        display:block;
+      }
+      .chartTooltip{
+        position:absolute;
+        top:12px;
+        left:12px;
+        padding:10px 12px;
+        border-radius:14px;
+        border:1px solid rgba(255,178,74,.14);
+        background: rgba(0,0,0,.35);
+        backdrop-filter: blur(6px);
+        display:none;
+        pointer-events:none;
+        box-shadow: 0 18px 55px rgba(0,0,0,.45);
+      }
+      .chartTooltip .tKey{ color:var(--muted); font-size:10px; letter-spacing:.14em; }
+      .chartTooltip .tVal{ margin-top:6px; font-weight:800; letter-spacing:.10em; }
+
+      /* Market panel */
+      .panelMarket{ grid-area: market; }
+      .marketList{ position:relative; z-index:1; display:flex; flex-direction:column; gap:12px; }
+      .marketCard{
+        border:1px solid rgba(255,178,74,.14);
+        background: rgba(0,0,0,.18);
+        border-radius:18px;
+        padding:14px 14px;
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:12px;
+      }
+      .mLeft{ display:flex; flex-direction:column; gap:6px; }
+      .mTicker{ font-weight:800; letter-spacing:.14em; }
+      .mSub{ color:var(--muted); font-size:11px; letter-spacing:.08em; }
+      .mRight{ text-align:right; }
+      .mPrice{ font-weight:800; letter-spacing:.10em; }
+      .mChg{ font-size:11px; letter-spacing:.10em; margin-top:6px; }
+      .pos{ color: rgba(53,255,155,.92); }
+      .neg{ color: rgba(255,59,59,.92); }
+
+      /* Bottom area */
+      .bottomWrap{ grid-area: bottom; display:grid; grid-template-columns: 1.1fr 0.9fr; gap:14px; min-height:0; }
+
+      /* Trades */
+      .tradeTable{ position:relative; z-index:1; border:1px solid rgba(255,178,74,.12); background: rgba(0,0,0,.14); border-radius:18px; overflow:hidden; }
+      .tradeHead, .tradeRow{ display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px; align-items:center; }
+      .tradeHead{ padding:12px 14px; font-size:11px; color:rgba(232,232,238,.70); letter-spacing:.14em; background: rgba(255,178,74,.05); border-bottom:1px solid rgba(255,178,74,.10); }
+      .tradeBody{ max-height: 210px; overflow:auto; }
+      .tradeRow{ padding:12px 14px; border-bottom:1px solid rgba(255,255,255,.06); font-size:12px; letter-spacing:.06em; }
+      .tradeRow:last-child{ border-bottom:none; }
+
+      /* Allocation */
+      .allocWrap{ position:relative; z-index:1; display:grid; grid-template-columns: 160px 1fr; gap:14px; align-items:center; }
+      .donut{
+        width:160px; height:160px;
+        border-radius:999px;
+        background:
+          conic-gradient(
+            rgba(255,178,74,.95) 0% 32.5%,
+            rgba(213,139,106,.90) 32.5% 58.0%,
+            rgba(255,178,74,.55) 58.0% 71.0%,
+            rgba(90,180,255,.38) 71.0% 83.0%,
+            rgba(255,255,255,.18) 83.0% 100%
+          );
+        box-shadow: 0 0 calc(40px * var(--hudGlowBoost)) rgba(255,178,74,.12);
+        border:1px solid rgba(255,178,74,.16);
+        position:relative;
+      }
+      .donut::after{
+        content:"";
+        position:absolute;
+        inset:20px;
+        border-radius:999px;
+        background: rgba(0,0,0,.55);
+        border:1px solid rgba(255,178,74,.12);
+      }
+      .legend{ display:flex; flex-direction:column; gap:10px; }
+      .legendItem{ display:flex; align-items:center; justify-content:space-between; gap:10px; font-size:12px; letter-spacing:.06em; }
+      .swatch{ width:10px; height:10px; border-radius:99px; margin-right:10px; display:inline-block; }
+      .liLeft{ display:flex; align-items:center; gap:10px; color:rgba(232,232,238,.88); }
+      .liRight{ color:rgba(232,232,238,.78); }
+
+      /* System */
+      .panelSystem{ grid-area: system; }
+      .sysList{ position:relative; z-index:1; display:flex; flex-direction:column; gap:12px; }
+      .sysRow{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 12px; border-radius:16px; border:1px solid rgba(255,178,74,.12); background: rgba(0,0,0,.16); }
+      .sysName{ letter-spacing:.10em; font-size:12px; }
+      .sysState{ display:flex; align-items:center; gap:10px; color:rgba(232,232,238,.80); font-size:12px; }
+      .sysDot{ width:10px; height:10px; border-radius:999px; }
+      .sysDot.ok{ background: rgba(53,255,155,.92); box-shadow: 0 0 16px rgba(53,255,155,.18); }
+      .sysDot.warn{ background: rgba(255,178,74,.92); box-shadow: 0 0 16px rgba(255,178,74,.16); }
+      .sysDot.bad{ background: rgba(255,59,59,.92); box-shadow: 0 0 16px rgba(255,59,59,.16); }
+
+      /* Modal expansion (click-to-expand, big sections) */
+      .modalOverlay{
+        position:fixed;
+        inset:0;
+        z-index:10000;
+        display:none;
+        align-items:center;
+        justify-content:center;
+        padding:18px;
+        background: rgba(0,0,0,.62);
+        backdrop-filter: blur(10px);
+      }
+      .modalOverlay.isOpen{ display:flex; }
+      .modalShell{ width:min(1180px, 96vw); max-height:92vh; }
+      .modalPanel{
+        width:100%;
+        max-height:92vh;
+        overflow:auto;
+      }
+      .modalBody{ position:relative; z-index:1; }
+
+      .modalGrid{
+        display:grid;
+        grid-template-columns: 1.35fr 0.65fr;
+        gap:14px;
+      }
+      .subPanel{
+        border:1px solid rgba(255,178,74,.12);
+        background: rgba(0,0,0,.16);
+        border-radius:18px;
+        padding:14px;
+      }
+      .subTitle{ font-weight:800; letter-spacing:.14em; font-size:12px; color:rgba(232,232,238,.90); }
+      .subNote{ color:var(--muted); font-size:11px; letter-spacing:.08em; margin-top:8px; line-height:1.4; }
+
+      .hudFooter{ padding:0 6px; display:flex; justify-content:space-between; align-items:center; }
+      .footerHint{ color:rgba(167,167,181,.85); font-size:10px; letter-spacing:.10em; }
+
+      /* Self-test + state toast */
+      .stateToast{
+        position:fixed;
+        right:16px;
+        bottom:14px;
+        z-index:9999;
+        display:flex;
+        gap:10px;
+        align-items:center;
+        padding:10px 12px;
+        border-radius:16px;
+        border:1px solid rgba(255,178,74,.16);
+        background: rgba(0,0,0,.28);
+        box-shadow: 0 18px 55px rgba(0,0,0,.55);
+        backdrop-filter: blur(4px);
+      }
+      .stateText{ font-size:11px; color:rgba(232,232,238,.78); letter-spacing:.12em; }
+      .selfTest{
+        margin-left:10px;
+        padding:4px 8px;
+        border-radius:999px;
+        border:1px solid rgba(255,178,74,.18);
+        background: rgba(0,0,0,.20);
+        font-size:10px;
+        letter-spacing:.10em;
+        color: rgba(255,178,74,.9);
+      }
+      .selfTest.ok{ border-color: rgba(53,255,155,.25); color: rgba(53,255,155,.95); background: rgba(53,255,155,.08); }
+      .selfTest.bad{ border-color: rgba(255,59,59,.28); color: rgba(255,59,59,.95); background: rgba(255,59,59,.10); }
+
+      /* Scrollbars (subtle) */
+      .agentList::-webkit-scrollbar,
+      .tradeBody::-webkit-scrollbar,
+      .modalPanel::-webkit-scrollbar{ width:10px; }
+      .agentList::-webkit-scrollbar-thumb,
+      .tradeBody::-webkit-scrollbar-thumb,
+      .modalPanel::-webkit-scrollbar-thumb{ background: rgba(255,178,74,.14); border:3px solid transparent; background-clip: content-box; border-radius:999px; }
+
+      /* Responsive */
+      @media (max-width: 1280px){
+        body{ overflow:auto; }
+        .hud{ height:auto; min-height:100%; }
+        .dashboard{
+          grid-template-columns: 1fr;
+          grid-template-rows: auto;
+          grid-template-areas:
+            "performance"
+            "agents"
+            "market"
+            "bottom"
+            "system";
+        }
+        .bottomWrap{ grid-template-columns: 1fr; }
+        #bg, #noise{ position:fixed; }
+      }
+      @media (prefers-reduced-motion: reduce){
+        .btnPrimary, .btnGhost, .btnDanger, .iconBtn, .navLink, .expandBtn, .agentItem{ transition:none; }
+      }
+    </style>
+  </head>
+
+  <body>
+    <canvas id="bg"></canvas>
+    <canvas id="noise"></canvas>
+
+    <div class="hud">
+      <header class="topbar">
+        <div class="brand">
+          <div class="brandMark" aria-hidden="true"></div>
+          <div class="brandText">
+            <div class="brandName">ADAM</div>
+            <div class="brandSub">Agentic Trading HUD</div>
+          </div>
+        </div>
+
+        <nav class="nav" aria-label="Primary">
+          <button class="navLink isActive">DASHBOARD</button>
+          <button class="navLink">PORTFOLIOS</button>
+          <button class="navLink">AI AGENTS</button>
+          <button class="navLink">MARKETS</button>
+          <button class="navLink">SETTINGS</button>
+        </nav>
+
+        <div class="topRight">
+          <div class="statePill" title="G cycles state (Idle/Running/Alert)">
+            <span class="stateDot" aria-hidden="true" id="topStateDot"></span>
+            <span class="stateLabel" id="topStateLabel">IDLE</span>
+          </div>
+          <button class="btnPrimary" id="addAgentBtn">+ ADD</button>
+          <button class="iconBtn" id="cycleStateBtn" title="Cycle state" aria-label="Cycle state">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none">
+              <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z" stroke="currentColor" stroke-width="1.8"/>
+              <path d="M19.4 15a8.6 8.6 0 0 0 .1-6l-2.1.2a7 7 0 0 0-1.2-1.9l1.2-1.8a8.6 8.6 0 0 0-5.2-3l-.8 1.9a6.9 6.9 0 0 0-2.3 0l-.8-1.9a8.6 8.6 0 0 0-5.2 3l1.2 1.8A7 7 0 0 0 6.6 9l-2.1-.2a8.6 8.6 0 0 0 .1 6l2.1-.2c.3.7.7 1.3 1.2 1.9l-1.2 1.8a8.6 8.6 0 0 0 5.2 3l.8-1.9c.8.1 1.5.1 2.3 0l.8 1.9a8.6 8.6 0 0 0 5.2-3l-1.2-1.8c.5-.6.9-1.2 1.2-1.9l2.1.2Z" stroke="currentColor" stroke-width="1.2" opacity="0.9"/>
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <main class="dashboard" aria-label="Dashboard">
+        <!-- LEFT: AGENTS (less text, bigger rows) -->
+        <section class="panel panelAgents" data-expandable data-panel="agents" aria-label="AI Agents">
+          <div class="panelHeader">
+            <div class="panelTitle">AI AGENTS</div>
+            <div class="panelMeta">
+              <button class="expandBtn" title="Expand" aria-label="Expand agents">⤢</button>
+            </div>
+          </div>
+
+          <div class="agentsTop">
+            <div class="muted" style="letter-spacing:.12em; font-size:11px;">ACTIVE AGENTS</div>
+            <button class="filter" id="agentSortBtn">STATUS ▾</button>
+          </div>
+
+          <div class="agentList" id="agentList">
+            <div class="agentItem isActive" data-agent="agent1">
+              <div class="agentIcon">A1</div>
+              <div>
+                <div class="agentName"><span class="dot" aria-hidden="true"></span>Agent 1</div>
+                <div class="agentSub">T-Mode · Solana</div>
+              </div>
+              <div class="agentRight">
+                <div class="agentPnl pos" id="a1pnl">+1.2%</div>
+                <div class="agentAum" id="a1aum">$2.3M</div>
+              </div>
+            </div>
+
+            <div class="agentItem" data-agent="agent2">
+              <div class="agentIcon">A2</div>
+              <div>
+                <div class="agentName"><span class="dot" aria-hidden="true"></span>Agent 2</div>
+                <div class="agentSub">Perps · Cardano</div>
+              </div>
+              <div class="agentRight">
+                <div class="agentPnl pos" id="a2pnl">+1.0%</div>
+                <div class="agentAum" id="a2aum">$3.7M</div>
+              </div>
+            </div>
+
+            <div class="agentItem" data-agent="agent3">
+              <div class="agentIcon">A3</div>
+              <div>
+                <div class="agentName"><span class="dot" aria-hidden="true"></span>Agent 3</div>
+                <div class="agentSub">Standard · Base</div>
+              </div>
+              <div class="agentRight">
+                <div class="agentPnl pos" id="a3pnl">+1.3%</div>
+                <div class="agentAum" id="a3aum">$3.2M</div>
+              </div>
+            </div>
+
+            <div class="agentItem" data-agent="agent4">
+              <div class="agentIcon">A4</div>
+              <div>
+                <div class="agentName"><span class="dot" aria-hidden="true"></span>Agent 4</div>
+                <div class="agentSub">Loans · Cardano</div>
+              </div>
+              <div class="agentRight">
+                <div class="agentPnl pos" id="a4pnl">+1.0%</div>
+                <div class="agentAum" id="a4aum">$3.2M</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="agentFooter">
+            <button class="btnGhost" id="openAgentBtn">OPEN</button>
+            <button class="btnPrimary" id="armBtn">ARM</button>
+          </div>
+        </section>
+
+        <!-- CENTER: PERFORMANCE (big) -->
+        <section class="panel panelPerformance" data-expandable data-panel="performance" aria-label="Portfolio performance">
+          <div class="panelHeader">
+            <div class="panelTitle">PORTFOLIO PERFORMANCE</div>
+            <div class="panelMeta">
+              <div class="pill" title="Selected portfolio">
+                <span class="pillLabel">ALL</span>
+                <span class="pillValue mono" id="portfolioLabel">Standforth</span>
+              </div>
+              <button class="expandBtn" title="Expand" aria-label="Expand performance">⤢</button>
+            </div>
+          </div>
+
+          <div class="perfTop">
+            <div class="seg" role="tablist" aria-label="Performance series">
+              <button class="segBtn isOn" data-series="all">ALL</button>
+              <button class="segBtn" data-series="crypto">CRYPTO</button>
+              <button class="segBtn" data-series="stock">STOCK</button>
+            </div>
+            <div class="muted" style="font-size:11px; letter-spacing:.12em;">HOVER FOR VALUES</div>
+          </div>
+
+          <div class="chartWrap" id="perfWrap">
+            <canvas class="chartCanvas" id="perfChart"></canvas>
+            <div class="chartTooltip" id="perfTip">
+              <div class="tKey" id="tipKey">MONTH</div>
+              <div class="tVal" id="tipVal">$0</div>
+            </div>
+          </div>
+
+          <div class="kpis">
+            <div class="kpi"><div class="kpiKey">TOTAL PNL</div><div class="kpiVal" id="kpiPnl">+$93.36</div></div>
+            <div class="kpi"><div class="kpiKey">WIN RATE</div><div class="kpiVal" id="kpiWin">61%</div></div>
+            <div class="kpi"><div class="kpiKey">EXPOSURE</div><div class="kpiVal" id="kpiExp">MED</div></div>
+          </div>
+        </section>
+
+        <!-- RIGHT: MARKET -->
+        <section class="panel panelMarket" data-expandable data-panel="market" aria-label="Live market data">
+          <div class="panelHeader">
+            <div class="panelTitle">LIVE MARKET DATA</div>
+            <div class="panelMeta">
+              <button class="expandBtn" title="Expand" aria-label="Expand market">⤢</button>
+            </div>
+          </div>
+
+          <div class="marketList" id="marketList">
+            <div class="marketCard" data-ticker="BTC">
+              <div class="mLeft"><div class="mTicker">BTC</div><div class="mSub mono">BTC/USD</div></div>
+              <div class="mRight"><div class="mPrice mono" id="pBTC">$3,300.60</div><div class="mChg neg" id="cBTC">-0.60%</div></div>
+            </div>
+            <div class="marketCard" data-ticker="ETH">
+              <div class="mLeft"><div class="mTicker">ETH</div><div class="mSub mono">ETH/USD</div></div>
+              <div class="mRight"><div class="mPrice mono" id="pETH">$75.75</div><div class="mChg pos" id="cETH">+3.37%</div></div>
+            </div>
+            <div class="marketCard" data-ticker="SPX">
+              <div class="mLeft"><div class="mTicker">SPX</div><div class="mSub mono">S&amp;P Index</div></div>
+              <div class="mRight"><div class="mPrice mono" id="pSPX">$38.74</div><div class="mChg neg" id="cSPX">-0.43%</div></div>
+            </div>
+            <div class="marketCard" data-ticker="NDX">
+              <div class="mLeft"><div class="mTicker">NDX</div><div class="mSub mono">Nasdaq</div></div>
+              <div class="mRight"><div class="mPrice mono" id="pNDX">$36.01</div><div class="mChg neg" id="cNDX">-11.26%</div></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- BOTTOM CENTER: Trades + Allocation -->
+        <div class="bottomWrap">
+          <section class="panel" data-expandable data-panel="trades" aria-label="Recent trades">
+            <div class="panelHeader">
+              <div class="panelTitle">RECENT TRADES</div>
+              <div class="panelMeta"><button class="expandBtn" title="Expand" aria-label="Expand trades">⤢</button></div>
+            </div>
+            <div class="tradeTable">
+              <div class="tradeHead"><div>TICKER</div><div>PRICE</div><div>CHANGE</div></div>
+              <div class="tradeBody" id="tradeBody">
+                <div class="tradeRow"><div class="mono">BTC</div><div class="mono">$3,600</div><div class="pos">+$21.80%</div></div>
+                <div class="tradeRow"><div class="mono">ETH</div><div class="mono">$1,000</div><div class="neg">-$14.16%</div></div>
+                <div class="tradeRow"><div class="mono">SPX</div><div class="mono">$6,081</div><div class="neg">-$12.33%</div></div>
+                <div class="tradeRow"><div class="mono">NDX</div><div class="mono">$6,320</div><div class="pos">+$16.93%</div></div>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel" data-expandable data-panel="allocation" aria-label="Asset allocation">
+            <div class="panelHeader">
+              <div class="panelTitle">ASSET ALLOCATION</div>
+              <div class="panelMeta"><button class="expandBtn" title="Expand" aria-label="Expand allocation">⤢</button></div>
+            </div>
+            <div class="allocWrap">
+              <div class="donut" aria-label="Allocation donut"></div>
+              <div class="legend">
+                <div class="legendItem"><div class="liLeft"><span class="swatch" style="background: rgba(255,178,74,.95);"></span><span class="mono">BTC</span></div><div class="liRight mono">32.5%</div></div>
+                <div class="legendItem"><div class="liLeft"><span class="swatch" style="background: rgba(213,139,106,.90);"></span><span class="mono">ETH</span></div><div class="liRight mono">25.5%</div></div>
+                <div class="legendItem"><div class="liLeft"><span class="swatch" style="background: rgba(255,178,74,.55);"></span><span class="mono">SPX</span></div><div class="liRight mono">13.0%</div></div>
+                <div class="legendItem"><div class="liLeft"><span class="swatch" style="background: rgba(90,180,255,.38);"></span><span class="mono">NDX</span></div><div class="liRight mono">12.0%</div></div>
+                <div class="legendItem"><div class="liLeft"><span class="swatch" style="background: rgba(255,255,255,.18);"></span><span class="mono">CASH</span></div><div class="liRight mono">17.0%</div></div>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- RIGHT BOTTOM: System status -->
+        <section class="panel panelSystem" data-expandable data-panel="system" aria-label="System status">
+          <div class="panelHeader">
+            <div class="panelTitle">SYSTEM STATUS</div>
+            <div class="panelMeta"><button class="expandBtn" title="Expand" aria-label="Expand system">⤢</button></div>
+          </div>
+          <div class="sysList">
+            <div class="sysRow"><div class="sysName">ORCHESTRATOR</div><div class="sysState"><span class="sysDot ok" aria-hidden="true"></span><span class="mono">DELIVERED</span></div></div>
+            <div class="sysRow"><div class="sysName">TX RELAY</div><div class="sysState"><span class="sysDot ok" aria-hidden="true"></span><span class="mono">VERIFIED</span></div></div>
+            <div class="sysRow"><div class="sysName">DB SYNC</div><div class="sysState"><span class="sysDot warn" aria-hidden="true"></span><span class="mono">DEGRADED</span></div></div>
+            <div class="sysRow"><div class="sysName">CPU / LAG</div><div class="sysState"><span class="sysDot ok" aria-hidden="true"></span><span class="mono">NOMINAL</span></div></div>
+          </div>
+        </section>
+      </main>
+
+      <footer class="hudFooter">
+        <div class="footerHint mono">Less clutter · Bigger panels · Click ⤢ to expand · Double‑click any panel</div>
+        <div class="footerHint mono">Tip: press <b>G</b> to cycle state</div>
+      </footer>
+    </div>
+
+    <!-- Modal Overlay for expanded views -->
+    <div class="modalOverlay" id="modalOverlay" aria-hidden="true">
+      <div class="modalShell">
+        <div class="panel modalPanel">
+          <div class="panelHeader">
+            <div class="panelTitle" id="modalTitle">DETAILS</div>
+            <div class="panelMeta">
+              <button class="btnGhost sm" id="modalClose">CLOSE</button>
+            </div>
+          </div>
+          <div class="modalBody" id="modalBody"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- State + selftest toast -->
+    <div class="stateToast" id="stateToast" title="G cycles state">
+      <div class="stateDot" aria-hidden="true" id="toastDot"></div>
+      <div class="stateText mono">
+        STATE: <span id="toastState">IDLE</span>
+        <span id="selfTestBadge" class="selfTest">SELFTEST…</span>
+      </div>
+    </div>
+
+    <script type="module">
+      import * as THREE from "three";
+      import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
+      import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
+      import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
+
+      // ---------- Self-tests (runtime assertions) ----------
+      const selfTestBadge = document.getElementById("selfTestBadge");
+      function selfTestOk(msg = "OK"){
+        selfTestBadge.textContent = `SELFTEST: ${msg}`;
+        selfTestBadge.classList.remove("bad");
+        selfTestBadge.classList.add("ok");
+      }
+      function selfTestBad(msg){
+        selfTestBadge.textContent = `SELFTEST: FAIL`;
+        selfTestBadge.classList.remove("ok");
+        selfTestBadge.classList.add("bad");
+        console.error("SELFTEST FAILED:", msg);
+      }
+
+      try {
+        if (!THREE?.WebGLRenderer) throw new Error("Three.js did not load: missing WebGLRenderer");
+        if (!EffectComposer) throw new Error("Postprocessing did not load: missing EffectComposer");
+        if (!UnrealBloomPass) throw new Error("Postprocessing did not load: missing UnrealBloomPass");
+      } catch (e) {
+        selfTestBad(e);
+        throw e;
+      }
+
+      // ---------- Procedural Noise Overlay (init early) ----------
+      const noiseCanvas = document.getElementById("noise");
+      const nctx = noiseCanvas.getContext("2d", { alpha: true });
+      if (!nctx) {
+        selfTestBad("Could not acquire 2D context for #noise canvas");
+        throw new Error("Could not acquire 2D context for #noise canvas");
+      }
+
+      const NOISE_TILE = 256;
+      const noiseTile = document.createElement("canvas");
+      noiseTile.width = NOISE_TILE;
+      noiseTile.height = NOISE_TILE;
+      const tctx = noiseTile.getContext("2d", { alpha: true });
+      if (!tctx) {
+        selfTestBad("Could not acquire 2D context for noise tile");
+        throw new Error("Could not acquire 2D context for noise tile");
+      }
+      const tileData = tctx.createImageData(NOISE_TILE, NOISE_TILE);
+
+      function regenNoiseTile(intensity01) {
+        const data = tileData.data;
+        const intensity = Math.max(0, Math.min(1, intensity01));
+        for (let i = 0; i < data.length; i += 4) {
+          const v = Math.random() * 255;
+          data[i + 0] = v;
+          data[i + 1] = v;
+          data[i + 2] = v;
+          data[i + 3] = Math.floor(v * 0.18 * intensity);
+        }
+        tctx.putImageData(tileData, 0, 0);
+      }
+
+      let noiseIntensity = 0.9;
+      regenNoiseTile(noiseIntensity);
+
+      let noiseTick = 0;
+      function drawNoise() {
+        const dpr = Math.min(window.devicePixelRatio, 2);
+        const w = noiseCanvas.width;
+        const h = noiseCanvas.height;
+
+        nctx.clearRect(0, 0, w, h);
+        nctx.globalAlpha = 1.0;
+
+        const ox = Math.floor((noiseTick * 13) % NOISE_TILE);
+        const oy = Math.floor((noiseTick * 9) % NOISE_TILE);
+
+        for (let y = -NOISE_TILE; y < h + NOISE_TILE; y += NOISE_TILE) {
+          for (let x = -NOISE_TILE; x < w + NOISE_TILE; x += NOISE_TILE) {
+            nctx.drawImage(noiseTile, x - ox, y - oy);
+          }
+        }
+
+        // subtle scanline
+        nctx.globalAlpha = 0.18 * noiseIntensity;
+        nctx.fillStyle = "rgba(0,0,0,1)";
+        for (let y = 0; y < h; y += Math.floor(3 * dpr)) {
+          nctx.fillRect(0, y, w, 1);
+        }
+
+        noiseTick++;
+      }
+      setInterval(drawNoise, 50);
+
+      // ---------- Three.js background (stars + bloom) ----------
+      const bgCanvas = document.getElementById("bg");
+      const renderer = new THREE.WebGLRenderer({ canvas: bgCanvas, antialias: true, alpha: true, powerPreference: "high-performance" });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setClearColor(0x000000, 0);
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.05;
+
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(60, 1, 0.1, 2500);
+      camera.position.set(0, 0, 220);
+      scene.add(new THREE.AmbientLight(0xffffff, 0.9));
+
+      const STAR_COUNT = 2200;
+      const positions = new Float32Array(STAR_COUNT * 3);
+      for (let i = 0; i < STAR_COUNT; i++) {
+        const i3 = i * 3;
+        positions[i3 + 0] = (Math.random() - 0.5) * 980;
+        positions[i3 + 1] = (Math.random() - 0.5) * 560;
+        positions[i3 + 2] = (Math.random() - 0.5) * 980;
+      }
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+      const mat = new THREE.PointsMaterial({
+        color: 0xffb24a,
+        size: 1.05,
+        sizeAttenuation: true,
+        transparent: true,
+        opacity: 0.42,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      });
+      const stars = new THREE.Points(geo, mat);
+      scene.add(stars);
+
+      const positions2 = new Float32Array(STAR_COUNT * 3);
+      for (let i = 0; i < STAR_COUNT; i++) {
+        const i3 = i * 3;
+        positions2[i3 + 0] = (Math.random() - 0.5) * 1100;
+        positions2[i3 + 1] = (Math.random() - 0.5) * 680;
+        positions2[i3 + 2] = (Math.random() - 0.5) * 1100;
+      }
+      const geo2 = new THREE.BufferGeometry();
+      geo2.setAttribute("position", new THREE.BufferAttribute(positions2, 3));
+      const mat2 = new THREE.PointsMaterial({
+        color: 0x5ab4ff,
+        size: 0.95,
+        sizeAttenuation: true,
+        transparent: true,
+        opacity: 0.10,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      });
+      const dust = new THREE.Points(geo2, mat2);
+      scene.add(dust);
+
+      const composer = new EffectComposer(renderer);
+      composer.addPass(new RenderPass(scene, camera));
+      const bloomPass = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.85, 0.55, 0.22);
+      composer.addPass(bloomPass);
+
+      // ---------- Performance Chart (canvas, minimal UI) ----------
+      const perfCanvas = document.getElementById("perfChart");
+      const perfWrap = document.getElementById("perfWrap");
+      const perfTip = document.getElementById("perfTip");
+      const tipKey = document.getElementById("tipKey");
+      const tipVal = document.getElementById("tipVal");
+
+      const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep"]; // matches reference style
+      const seriesCrypto = [30, 105, 82, 140, 182, 150, 210, 193, 318];
+      const seriesStock  = [18, 72, 64, 110, 122, 131, 162, 151, 327];
+
+      let perfMode = "all"; // all | crypto | stock
+
+      function getCssColor(varName, fallback){
+        const v = getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+        return v || fallback;
+      }
+
+      function sizeCanvasTo(elCanvas, elWrap){
+        const rect = elWrap.getBoundingClientRect();
+        const dpr = Math.min(window.devicePixelRatio, 2);
+        elCanvas.width = Math.max(1, Math.floor(rect.width * dpr));
+        elCanvas.height = Math.max(1, Math.floor(rect.height * dpr));
+        elCanvas.style.width = `${rect.width}px`;
+        elCanvas.style.height = `${rect.height}px`;
+        const ctx = elCanvas.getContext("2d");
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        return { ctx, w: rect.width, h: rect.height };
+      }
+
+      function drawLineChart(canvas, wrap, mode = "all"){
+        const { ctx, w, h } = sizeCanvasTo(canvas, wrap);
+
+        ctx.clearRect(0, 0, w, h);
+
+        const padL = 44;
+        const padR = 18;
+        const padT = 18;
+        const padB = 34;
+
+        const plotW = w - padL - padR;
+        const plotH = h - padT - padB;
+
+        // grid
+        ctx.strokeStyle = getCssColor("--gridLine", "rgba(255,255,255,.06)");
+        ctx.lineWidth = 1;
+        for (let i = 0; i <= 5; i++) {
+          const y = padT + (plotH * i) / 5;
+          ctx.beginPath();
+          ctx.moveTo(padL, y);
+          ctx.lineTo(padL + plotW, y);
+          ctx.stroke();
+        }
+
+        // axes labels (light)
+        ctx.fillStyle = "rgba(232,232,238,.55)";
+        ctx.font = "11px Orbitron, system-ui";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "top";
+        for (let i = 0; i < months.length; i++) {
+          const x = padL + (plotW * i) / (months.length - 1);
+          ctx.fillText(months[i], x, padT + plotH + 10);
+        }
+
+        // scale
+        const maxV = Math.max(...seriesCrypto, ...seriesStock) * 1.05;
+        const minV = 0;
+
+        const toXY = (i, v) => {
+          const x = padL + (plotW * i) / (months.length - 1);
+          const t = (v - minV) / (maxV - minV);
+          const y = padT + plotH - t * plotH;
+          return { x, y };
+        };
+
+        const drawSeries = (arr, stroke, glow, fill) => {
+          // path
+          ctx.save();
+          ctx.lineWidth = 2;
+          ctx.strokeStyle = stroke;
+          ctx.shadowColor = glow;
+          ctx.shadowBlur = 18;
+          ctx.beginPath();
+          for (let i = 0; i < arr.length; i++) {
+            const p = toXY(i, arr[i]);
+            if (i === 0) ctx.moveTo(p.x, p.y);
+            else ctx.lineTo(p.x, p.y);
+          }
+          ctx.stroke();
+          ctx.restore();
+
+          // fill
+          ctx.save();
+          ctx.beginPath();
+          for (let i = 0; i < arr.length; i++) {
+            const p = toXY(i, arr[i]);
+            if (i === 0) ctx.moveTo(p.x, p.y);
+            else ctx.lineTo(p.x, p.y);
+          }
+          ctx.lineTo(padL + plotW, padT + plotH);
+          ctx.lineTo(padL, padT + plotH);
+          ctx.closePath();
+          const grad = ctx.createLinearGradient(0, padT, 0, padT + plotH);
+          grad.addColorStop(0, fill);
+          grad.addColorStop(1, "rgba(0,0,0,0)");
+          ctx.fillStyle = grad;
+          ctx.fill();
+          ctx.restore();
+
+          // points
+          ctx.save();
+          ctx.fillStyle = stroke;
+          ctx.strokeStyle = "rgba(0,0,0,.55)";
+          ctx.lineWidth = 2;
+          for (let i = 0; i < arr.length; i++) {
+            const p = toXY(i, arr[i]);
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+          }
+          ctx.restore();
+        };
+
+        const cA = getCssColor("--chartA", "rgba(255,178,74,.95)");
+        const cB = getCssColor("--chartB", "rgba(213,139,106,.85)");
+
+        if (mode === "crypto") {
+          drawSeries(seriesCrypto, cA, "rgba(255,178,74,.35)", "rgba(255,178,74,.16)");
+        } else if (mode === "stock") {
+          drawSeries(seriesStock, cB, "rgba(213,139,106,.30)", "rgba(213,139,106,.14)");
+        } else {
+          drawSeries(seriesCrypto, cA, "rgba(255,178,74,.30)", "rgba(255,178,74,.12)");
+          drawSeries(seriesStock, cB, "rgba(213,139,106,.26)", "rgba(213,139,106,.10)");
+        }
+      }
+
+      function showTip(x, y, label, value){
+        tipKey.textContent = label.toUpperCase();
+        tipVal.textContent = value;
+        perfTip.style.display = "block";
+        // clamp inside wrap
+        const rect = perfWrap.getBoundingClientRect();
+        const tx = Math.max(12, Math.min(rect.width - 220, x + 16));
+        const ty = Math.max(12, Math.min(rect.height - 80, y - 10));
+        perfTip.style.left = `${tx}px`;
+        perfTip.style.top = `${ty}px`;
+      }
+      function hideTip(){ perfTip.style.display = "none"; }
+
+      perfCanvas.addEventListener("mouseleave", hideTip);
+      perfCanvas.addEventListener("mousemove", (e) => {
+        const rect = perfWrap.getBoundingClientRect();
+        const mx = e.clientX - rect.left;
+        const my = e.clientY - rect.top;
+        const padL = 44, padR = 18;
+        const plotW = rect.width - padL - padR;
+        const t = (mx - padL) / Math.max(1, plotW);
+        const idx = Math.max(0, Math.min(months.length - 1, Math.round(t * (months.length - 1))));
+
+        const vC = seriesCrypto[idx];
+        const vS = seriesStock[idx];
+
+        if (perfMode === "crypto") showTip(mx, my, months[idx], `$${vC.toFixed(0)}`);
+        else if (perfMode === "stock") showTip(mx, my, months[idx], `$${vS.toFixed(0)}`);
+        else showTip(mx, my, months[idx], `C $${vC.toFixed(0)}  ·  S $${vS.toFixed(0)}`);
+      });
+
+      // series toggle
+      for (const btn of document.querySelectorAll(".segBtn")) {
+        btn.addEventListener("click", () => {
+          document.querySelectorAll(".segBtn").forEach(b => b.classList.remove("isOn"));
+          btn.classList.add("isOn");
+          perfMode = btn.dataset.series || "all";
+          drawLineChart(perfCanvas, perfWrap, perfMode);
+        });
+      }
+
+      // ---------- Modal (click-to-expand) ----------
+      const modalOverlay = document.getElementById("modalOverlay");
+      const modalTitle = document.getElementById("modalTitle");
+      const modalBody = document.getElementById("modalBody");
+      const modalClose = document.getElementById("modalClose");
+
+      const PANEL_TITLES = {
+        agents: "AI AGENTS",
+        performance: "PORTFOLIO PERFORMANCE",
+        market: "LIVE MARKET DATA",
+        trades: "RECENT TRADES",
+        allocation: "ASSET ALLOCATION",
+        system: "SYSTEM STATUS",
+      };
+
+      function openModal(panelKey){
+        modalTitle.textContent = PANEL_TITLES[panelKey] || "DETAILS";
+        modalBody.innerHTML = renderModal(panelKey);
+        modalOverlay.classList.add("isOpen");
+        modalOverlay.setAttribute("aria-hidden", "false");
+
+        // After mount: render charts if needed
+        if (panelKey === "performance") {
+          const c = modalBody.querySelector("#modalPerfChart");
+          const w = modalBody.querySelector("#modalPerfWrap");
+          if (c && w) {
+            // draw big chart with same mode
+            drawLineChart(c, w, perfMode);
+            // hover tooltip inside modal
+            const tip = modalBody.querySelector("#modalTip");
+            const tK = modalBody.querySelector("#modalTipKey");
+            const tV = modalBody.querySelector("#modalTipVal");
+            const show = (x,y,label,value)=>{
+              tK.textContent = label.toUpperCase();
+              tV.textContent = value;
+              tip.style.display = "block";
+              const rect = w.getBoundingClientRect();
+              const tx = Math.max(12, Math.min(rect.width - 240, x + 16));
+              const ty = Math.max(12, Math.min(rect.height - 80, y - 10));
+              tip.style.left = `${tx}px`;
+              tip.style.top = `${ty}px`;
+            };
+            const hide = ()=> tip.style.display = "none";
+            c.addEventListener("mouseleave", hide);
+            c.addEventListener("mousemove", (e)=>{
+              const rect = w.getBoundingClientRect();
+              const mx = e.clientX - rect.left;
+              const my = e.clientY - rect.top;
+              const padL = 44, padR = 18;
+              const plotW = rect.width - padL - padR;
+              const t = (mx - padL) / Math.max(1, plotW);
+              const idx = Math.max(0, Math.min(months.length - 1, Math.round(t * (months.length - 1))));
+              const vC = seriesCrypto[idx];
+              const vS = seriesStock[idx];
+              if (perfMode === "crypto") show(mx,my,months[idx],`$${vC.toFixed(0)}`);
+              else if (perfMode === "stock") show(mx,my,months[idx],`$${vS.toFixed(0)}`);
+              else show(mx,my,months[idx],`C $${vC.toFixed(0)}  ·  S $${vS.toFixed(0)}`);
+            });
+          }
+        }
+
+        // close on ESC
+        window.addEventListener("keydown", onModalKey);
+      }
+
+      function closeModal(){
+        modalOverlay.classList.remove("isOpen");
+        modalOverlay.setAttribute("aria-hidden", "true");
+        modalBody.innerHTML = "";
+        window.removeEventListener("keydown", onModalKey);
+      }
+
+      function onModalKey(e){
+        if (e.key === "Escape") closeModal();
+      }
+
+      modalClose.addEventListener("click", closeModal);
+      modalOverlay.addEventListener("click", (e) => {
+        if (e.target === modalOverlay) closeModal();
+      });
+
+      function renderModal(panelKey){
+        const html = {
+          agents: `
+            <div class="modalGrid">
+              <div class="subPanel">
+                <div class="subTitle">AGENT ROSTER</div>
+                <div class="subNote">Click any agent to view full config, wallet, and live logs. This view is intentionally bigger and calmer.</div>
+                <div style="height:12px"></div>
+                <div class="agentList" style="max-height:58vh;">
+                  ${document.getElementById("agentList").innerHTML}
+                </div>
+              </div>
+              <div class="subPanel">
+                <div class="subTitle">SELECTED AGENT</div>
+                <div class="subNote" id="modalAgentHint">Agent 1 · T‑Mode · Solana</div>
+                <div style="height:14px"></div>
+                <div class="subPanel" style="background:rgba(0,0,0,.10);">
+                  <div class="subTitle">QUICK ACTIONS</div>
+                  <div style="height:12px"></div>
+                  <div style="display:flex; gap:10px;">
+                    <button class="btnGhost" style="flex:1;">OPEN LOGS</button>
+                    <button class="btnPrimary" style="flex:1;">ARM</button>
+                  </div>
+                  <div style="height:10px"></div>
+                  <button class="btnDanger" style="width:100%;">STOP BOT</button>
+                </div>
+                <div style="height:14px"></div>
+                <div class="subPanel" style="background:rgba(0,0,0,.10);">
+                  <div class="subTitle">WALLET</div>
+                  <div class="subNote"><span class="mono">addr1q...3sk5s3</span></div>
+                  <div style="height:12px"></div>
+                  <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                    <button class="btnGhost">DEPOSIT</button>
+                    <button class="btnGhost">WITHDRAW</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `,
+          performance: `
+            <div class="subPanel" style="margin-bottom:14px;">
+              <div class="subTitle">BIGGER VIEW</div>
+              <div class="subNote">Same data, bigger canvas, and no extra clutter. Hover for values.</div>
+            </div>
+            <div class="chartWrap" id="modalPerfWrap" style="height:520px;">
+              <canvas class="chartCanvas" id="modalPerfChart"></canvas>
+              <div class="chartTooltip" id="modalTip" style="display:none;">
+                <div class="tKey" id="modalTipKey">MONTH</div>
+                <div class="tVal" id="modalTipVal">$0</div>
+              </div>
+            </div>
+            <div class="kpis" style="margin-top:14px;">
+              <div class="kpi"><div class="kpiKey">TOTAL PNL</div><div class="kpiVal">+$93.36</div></div>
+              <div class="kpi"><div class="kpiKey">CRYPTO</div><div class="kpiVal">+318H</div></div>
+              <div class="kpi"><div class="kpiKey">STOCK</div><div class="kpiVal">+327H</div></div>
+            </div>
+          `,
+          market: `
+            <div class="modalGrid">
+              <div class="subPanel">
+                <div class="subTitle">WATCHLIST</div>
+                <div class="subNote">Bigger cards + more spacing. (In real build, this is where filters + tags live.)</div>
+                <div style="height:12px"></div>
+                <div class="marketList">${document.getElementById("marketList").innerHTML}</div>
+              </div>
+              <div class="subPanel">
+                <div class="subTitle">DETAILS</div>
+                <div class="subNote">Select a ticker to show depth, spread, and bot exposure.</div>
+                <div style="height:14px"></div>
+                <div class="subPanel" style="background:rgba(0,0,0,.10);">
+                  <div class="subTitle">BOT EXPOSURE</div>
+                  <div class="subNote">Demo values:</div>
+                  <div style="height:10px"></div>
+                  <div class="sysRow"><div class="sysName">SOL</div><div class="sysState"><span class="sysDot ok"></span><span class="mono">+0.42</span></div></div>
+                  <div style="height:10px"></div>
+                  <div class="sysRow"><div class="sysName">BTC</div><div class="sysState"><span class="sysDot warn"></span><span class="mono">+0.07</span></div></div>
+                </div>
+              </div>
+            </div>
+          `,
+          trades: `
+            <div class="subPanel" style="margin-bottom:14px;">
+              <div class="subTitle">FULL TRADE FEED</div>
+              <div class="subNote">Filters would live here (mode, chain, wallet). Keeping it clean in the default dashboard.</div>
+            </div>
+            <div class="tradeTable" style="max-height:66vh; overflow:auto;">
+              <div class="tradeHead"><div>TICKER</div><div>PRICE</div><div>CHANGE</div></div>
+              <div class="tradeBody" style="max-height:none;">
+                ${Array.from({length: 16}).map((_, i) => {
+                  const t = ["BTC","ETH","SPX","NDX"][i % 4];
+                  const p = ["$3,600","$1,000","$6,081","$6,320"][i % 4];
+                  const c = ["+$21.80%","-$14.16%","-$12.33%","+$16.93%"][i % 4];
+                  const cls = c.startsWith("+") ? "pos" : "neg";
+                  return `<div class="tradeRow"><div class="mono">${t}</div><div class="mono">${p}</div><div class="${cls}">${c}</div></div>`;
+                }).join("")}
+              </div>
+            </div>
+          `,
+          allocation: `
+            <div class="modalGrid">
+              <div class="subPanel">
+                <div class="subTitle">ALLOCATION</div>
+                <div class="subNote">Big donut, clean legend. (Default dashboard stays compact.)</div>
+                <div style="height:12px"></div>
+                <div class="allocWrap" style="grid-template-columns: 220px 1fr;">
+                  <div class="donut" style="width:220px; height:220px;"></div>
+                  <div class="legend">
+                    <div class="legendItem"><div class="liLeft"><span class="swatch" style="background: rgba(255,178,74,.95);"></span><span class="mono">BTC</span></div><div class="liRight mono">32.5%</div></div>
+                    <div class="legendItem"><div class="liLeft"><span class="swatch" style="background: rgba(213,139,106,.90);"></span><span class="mono">ETH</span></div><div class="liRight mono">25.5%</div></div>
+                    <div class="legendItem"><div class="liLeft"><span class="swatch" style="background: rgba(255,178,74,.55);"></span><span class="mono">SPX</span></div><div class="liRight mono">13.0%</div></div>
+                    <div class="legendItem"><div class="liLeft"><span class="swatch" style="background: rgba(90,180,255,.38);"></span><span class="mono">NDX</span></div><div class="liRight mono">12.0%</div></div>
+                    <div class="legendItem"><div class="liLeft"><span class="swatch" style="background: rgba(255,255,255,.18);"></span><span class="mono">CASH</span></div><div class="liRight mono">17.0%</div></div>
+                  </div>
+                </div>
+              </div>
+              <div class="subPanel">
+                <div class="subTitle">RISK NOTES</div>
+                <div class="subNote">In the real build: show leverage, counterparty, and liquidation proximity. Keep the default view calm.</div>
+                <div style="height:14px"></div>
+                <div class="sysRow"><div class="sysName">LEVERAGE</div><div class="sysState"><span class="sysDot warn"></span><span class="mono">2.1x</span></div></div>
+                <div style="height:10px"></div>
+                <div class="sysRow"><div class="sysName">LIQ BUFFER</div><div class="sysState"><span class="sysDot ok"></span><span class="mono">SAFE</span></div></div>
+              </div>
+            </div>
+          `,
+          system: `
+            <div class="modalGrid">
+              <div class="subPanel">
+                <div class="subTitle">SERVICE HEALTH</div>
+                <div class="subNote">In default dashboard: just statuses. Expanded view: show details + last incidents.</div>
+                <div style="height:12px"></div>
+                <div class="sysList">${document.querySelector(".panelSystem .sysList").innerHTML}</div>
+              </div>
+              <div class="subPanel">
+                <div class="subTitle">LATEST LOGS</div>
+                <div class="subNote"><span class="mono">[GENERAL]</span> buy cycle complete · 50 scanned · 0 executed</div>
+                <div class="subNote"><span class="mono">[RELAY]</span> tx submitted · confirmed</div>
+                <div class="subNote"><span class="mono">[DB]</span> p95 latency elevated · retrying</div>
+                <div style="height:14px"></div>
+                <button class="btnPrimary" style="width:100%;">OPEN FULL MONITORING</button>
+              </div>
+            </div>
+          `,
+        };
+        return html[panelKey] || `<div class="subPanel"><div class="subTitle">NOT FOUND</div><div class="subNote">No modal template for ${panelKey}</div></div>`;
+      }
+
+      // wire expand buttons + dblclick anywhere on panel
+      for (const p of document.querySelectorAll("[data-expandable][data-panel]")) {
+        const key = p.dataset.panel;
+        const btn = p.querySelector(".expandBtn");
+        if (btn) btn.addEventListener("click", (e)=>{ e.stopPropagation(); openModal(key); });
+        p.addEventListener("dblclick", ()=> openModal(key));
+      }
+
+      // ---------- Agents selection (simple, keeps screen clean) ----------
+      let selectedAgent = "agent1";
+      const agentList = document.getElementById("agentList");
+      agentList.addEventListener("click", (e) => {
+        const item = e.target.closest(".agentItem");
+        if (!item) return;
+        selectedAgent = item.dataset.agent || "agent1";
+        agentList.querySelectorAll(".agentItem").forEach(el => el.classList.remove("isActive"));
+        item.classList.add("isActive");
+      });
+
+      document.getElementById("openAgentBtn").addEventListener("click", () => openModal("agents"));
+
+      // ---------- Market drift (tiny, just to feel alive) ----------
+      const mk = {
+        BTC: { pEl: document.getElementById("pBTC"), cEl: document.getElementById("cBTC"), p: 3300.60, c: -0.60 },
+        ETH: { pEl: document.getElementById("pETH"), cEl: document.getElementById("cETH"), p: 75.75, c: +3.37 },
+        SPX: { pEl: document.getElementById("pSPX"), cEl: document.getElementById("cSPX"), p: 38.74, c: -0.43 },
+        NDX: { pEl: document.getElementById("pNDX"), cEl: document.getElementById("cNDX"), p: 36.01, c: -11.26 },
+      };
+      function fmtMoney(x){
+        return "$" + x.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      }
+      function fmtPct(x){
+        const s = (x >= 0 ? "+" : "") + x.toFixed(2) + "%";
+        return s;
+      }
+      setInterval(() => {
+        for (const k of Object.keys(mk)) {
+          const m = mk[k];
+          const dp = (Math.random() - 0.5) * (k === "BTC" ? 8 : 0.25);
+          const dc = (Math.random() - 0.5) * 0.18;
+          m.p = Math.max(0.01, m.p + dp);
+          m.c = Math.max(-99, Math.min(99, m.c + dc));
+          m.pEl.textContent = fmtMoney(m.p);
+          m.cEl.textContent = fmtPct(m.c);
+          m.cEl.classList.toggle("pos", m.c >= 0);
+          m.cEl.classList.toggle("neg", m.c < 0);
+        }
+      }, 1200);
+
+      // ---------- State handling (idle/running/alert) ----------
+      const root = document.documentElement;
+      const topStateLabel = document.getElementById("topStateLabel");
+      const toastState = document.getElementById("toastState");
+
+      const STATES = ["idle", "running", "alert"];
+      let stateIndex = 0;
+
+      function setVar(name, val){ root.style.setProperty(name, String(val)); }
+
+      function applyState(state) {
+        if (state === "idle") {
+          setVar("--hudGlowBoost", 0.95);
+          setVar("--noiseOpacity", 0.08);
+          setVar("--noiseBlur", "0.28px");
+          setVar("--noiseBrightness", 0.96);
+
+          // copper tint
+          setVar("--tintR", 213); setVar("--tintG", 139); setVar("--tintB", 106);
+
+          // state dot = copper
+          setVar("--stateR", 213); setVar("--stateG", 139); setVar("--stateB", 106);
+
+          bloomPass.strength = 0.65;
+          bloomPass.radius = 0.55;
+          bloomPass.threshold = 0.24;
+
+          noiseIntensity = 0.75;
+          regenNoiseTile(noiseIntensity);
+
+          topStateLabel.textContent = "IDLE";
+          toastState.textContent = "IDLE";
+
+          renderer.toneMappingExposure = 1.00;
+        }
+
+        if (state === "running") {
+          setVar("--hudGlowBoost", 1.22);
+          setVar("--noiseOpacity", 0.12);
+          setVar("--noiseBlur", "0.22px");
+          setVar("--noiseBrightness", 1.06);
+
+          // keep copper tint
+          setVar("--tintR", 213); setVar("--tintG", 139); setVar("--tintB", 106);
+
+          // state dot = green
+          setVar("--stateR", 53); setVar("--stateG", 255); setVar("--stateB", 155);
+
+          bloomPass.strength = 0.98;
+          bloomPass.radius = 0.50;
+          bloomPass.threshold = 0.16;
+
+          noiseIntensity = 1.02;
+          regenNoiseTile(noiseIntensity);
+
+          topStateLabel.textContent = "RUNNING";
+          toastState.textContent = "RUNNING";
+
+          renderer.toneMappingExposure = 1.08;
+        }
+
+        if (state === "alert") {
+          setVar("--hudGlowBoost", 1.35);
+          setVar("--noiseOpacity", 0.19);
+          setVar("--noiseBlur", "0.14px");
+          setVar("--noiseBrightness", 1.10);
+
+          // tint leans red for alarm
+          setVar("--tintR", 255); setVar("--tintG", 90); setVar("--tintB", 90);
+
+          // state dot = red
+          setVar("--stateR", 255); setVar("--stateG", 59); setVar("--stateB", 59);
+
+          bloomPass.strength = 1.22;
+          bloomPass.radius = 0.62;
+          bloomPass.threshold = 0.08;
+
+          noiseIntensity = 1.35;
+          regenNoiseTile(noiseIntensity);
+
+          topStateLabel.textContent = "ALERT";
+          toastState.textContent = "ALERT";
+
+          renderer.toneMappingExposure = 1.12;
+        }
+
+        // redraw chart (colors can shift)
+        drawLineChart(perfCanvas, perfWrap, perfMode);
+      }
+
+      function cycleState() {
+        stateIndex = (stateIndex + 1) % STATES.length;
+        applyState(STATES[stateIndex]);
+      }
+
+      document.getElementById("cycleStateBtn").addEventListener("click", cycleState);
+      window.addEventListener("keydown", (e) => {
+        if (e.key.toLowerCase() === "g") cycleState();
+      });
+
+      // ---------- Resize handling ----------
+      function resize() {
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+
+        renderer.setSize(w, h, false);
+        composer.setSize(w, h);
+        camera.aspect = w / h;
+        camera.updateProjectionMatrix();
+        bloomPass.setSize(w, h);
+
+        // Noise canvas
+        const dpr = Math.min(window.devicePixelRatio, 2);
+        noiseCanvas.width = Math.floor(w * dpr);
+        noiseCanvas.height = Math.floor(h * dpr);
+
+        // Performance chart
+        drawLineChart(perfCanvas, perfWrap, perfMode);
+      }
+      window.addEventListener("resize", resize);
+
+      // ---------- Tiny UI tests (additive, non-destructive) ----------
+      function runUiTests(){
+        // Ensure expandable panels exist
+        const panels = document.querySelectorAll("[data-expandable][data-panel]");
+        if (panels.length < 5) throw new Error(`Expected >=5 expandable panels, got ${panels.length}`);
+
+        // Ensure expand buttons exist
+        const expandBtns = document.querySelectorAll(".expandBtn");
+        if (expandBtns.length < 5) throw new Error(`Expected >=5 expand buttons, got ${expandBtns.length}`);
+
+        // Modal open/close smoke
+        openModal("performance");
+        if (!modalOverlay.classList.contains("isOpen")) throw new Error("Modal failed to open");
+        closeModal();
+        if (modalOverlay.classList.contains("isOpen")) throw new Error("Modal failed to close");
+      }
+
+      // ---------- Render loop ----------
+      let targetParallaxX = 0, targetParallaxY = 0;
+      let parallaxX = 0, parallaxY = 0;
+      window.addEventListener("mousemove", (e) => {
+        const nx = (e.clientX / window.innerWidth) * 2 - 1;
+        const ny = (e.clientY / window.innerHeight) * 2 - 1;
+        targetParallaxX = nx * 10;
+        targetParallaxY = -ny * 6;
+      });
+
+      let t = 0;
+      function animate() {
+        t += 0.0014;
+
+        parallaxX += (targetParallaxX - parallaxX) * 0.05;
+        parallaxY += (targetParallaxY - parallaxY) * 0.05;
+
+        camera.position.x = parallaxX;
+        camera.position.y = parallaxY;
+
+        stars.rotation.y = t * 0.50;
+        stars.rotation.x = t * 0.16;
+
+        dust.rotation.y = -t * 0.30;
+        dust.rotation.x = t * 0.09;
+
+        composer.render();
+        requestAnimationFrame(animate);
+      }
+
+      // init
+      applyState("idle");
+      resize();
+      try {
+        runUiTests();
+        selfTestOk("OK");
+      } catch (e) {
+        selfTestBad(e);
+        throw e;
+      }
+      animate();
+    </script>
+  </body>
+</html>

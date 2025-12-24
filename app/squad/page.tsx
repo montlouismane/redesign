@@ -17,6 +17,8 @@ import {
 } from 'lucide-react';
 import AgentDetailModal from './AgentDetailModal';
 import type { Agent } from './types';
+import { UiStyleToggle } from '../UiStyleToggle';
+import { useUiStyle } from '../UiStyleProvider';
 
 // --- VISUAL PRIMITIVES ---
 
@@ -31,13 +33,13 @@ type BentoCardProps = {
 // This mimics the "Folder" look from your reference with a distinct metallic header
 const BentoCard = ({ title, children, className = '', onExpand }: BentoCardProps) => (
   <div
-    className={`relative flex flex-col bg-[#181B21]/90 backdrop-blur-md border border-[#2A303C] rounded-2xl shadow-2xl overflow-hidden group ${className}`}
+    className={`relative flex flex-col ui-bento-surface backdrop-blur-md border border-[var(--ui-panel-border)] rounded-2xl shadow-2xl overflow-hidden group ${className}`}
   >
     {/* The "Tab" Header - Metallic Gradient Background */}
-    <div className="h-12 bg-gradient-to-r from-[#2A303C] to-[#181B21] border-b border-[#374151] flex justify-between items-center px-4 shrink-0">
+    <div className="h-12 ui-bento-front border-b border-[var(--ui-divider)] flex justify-between items-center px-4 shrink-0">
       <div className="flex items-center gap-2">
         {/* Decorative 'LED' line */}
-        <div className="h-4 w-1 bg-[#D97706] rounded-full shadow-[0_0_8px_#D97706]"></div>
+        <div className="h-4 w-1 bg-[rgb(var(--ui-accentHot-rgb))] rounded-full shadow-[0_0_10px_rgba(var(--ui-accentHot-rgb),0.45)]"></div>
         <span className="text-sm font-bold tracking-wider text-gray-200 font-mono uppercase">
           {title}
         </span>
@@ -147,6 +149,9 @@ const AgentItem = ({
 // --- MAIN LAYOUT ---
 
 export default function SquadCommandLayout() {
+  const { style: uiStyle } = useUiStyle();
+  const isHud = uiStyle === 'hud';
+
   const agents = useMemo<Agent[]>(
     () => [
       {
@@ -190,12 +195,19 @@ export default function SquadCommandLayout() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0F1115] text-gray-300 font-sans flex flex-col overflow-hidden">
+    <div className="min-h-screen bg-[var(--ui-bg0)] text-[var(--ui-text)] font-terminal flex flex-col overflow-hidden">
       {/* ---------------- ZONE 1: TOP NAVIGATION ---------------- */}
-      <header className="h-16 bg-[#181B21]/90 backdrop-blur-md border-b border-[#2A303C] flex items-center justify-between px-6 shrink-0 z-50">
+      <header
+        className={
+          'h-16 backdrop-blur-md flex items-center justify-between px-6 shrink-0 z-50 font-adam-header ' +
+          (isHud
+            ? 'bg-[rgba(7,7,10,0.72)] border-b border-[rgba(var(--ui-accent-rgb),0.18)]'
+            : 'bg-[#181B21]/90 border-b border-[#2A303C]')
+        }
+      >
         {/* Logo Area */}
         <Link href="/" className="flex items-center gap-3 w-[240px]" aria-label="Go to Dashboard">
-          <div className="w-9 h-9 bg-gradient-to-br from-[#D97706] to-[#92400E] rounded-lg flex items-center justify-center shadow-[0_0_15px_rgba(217,119,6,0.3)]">
+          <div className="w-9 h-9 bg-gradient-to-br from-[rgb(var(--ui-accentHot-rgb))] to-[rgba(var(--ui-accent-rgb),0.65)] rounded-lg flex items-center justify-center shadow-[0_0_15px_rgba(var(--ui-accentHot-rgb),0.26)]">
             <span className="font-bold text-white text-xl">A</span>
           </div>
           <span className="font-bold text-xl tracking-tight text-white">ADAM</span>
@@ -203,7 +215,7 @@ export default function SquadCommandLayout() {
 
         {/* Global Nav Links */}
         <nav className="hidden md:flex items-center gap-8">
-          <a href="#" className="text-white text-sm font-medium border-b-2 border-[#D97706] py-5">
+          <a href="#" className="text-white text-sm font-medium border-b-2 border-[rgb(var(--ui-accentHot-rgb))] py-5">
             Command Center
           </a>
           <a
@@ -222,9 +234,10 @@ export default function SquadCommandLayout() {
 
         {/* Right Actions */}
         <div className="flex items-center gap-4">
+          <UiStyleToggle />
           <button className="p-2 text-gray-400 hover:text-white transition-colors relative" type="button">
             <Bell size={20} />
-            <span className="absolute top-2 right-2 w-2 h-2 bg-[#D97706] rounded-full"></span>
+            <span className="absolute top-2 right-2 w-2 h-2 bg-[rgb(var(--ui-accentHot-rgb))] rounded-full"></span>
           </button>
 
           <div className="flex items-center gap-2 bg-[#0F1115] border border-[#2A303C] pl-2 pr-4 py-1.5 rounded-full hover:border-[#D97706]/50 cursor-pointer transition-colors group">
