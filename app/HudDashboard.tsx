@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Bell, Wallet, Mic, Rocket, ChevronDown, ArrowUp, Paperclip, Lightbulb, Minimize2, X } from 'lucide-react';
 import { UiStyleToggle } from './UiStyleToggle';
+import { ScrollHintArea } from './ScrollHintArea';
 import styles from './HudDashboard.module.css';
 
 type PanelKey = 'agents' | 'performance' | 'market' | 'trades' | 'allocation' | 'system';
@@ -367,6 +368,59 @@ export function HudDashboard() {
   ]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const fileInputDockRef = useRef<HTMLInputElement>(null);
+
+  // Portfolio send/receive state
+  const botWallets = [
+    {
+      id: 'alpha',
+      label: 'Alpha Sniper',
+      address: 'addr1q8p209qzgw25tmnu3eu9x5jk82twxr28jm5022c0s4ht7cts2sap',
+    },
+    {
+      id: 'snek',
+      label: 'Snek Farmer',
+      address: 'addr1q9m9m5v6l3y0n3u6rzz0w3z0k0d9t3d0s5s3k0n0l0s9s8s3k0',
+    },
+    {
+      id: 'base',
+      label: 'Base Runner',
+      address: '0x8a22...c0de',
+    },
+  ] as const;
+
+  const [receiveWalletId, setReceiveWalletId] = useState<(typeof botWallets)[number]['id']>('alpha');
+  const receiveWallet = botWallets.find((w) => w.id === receiveWalletId) ?? botWallets[0];
+  const [copied, setCopied] = useState(false);
+
+  const [sendRecipient, setSendRecipient] = useState('');
+  const [sendAsset, setSendAsset] = useState<'ADA' | 'USDC' | 'SOL'>('ADA');
+  const [sendAmount, setSendAmount] = useState('');
+
+  const heldPositions = [
+    {
+      symbol: 'ADA',
+      name: 'Cardano',
+      amount: '191.530038 ADA',
+      value: '$71.49',
+    },
+    {
+      symbol: 'SNEK',
+      name: 'Snek',
+      amount: '455 SNEK',
+      value: '$0.00',
+      subtitle: '279c909f348e533da5808898f87f9a14bb2c3dfbbacccd631d927a3f534e454b',
+    },
+  ] as const;
+
+  const copyText = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1200);
+    } catch {
+      // ignore
+    }
+  };
 
   const chatStarters = [
     'Draft a plan for my new agent',
@@ -906,8 +960,9 @@ export function HudDashboard() {
               </div>
             </div>
 
-            <div className={styles.agentList}>
-              {agents.map((a) => {
+            <ScrollHintArea>
+              <div className={styles.agentList}>
+                {agents.map((a) => {
                 const isActive = a.id === selectedAgentId;
                 const dotTone =
                   a.runtimeState === 'running'
@@ -953,7 +1008,8 @@ export function HudDashboard() {
               <button type="button" className={styles.deployBtn}>
                 Deploy New Agent
               </button>
-            </div>
+              </div>
+            </ScrollHintArea>
           </section>
 
           {/* CENTER: PERFORMANCE */}
@@ -1016,8 +1072,9 @@ export function HudDashboard() {
               </div>
             </div>
 
-            <div className={styles.marketList}>
-              {holdings.map((h) => (
+            <ScrollHintArea>
+              <div className={styles.marketList}>
+                {holdings.map((h) => (
                 <div key={h.symbol} className={styles.marketCard}>
                   <div className={styles.mLeft}>
                     <div className={styles.mTicker}>{h.symbol}</div>
@@ -1026,9 +1083,10 @@ export function HudDashboard() {
                   <div className={styles.mRight}>
                     <div className={`${styles.mPrice} ${styles.mono}`}>{h.value}</div>
                   </div>
-                </div>
-              ))}
-            </div>
+                  </div>
+                ))}
+              </div>
+            </ScrollHintArea>
           </section>
 
           {/* BOTTOM CENTER: Trades + Allocation */}
@@ -1048,8 +1106,9 @@ export function HudDashboard() {
                   <div>PAIR</div>
                   <div>TIME</div>
                 </div>
-                <div className={styles.tradeBody}>
-                  {recentTrades.map((t, idx) => (
+                <ScrollHintArea>
+                  <div className={styles.tradeBody}>
+                    {recentTrades.map((t, idx) => (
                     <div key={idx} className={styles.tradeRow}>
                       <div>
                         <span className={`${styles.tradeType} ${t.type === 'BUY' ? styles.tradeBuy : styles.tradeSell}`}>{t.type}</span>
@@ -1058,7 +1117,8 @@ export function HudDashboard() {
                       <div className={`${styles.mono} ${styles.muted}`}>{t.time}</div>
                     </div>
                   ))}
-                </div>
+                  </div>
+                </ScrollHintArea>
               </div>
             </section>
 
@@ -1108,8 +1168,9 @@ export function HudDashboard() {
                 </button>
               </div>
             </div>
-            <div className={styles.sysList}>
-              {systemStatus.map((sys) => (
+            <ScrollHintArea>
+              <div className={styles.sysList}>
+                {systemStatus.map((sys) => (
                 <div key={sys.label} className={styles.sysRow}>
                   <div className={styles.sysName}>{sys.label}</div>
                   <div className={styles.sysState}>
@@ -1123,9 +1184,172 @@ export function HudDashboard() {
                   </div>
                 </div>
               ))}
-            </div>
+              </div>
+            </ScrollHintArea>
           </section>
         </main>
+
+        {/* EXPANDED PORTFOLIO VIEW */}
+        {view === 'portfolio' && (
+          <div className="fixed inset-0 z-[11000] bg-[radial-gradient(circle_at_50%_42%,rgba(0,0,0,0.95)_0%,rgba(0,0,0,0.92)_48%,rgba(0,0,0,0.88)_100%)] backdrop-blur-[40px] overflow-y-auto custom-scrollbar px-[12%] pt-[clamp(92px,10vh,140px)] pb-[12%]"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                setView('dashboard');
+              }
+            }}
+          >
+            <div className="max-w-[980px] mx-auto space-y-6">
+              <div className="flex items-start justify-between gap-6">
+                <div>
+                  <div className="text-3xl font-semibold text-white">Portfolio</div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setView('dashboard')}
+                    className="p-2 rounded-full border border-white/10 text-white/80 bg-white/5 hover:bg-white/10 transition-colors"
+                    aria-label="Close"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Send / Receive */}
+              <div className="relative rounded-[22px] overflow-hidden shadow-[0_18px_55px_rgba(0,0,0,0.65)]">
+                <div aria-hidden className="absolute inset-0 p-[2px] rounded-[22px] copperRim" />
+                <div aria-hidden className="absolute inset-[2px] rounded-[20px] bg-[#0E131C]/88 border border-white/5 backdrop-blur-2xl" />
+                <div className="relative p-6 z-10">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-lg font-semibold text-white">Send / Receive</h2>
+                    <div className="text-[11px] text-white/50">{receiveWallet.label}</div>
+                  </div>
+
+                  <div className="mt-4 space-y-4">
+                    <div className="grid gap-3 md:grid-cols-[220px_1fr_auto] items-center">
+                      <select
+                        value={receiveWalletId}
+                        onChange={(e) => setReceiveWalletId(e.target.value as (typeof botWallets)[number]['id'])}
+                        className="h-11 rounded-xl bg-[#0F131B]/80 border border-white/10 px-3 text-sm text-white/80 focus:outline-none focus:border-amber-300/40"
+                      >
+                        {botWallets.map((w) => (
+                          <option key={w.id} value={w.id}>
+                            {w.label}
+                          </option>
+                        ))}
+                      </select>
+
+                      <input
+                        value={receiveWallet.address}
+                        readOnly
+                        className="h-11 w-full rounded-xl bg-[#0F131B]/80 border border-white/10 px-3 text-sm text-white/70 focus:outline-none"
+                      />
+
+                      <button
+                        type="button"
+                        onClick={() => copyText(receiveWallet.address)}
+                        className="h-11 px-4 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-white/80 transition-colors"
+                      >
+                        {copied ? 'Copied' : 'Copy'}
+                      </button>
+                    </div>
+
+                    <div className="grid gap-3 md:grid-cols-[1fr_160px_160px_auto] items-end">
+                      <div>
+                        <div className="text-xs text-white/60 mb-2">Recipient</div>
+                        <input
+                          value={sendRecipient}
+                          onChange={(e) => setSendRecipient(e.target.value)}
+                          placeholder="Recipient addr1..."
+                          className="h-11 w-full rounded-xl bg-[#0F131B]/80 border border-white/10 px-3 text-sm text-white/80 placeholder:text-white/30 focus:outline-none focus:border-amber-300/40"
+                        />
+                      </div>
+
+                      <div>
+                        <div className="text-xs text-white/60 mb-2">Asset</div>
+                        <select
+                          value={sendAsset}
+                          onChange={(e) => setSendAsset(e.target.value as typeof sendAsset)}
+                          className="h-11 w-full rounded-xl bg-[#0F131B]/80 border border-white/10 px-3 text-sm text-white/80 focus:outline-none focus:border-amber-300/40"
+                        >
+                          <option value="ADA">ADA</option>
+                          <option value="USDC">USDC</option>
+                          <option value="SOL">SOL</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <div className="text-xs text-white/60 mb-2">Amount</div>
+                        <input
+                          value={sendAmount}
+                          onChange={(e) => setSendAmount(e.target.value)}
+                          placeholder="Amount"
+                          className="h-11 w-full rounded-xl bg-[#0F131B]/80 border border-white/10 px-3 text-sm text-white/80 placeholder:text-white/30 focus:outline-none focus:border-amber-300/40"
+                        />
+                      </div>
+
+                      <button
+                        type="button"
+                        className="h-11 px-6 rounded-xl copperButtonRaised text-white shadow-[0_10px_24px_rgba(200,137,93,0.25),inset_0_1px_0_rgba(255,255,255,0.22)]"
+                      >
+                        Send
+                      </button>
+                    </div>
+
+                    <div className="text-xs text-white/55">
+                      Balance: 191.5300 ADA{' '}
+                      <button type="button" className="ml-2 text-amber-200/80 hover:text-amber-200 underline underline-offset-4">
+                        MAX
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Portfolio positions */}
+              <div className="relative rounded-[22px] overflow-hidden shadow-[0_18px_55px_rgba(0,0,0,0.65)]">
+                <div aria-hidden className="absolute inset-0 p-[2px] rounded-[22px] copperRim" />
+                <div aria-hidden className="absolute inset-[2px] rounded-[20px] bg-[#0E131C]/88 border border-white/5 backdrop-blur-2xl" />
+
+                <div className="relative p-6 z-10">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-lg font-semibold text-white">Portfolio</h2>
+                    <button
+                      type="button"
+                      className="px-4 py-2 rounded-full copperButtonRaised text-white shadow-[0_10px_24px_rgba(200,137,93,0.25),inset_0_1px_0_rgba(255,255,255,0.22)]"
+                    >
+                      Sell all
+                    </button>
+                  </div>
+
+                  <div className="mt-4 space-y-2">
+                    {heldPositions.map((pos) => (
+                      <div
+                        key={pos.symbol}
+                        className="group relative flex items-center justify-between gap-6 p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/7 transition-colors"
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400/20 to-amber-600/10 border border-amber-400/20 flex items-center justify-center">
+                            <span className="text-xs font-bold text-amber-200">{pos.symbol}</span>
+                          </div>
+                          <div>
+                            <div className="text-sm font-semibold text-white">{pos.name}</div>
+                            <div className="text-xs text-white/60">{pos.amount}</div>
+                            {'subtitle' in pos && pos.subtitle && <div className="text-[10px] text-white/40 font-mono mt-1">{pos.subtitle}</div>}
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-sm font-semibold text-white">{pos.value}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         <footer className={styles.hudFooter}>
           <div className={`${styles.footerHint} ${styles.mono}`}>Less clutter · Bigger panels · Click ⤢ to expand · Double‑click any panel</div>
@@ -1162,8 +1386,9 @@ export function HudDashboard() {
                     <div className={styles.subNote}>Same agents as the Classic dashboard roster.</div>
                     <div style={{ height: 12 }} />
 
-                    <div className={styles.agentList} style={{ maxHeight: '58vh' }}>
-                      {agents.map((a) => {
+                    <ScrollHintArea>
+                      <div className={styles.agentList} style={{ maxHeight: '58vh' }}>
+                        {agents.map((a) => {
                         const isActive = a.id === selectedAgentId;
                         const dotTone =
                           a.runtimeState === 'running'
@@ -1203,7 +1428,8 @@ export function HudDashboard() {
                       <button type="button" className={styles.deployBtn}>
                         Deploy New Agent
                       </button>
-                    </div>
+                      </div>
+                    </ScrollHintArea>
                   </div>
 
                   <div className={styles.subPanel}>
@@ -1313,8 +1539,9 @@ export function HudDashboard() {
                     <div className={styles.subTitle}>HOLDINGS</div>
                     <div className={styles.subNote}>Same holdings list as the Classic dashboard.</div>
                     <div style={{ height: 12 }} />
-                    <div className={styles.marketList}>
-                      {holdings.map((h) => (
+                    <ScrollHintArea>
+                      <div className={styles.marketList}>
+                        {holdings.map((h) => (
                         <div key={h.symbol} className={styles.marketCard}>
                           <div className={styles.mLeft}>
                             <div className={styles.mTicker}>{h.symbol}</div>
@@ -1325,7 +1552,8 @@ export function HudDashboard() {
                           </div>
                         </div>
                       ))}
-                    </div>
+                      </div>
+                    </ScrollHintArea>
                   </div>
                   <div className={styles.subPanel}>
                     <div className={styles.subTitle}>DETAILS</div>
@@ -1359,27 +1587,29 @@ export function HudDashboard() {
                     <div className={styles.subNote}>Expanded view of the same Recent Trades list shown on the dashboard.</div>
                   </div>
 
-                  <div className={styles.tradeTable} style={{ maxHeight: '66vh', overflow: 'auto' }}>
-                    <div className={styles.tradeHead}>
-                      <div>TYPE</div>
-                      <div>PAIR</div>
-                      <div>TIME</div>
-                    </div>
-                    <div className={styles.tradeBody} style={{ maxHeight: 'none' }}>
-                      {Array.from({ length: 16 }).map((_, i) => {
-                        const t = recentTrades[i % recentTrades.length]!;
-                        return (
-                          <div key={i} className={styles.tradeRow}>
-                            <div>
-                              <span className={`${styles.tradeType} ${t.type === 'BUY' ? styles.tradeBuy : styles.tradeSell}`}>{t.type}</span>
+                  <ScrollHintArea>
+                    <div className={styles.tradeTable} style={{ maxHeight: '66vh' }}>
+                      <div className={styles.tradeHead}>
+                        <div>TYPE</div>
+                        <div>PAIR</div>
+                        <div>TIME</div>
+                      </div>
+                      <div className={styles.tradeBody} style={{ maxHeight: 'none' }}>
+                        {Array.from({ length: 16 }).map((_, i) => {
+                          const t = recentTrades[i % recentTrades.length]!;
+                          return (
+                            <div key={i} className={styles.tradeRow}>
+                              <div>
+                                <span className={`${styles.tradeType} ${t.type === 'BUY' ? styles.tradeBuy : styles.tradeSell}`}>{t.type}</span>
+                              </div>
+                              <div className={styles.mono}>{t.pair}</div>
+                              <div className={`${styles.mono} ${styles.muted}`}>{t.time}</div>
                             </div>
-                            <div className={styles.mono}>{t.pair}</div>
-                            <div className={`${styles.mono} ${styles.muted}`}>{t.time}</div>
-                          </div>
-                        );
-                      })}
+                          );
+                        })}
+                      </div>
                     </div>
-                  </div>
+                  </ScrollHintArea>
                 </>
               ) : null}
 
@@ -1428,8 +1658,9 @@ export function HudDashboard() {
                     <div className={styles.subTitle}>SYSTEM STATUS</div>
                     <div className={styles.subNote}>Same system status list as the Classic dashboard.</div>
                     <div style={{ height: 12 }} />
-                    <div className={styles.sysList}>
-                      {systemStatus.map((sys) => (
+                    <ScrollHintArea>
+                      <div className={styles.sysList}>
+                        {systemStatus.map((sys) => (
                         <div key={sys.label} className={styles.sysRow}>
                           <div className={styles.sysName}>{sys.label}</div>
                           <div className={styles.sysState}>
@@ -1443,7 +1674,8 @@ export function HudDashboard() {
                           </div>
                         </div>
                       ))}
-                    </div>
+                      </div>
+                    </ScrollHintArea>
                   </div>
                   <div className={styles.subPanel}>
                     <div className={styles.subTitle}>LATEST LOGS</div>
@@ -1532,7 +1764,7 @@ export function HudDashboard() {
               </div>
 
               <div className="relative h-[min(70vh,640px)] flex flex-col z-10">
-                <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-3">
+                <ScrollHintArea className="flex-1 p-4 space-y-3">
                   {chatMessages.map((m, idx) => (
                     <div key={idx} className={'flex items-start gap-3 ' + (m.role === 'user' ? 'justify-end' : 'justify-start')}>
                       {m.role === 'assistant' && (
@@ -1556,9 +1788,9 @@ export function HudDashboard() {
                       >
                         {m.text}
                       </div>
-                    </div>
-                  ))}
-                </div>
+                        </div>
+                      ))}
+                </ScrollHintArea>
 
                 <div className="border-t border-white/10 p-4 space-y-3">
                   {chatMessages.length <= 1 ? (
@@ -1746,7 +1978,7 @@ export function HudDashboard() {
               </div>
 
               {/* Messages */}
-              <div className="flex-1 overflow-y-auto scrollbar-hide px-5 py-4 space-y-3">
+              <ScrollHintArea className="flex-1 px-5 py-4 space-y-3">
                 {chatMessages.map((m, idx) => (
                   <div key={idx} className={'flex ' + (m.role === 'user' ? 'justify-end' : 'justify-start')}>
                     <div
@@ -1761,7 +1993,7 @@ export function HudDashboard() {
                     </div>
                   </div>
                 ))}
-              </div>
+              </ScrollHintArea>
 
               {/* Input */}
               <div className="border-t border-white/10 p-4 space-y-2">

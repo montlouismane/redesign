@@ -1098,19 +1098,21 @@
   background: rgba(255, 59, 59, 0.1);
 }
 
-/* Scrollbars (subtle) */
+/* Scrollbars hidden (using ScrollHintArea instead) */
+.agentList,
+.tradeBody,
+.modalPanel,
+.marketList,
+.sysList {
+  scrollbar-width: none;
+}
 .agentList::-webkit-scrollbar,
 .tradeBody::-webkit-scrollbar,
-.modalPanel::-webkit-scrollbar {
-  width: 10px;
-}
-.agentList::-webkit-scrollbar-thumb,
-.tradeBody::-webkit-scrollbar-thumb,
-.modalPanel::-webkit-scrollbar-thumb {
-  background: rgba(255, 178, 74, 0.14);
-  border: 3px solid transparent;
-  background-clip: content-box;
-  border-radius: 999px;
+.modalPanel::-webkit-scrollbar,
+.marketList::-webkit-scrollbar,
+.sysList::-webkit-scrollbar {
+  width: 0;
+  height: 0;
 }
 
 /* Responsive */

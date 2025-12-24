@@ -140,67 +140,7 @@ const RosterItem = ({ name, role, chain, status, pnl }: RosterItemProps) => (
 );
 
 
-type ScrollHintAreaProps = {
-  children: ReactNode;
-  className?: string;
-};
-
-/**
- * Scrollable container without a visible scrollbar.
- * Shows a subtle animated hint when there is more content below.
- */
-const ScrollHintArea = ({ children, className = '' }: ScrollHintAreaProps) => {
-  const ref = useRef<HTMLDivElement | null>(null);
-  const [showHint, setShowHint] = useState(false);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-
-    const update = () => {
-      const canScroll = el.scrollHeight > el.clientHeight + 2;
-      const atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 2;
-      setShowHint(canScroll && !atBottom);
-    };
-
-    update();
-
-    el.addEventListener('scroll', update, { passive: true });
-    let ro: ResizeObserver | null = null;
-    if (typeof ResizeObserver !== 'undefined') {
-      ro = new ResizeObserver(update);
-      ro.observe(el);
-    } else {
-      window.addEventListener('resize', update, { passive: true });
-    }
-
-    return () => {
-      el.removeEventListener('scroll', update);
-      if (ro) ro.disconnect();
-      else window.removeEventListener('resize', update);
-    };
-  }, []);
-
-  return (
-    <div className="relative h-full min-h-0">
-      <div ref={ref} className={`h-full min-h-0 overflow-y-auto scrollbar-hide ${className}`}>{children}</div>
-
-      {showHint ? (
-        <>
-          <div
-            aria-hidden
-            className="pointer-events-none absolute bottom-0 left-0 right-0 h-14 bg-gradient-to-t from-black/45 via-black/20 to-transparent"
-          />
-          <div aria-hidden className="pointer-events-none absolute bottom-3 left-0 right-0 flex justify-center">
-            <div className="h-7 w-9 rounded-full bg-black/25 border border-white/10 flex items-center justify-center">
-              <ChevronDown size={16} className="text-white/65 adam-scroll-hint" />
-            </div>
-          </div>
-        </>
-      ) : null}
-    </div>
-  );
-};
+import { ScrollHintArea } from './ScrollHintArea';
 // --- COMPONENT: BENTO CARD (The Texture Upgrade) ---
 const BentoCard = ({
   title,
@@ -1063,7 +1003,7 @@ function ClassicDashboard() {
               </BentoCard>
 
               <BentoCard title="System Status" headerStyle="tabbed" className="h-full min-h-0 col-span-12 lg:col-span-4 xl:col-span-4">
-                <div className="p-3 space-y-2 h-full overflow-y-auto custom-scrollbar">
+                <ScrollHintArea className="p-3 space-y-2">
                   {systemStatus.map((sys) => (
                     <div key={sys.label} className="flex justify-between items-center p-1.5 bg-white/5 rounded-lg border border-white/5">
                       <span className="text-[11px] text-gray-400">{sys.label}</span>
@@ -1073,7 +1013,7 @@ function ClassicDashboard() {
                       </span>
                     </div>
                   ))}
-                </div>
+                </ScrollHintArea>
               </BentoCard>
             </div>
           </div>
@@ -1313,7 +1253,7 @@ function ClassicDashboard() {
                   </div>
 
                   <div className="relative h-[min(70vh,640px)] flex flex-col z-10">
-                    <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-3">
+                    <ScrollHintArea className="flex-1 p-4 space-y-3">
                       {chatMessages.map((m, idx) => (
                         <div
                           key={idx}
@@ -1342,7 +1282,7 @@ function ClassicDashboard() {
                           </div>
                         </div>
                       ))}
-                    </div>
+                    </ScrollHintArea>
 
                     <div className="border-t border-white/10 p-4 space-y-3">
                       {chatMessages.length <= 1 ? (
@@ -1557,7 +1497,7 @@ function ClassicDashboard() {
               </div>
 
               {/* Messages */}
-              <div className="flex-1 overflow-y-auto scrollbar-hide px-5 py-4 space-y-3">
+              <ScrollHintArea className="flex-1 px-5 py-4 space-y-3">
                 {chatMessages.map((m, idx) => (
                   <div key={idx} className={'flex ' + (m.role === 'user' ? 'justify-end' : 'justify-start')}>
                     <div
@@ -1572,7 +1512,7 @@ function ClassicDashboard() {
                     </div>
                   </div>
                 ))}
-              </div>
+              </ScrollHintArea>
 
               {/* Input */}
               <div className="border-t border-white/10 p-4 space-y-2">
