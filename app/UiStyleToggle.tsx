@@ -11,7 +11,7 @@ export function UiStyleToggle({ className = '' }: { className?: string }) {
       type="button"
       onClick={toggle}
       className={
-        'ui-control font-terminal flex items-center gap-2 rounded-full px-3 py-2 transition-colors ' +
+        'ui-control flex items-center gap-2 rounded-full px-3 py-2 transition-colors ' +
         'focus:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--ui-accentHot-rgb),0.25)] ' +
         className
       }

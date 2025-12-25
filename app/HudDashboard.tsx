@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Bell, Wallet, Mic, Rocket, ChevronDown, ArrowUp, Paperclip, Lightbulb, Minimize2, X } from 'lucide-react';
 import { UiStyleToggle } from './UiStyleToggle';
 import { ScrollHintArea } from './ScrollHintArea';
+import { LiquidMetal } from '@paper-design/shaders-react';
 import styles from './HudDashboard.module.css';
 
 type PanelKey = 'agents' | 'performance' | 'market' | 'trades' | 'allocation' | 'system';
@@ -13,6 +14,25 @@ type PortfolioRange = '1H' | '24H' | '7D' | '30D' | 'ALL';
 type AgentRuntimeState = 'running' | 'idle' | 'alert' | 'stopped';
 
 type PortfolioSeriesPoint = { time: number; value: number };
+
+// --- REUSABLE COMPONENTS ---
+const LiquidMetalRim = ({ children, className = "", size = 36 }: { children: React.ReactNode, className?: string, size?: number }) => {
+  return (
+    <div className={`relative rounded-full flex items-center justify-center overflow-hidden ${className}`} style={{ width: size, height: size }}>
+      <div className="absolute inset-0 z-0">
+        <LiquidMetal 
+          speed={1} softness={0.24} repetition={2} shiftRed={0} shiftBlue={0} 
+          distortion={0.21} contour={0.31} scale={1.16} rotation={0} shape="circle" 
+          angle={322} frame={166287.5} colorBack="#00000000" colorTint="#D08F2C" 
+          style={{ width: '100%', height: '100%' }} 
+        />
+      </div>
+      <div className="relative z-10 rounded-full overflow-hidden border border-black/20 bg-[#0E131C]" style={{ width: size - 4, height: size - 4 }}>
+        {children}
+      </div>
+    </div>
+  );
+};
 
 type AgentRow = {
   id: string;
@@ -1768,7 +1788,7 @@ export function HudDashboard() {
                   {chatMessages.map((m, idx) => (
                     <div key={idx} className={'flex items-start gap-3 ' + (m.role === 'user' ? 'justify-end' : 'justify-start')}>
                       {m.role === 'assistant' && (
-                        <div className="relative w-8 h-8 rounded-full overflow-hidden border border-amber-400/20 flex-shrink-0 mt-1">
+                        <LiquidMetalRim size={32} className="flex-shrink-0 mt-1">
                           <Image
                             src="/agents/agent-t-portrait-512.jpg"
                             alt="Agent T"
@@ -1776,7 +1796,7 @@ export function HudDashboard() {
                             height={32}
                             className="object-cover"
                           />
-                        </div>
+                        </LiquidMetalRim>
                       )}
                       <div
                         className={
@@ -1938,7 +1958,7 @@ export function HudDashboard() {
               {/* Header */}
               <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
                 <div className="flex items-center gap-3">
-                  <div className="relative w-9 h-9 rounded-full overflow-hidden border border-amber-400/20">
+                  <LiquidMetalRim size={36}>
                     <Image
                       src="/agents/agent-t-portrait-512.jpg"
                       alt="Agent T"
@@ -1946,7 +1966,7 @@ export function HudDashboard() {
                       height={36}
                       className="object-cover"
                     />
-                  </div>
+                  </LiquidMetalRim>
                   <div>
                     <div className="text-sm font-semibold text-white">Agent T</div>
                     <div className="text-[10px] text-white/50">Quick chat</div>
@@ -2105,18 +2125,18 @@ export function HudDashboard() {
           <button
             type="button"
             onClick={() => setIsChatDockOpen(true)}
-            className="w-14 h-14 rounded-full flex items-center justify-center shadow-[0_10px_30px_rgba(217,119,6,0.4),inset_0_1px_0_rgba(255,255,255,0.4)] border-[1px] border-amber-400/10 hover:scale-110 transition-transform group copperButtonRaised"
+            className="w-14 h-14 rounded-full flex items-center justify-center relative shadow-[0_10px_30px_rgba(217,119,6,0.4)] hover:scale-110 transition-transform group"
             aria-label="Talk to Agent T"
           >
-            <div className="relative w-[50px] h-[50px] rounded-full overflow-hidden border border-black/30 shadow-[inset_0_1px_0_rgba(255,255,255,0.18)]">
+            <LiquidMetalRim size={56}>
               <Image
                 src="/agents/agent-t-portrait-512.jpg"
                 alt="Agent T"
                 fill
-                sizes="50px"
+                sizes="56px"
                 className="object-cover"
               />
-            </div>
+            </LiquidMetalRim>
           </button>
         </div>
       )}

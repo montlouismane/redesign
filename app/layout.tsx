@@ -1,18 +1,15 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, JetBrains_Mono, Orbitron } from "next/font/google";
+import { JetBrains_Mono, Orbitron, Barlow } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
 import { UiStyleProvider } from "./UiStyleProvider";
 import { ScrollXReset } from "./ScrollXReset";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const barlow = Barlow({
+  variable: "--font-barlow",
   subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  display: "swap",
+  weight: ["400", "500", "600", "700"],
 });
 const adamHeader = localFont({
   src: "./fonts/adam-header/AdamHeader.woff2",
@@ -64,7 +61,7 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: uiStyleInitScript }} />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${jetbrainsMono.variable} ${orbitron.variable} ${adamHeader.variable} antialiased`}
+        className={`${barlow.variable} ${jetbrainsMono.variable} ${orbitron.variable} ${adamHeader.variable} antialiased`}
       >
         <UiStyleProvider>
           <ScrollXReset />

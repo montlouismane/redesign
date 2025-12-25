@@ -6,45 +6,48 @@
   - HUD mode is activated by: <html data-ui="hud">
 */
 :root {
-  --ui-bg0: #070A10;
-  --ui-bg1: #0E1117;
+  --ui-bg0: #f0f2f5;
+  --ui-bg1: #ffffff;
 
-  --ui-text: #ededed;
-  --ui-muted: #a7a7b5;
+  --ui-text: #1a1a1a;
+  --ui-muted: #666666;
 
-  /* comma-separated RGB for rgba(...) helpers */
-  --ui-accent-rgb: 200,137,93;
-  --ui-accentHot-rgb: 255,178,74;
+  /* Bronze accent (matching mockup wordmark) */
+  --ui-accent-rgb: 196, 124, 72;
+  --ui-accentHot-rgb: 173, 108, 60;
 
-  --ui-line: rgba(var(--ui-accent-rgb), 0.28);
-  --ui-lineSoft: rgba(var(--ui-accent-rgb), 0.18);
-  --ui-shadow: rgba(0, 0, 0, 0.65);
+  --ui-line: rgba(0, 0, 0, 0.08);
+  --ui-lineSoft: rgba(0, 0, 0, 0.04);
+  --ui-shadow: rgba(0, 0, 0, 0.06);
 
-  /* Surfaces */
-  --ui-panel-radius: 22px;
-  --ui-panel-surface: linear-gradient(180deg, rgba(43, 51, 64, 0.96) 0%, rgba(27, 32, 41, 0.96) 60%, rgba(16, 20, 27, 0.96) 100%);
-  --ui-panel-border: rgba(255, 255, 255, 0.06);
-  --ui-panel-inset: rgba(255, 255, 255, 0.05);
-  --ui-divider: rgba(255, 255, 255, 0.05);
+  /* Surfaces: clean white cards */
+  --ui-panel-radius: 12px;
+  --ui-panel-surface: #ffffff;
+  --ui-panel-border: rgba(0, 0, 0, 0.08);
+  --ui-panel-inset: rgba(0, 0, 0, 0.02);
+  --ui-divider: rgba(0, 0, 0, 0.05);
 
-  /* Bento specifics (dashboard cards) */
-  --ui-bento-surface: var(--ui-panel-surface);
-  --ui-bento-front: linear-gradient(180deg, rgba(58, 66, 80, 0.92) 0%, rgba(37, 43, 54, 0.92) 50%, rgba(26, 31, 40, 0.92) 100%);
+  /* Bento specifics */
+  --ui-bento-surface: #ffffff;
+  --ui-bento-front: #ffffff;
 
   /* Controls */
-  --ui-control-bg: rgba(255, 255, 255, 0.05);
-  --ui-control-bg-hover: rgba(255, 255, 255, 0.10);
-  --ui-control-border: rgba(var(--ui-accent-rgb), 0.22);
-  --ui-control-text: rgba(237, 237, 237, 0.90);
-  --ui-control-muted: rgba(237, 237, 237, 0.55);
+  --ui-control-bg: #ffffff;
+  --ui-control-bg-hover: #f9fafb;
+  --ui-control-border: rgba(0, 0, 0, 0.1);
+  --ui-control-text: #1a1a1a;
+  --ui-control-muted: #666666;
 
   /* Bridge to Tailwind color vars */
   --background: var(--ui-bg0);
   --foreground: var(--ui-text);
 
-  /* Font routing */
-  --ui-font-body: var(--font-jetbrains-mono);
-  --ui-font-display: var(--font-adam-header);
+  /* Font routing: Trustworthy institutional feel */
+  --ui-font-body: var(--font-barlow);
+  --ui-font-display: var(--font-barlow);
+
+  /* Header specific (Lighter Navy Blue) */
+  --ui-header-bg: #1a2a3a;
 }
 
 :root[data-ui='hud'] {
@@ -95,7 +98,7 @@ html,
 body {
   background: var(--ui-bg0);
   color: var(--ui-text);
-  font-family: var(--ui-font-body, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace);
+  font-family: var(--ui-font-body, var(--font-barlow), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif);
   font-variant-numeric: tabular-nums;
   max-width: 100%;
   overflow-x: clip;
@@ -153,6 +156,25 @@ body {
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(var(--ui-accentHot-rgb), 0.4);
+}
+
+.classic-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
+}
+.classic-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.classic-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.classic-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+}
+.classic-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.2);
 }
 /* Hide native scrollbars (we use a subtle "more below" hint instead on some panels) */
 .scrollbar-hide {
