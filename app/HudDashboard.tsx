@@ -34,6 +34,49 @@ const LiquidMetalRim = ({ children, className = "", size = 36 }: { children: Rea
   );
 };
 
+type DonutChartProps = {
+  solPct: number;
+  adaPct: number;
+  otherPct: number;
+  className?: string;
+  style?: React.CSSProperties;
+  svgPath?: string; // Optional path to SVG file
+};
+
+const DonutChart = ({ solPct, adaPct, otherPct, className = '', style = {}, svgPath }: DonutChartProps) => {
+  // If SVG is provided, use it; otherwise fall back to CSS gradient
+  if (svgPath) {
+    return (
+      <div className={`${styles.donut} ${className}`} style={style}>
+        <Image
+          src={svgPath}
+          alt="Allocation donut chart"
+          width={160}
+          height={160}
+          className="w-full h-full object-contain"
+          style={{ aspectRatio: '1' }}
+        />
+      </div>
+    );
+  }
+
+  // CSS-based donut chart (current implementation)
+  return (
+    <div 
+      className={`${styles.donut} ${className}`}
+      aria-label="Allocation donut" 
+      style={{
+        background: `conic-gradient(
+          rgba(255, 178, 74, 0.95) 0% ${solPct}%,
+          rgba(45, 212, 191, 0.92) ${solPct}% ${solPct + adaPct}%,
+          rgba(42, 48, 60, 0.92) ${solPct + adaPct}% 100%
+        )`,
+        ...style
+      }}
+    />
+  );
+};
+
 type AgentRow = {
   id: string;
   chip: string;
@@ -48,6 +91,7 @@ type HoldingRow = {
   symbol: string;
   name: string;
   value: string;
+  changePct: number;
   color: string;
 };
 
@@ -490,18 +534,28 @@ export function HudDashboard() {
 
   const holdings = useMemo<HoldingRow[]>(
     () => [
-      { symbol: 'SOL', name: 'Solana', value: '$4,200', color: '#7c3aed' },
-      { symbol: 'ADA', name: 'Cardano', value: '$1,840', color: '#2563eb' },
-      { symbol: 'SNEK', name: 'Snek', value: '$920', color: '#eab308' },
-      { symbol: 'WIF', name: 'Dogwifhat', value: '$410', color: '#7c2d12' },
-      { symbol: 'BONK', name: 'Bonk', value: '$220', color: '#ea580c' },
-      { symbol: 'ETH', name: 'Ethereum', value: '$140', color: '#4f46e5' },
-      { symbol: 'USDC', name: 'USD Coin', value: '$50', color: '#60a5fa' },
-      { symbol: 'XRP', name: 'Ripple', value: '$45', color: '#9ca3af' },
-      { symbol: 'DOT', name: 'Polkadot', value: '$32', color: '#db2777' },
+      { symbol: 'SOL', name: 'Solana', value: '$4,200', changePct: 5.2, color: '#7c3aed' },
+      { symbol: 'ADA', name: 'Cardano', value: '$1,840', changePct: -1.4, color: '#2563eb' },
+      { symbol: 'SNEK', name: 'Snek', value: '$920', changePct: 12.8, color: '#eab308' },
+      { symbol: 'WIF', name: 'Dogwifhat', value: '$410', changePct: -3.2, color: '#7c2d12' },
+      { symbol: 'BONK', name: 'Bonk', value: '$220', changePct: 8.4, color: '#ea580c' },
+      { symbol: 'ETH', name: 'Ethereum', value: '$140', changePct: 1.1, color: '#4f46e5' },
+      { symbol: 'USDC', name: 'USD Coin', value: '$50', changePct: 0.0, color: '#60a5fa' },
+      { symbol: 'XRP', name: 'Ripple', value: '$45', changePct: -0.5, color: '#9ca3af' },
+      { symbol: 'DOT', name: 'Polkadot', value: '$32', changePct: 2.3, color: '#db2777' },
     ],
     [],
   );
+
+  const { totalValue, solPct, adaPct, otherPct } = useMemo(() => {
+    const total = holdings.reduce((acc, h) => acc + parseFloat(h.value.replace(/[$,]/g, '')), 0);
+    const solVal = parseFloat(holdings.find((h) => h.symbol === 'SOL')?.value.replace(/[$,]/g, '') || '0');
+    const adaVal = parseFloat(holdings.find((h) => h.symbol === 'ADA')?.value.replace(/[$,]/g, '') || '0');
+    const sPct = Math.round((solVal / total) * 100);
+    const aPct = Math.round((adaVal / total) * 100);
+    const oPct = 100 - sPct - aPct;
+    return { totalValue: total, solPct: sPct, adaPct: aPct, otherPct: oPct };
+  }, [holdings]);
 
   const recentTrades = useMemo<TradeRow[]>(
     () => [
@@ -980,9 +1034,8 @@ export function HudDashboard() {
               </div>
             </div>
 
-            <ScrollHintArea>
-              <div className={styles.agentList}>
-                {agents.map((a) => {
+            <div className={`flex-1 min-h-0 overflow-y-auto custom-scrollbar ${styles.agentList}`}>
+              {agents.map((a) => {
                 const isActive = a.id === selectedAgentId;
                 const dotTone =
                   a.runtimeState === 'running'
@@ -1028,8 +1081,7 @@ export function HudDashboard() {
               <button type="button" className={styles.deployBtn}>
                 Deploy New Agent
               </button>
-              </div>
-            </ScrollHintArea>
+            </div>
           </section>
 
           {/* CENTER: PERFORMANCE */}
@@ -1092,17 +1144,20 @@ export function HudDashboard() {
               </div>
             </div>
 
-            <ScrollHintArea>
+            <ScrollHintArea className="flex-1">
               <div className={styles.marketList}>
                 {holdings.map((h) => (
-                <div key={h.symbol} className={styles.marketCard}>
-                  <div className={styles.mLeft}>
-                    <div className={styles.mTicker}>{h.symbol}</div>
-                    <div className={`${styles.mSub} ${styles.mono}`}>{h.name}</div>
-                  </div>
-                  <div className={styles.mRight}>
-                    <div className={`${styles.mPrice} ${styles.mono}`}>{h.value}</div>
-                  </div>
+                  <div key={h.symbol} className={styles.marketCard} style={{ flexShrink: 0 }}>
+                    <div className={styles.mLeft}>
+                      <div className={styles.mTicker}>{h.symbol}</div>
+                      <div className={`${styles.mSub} ${styles.mono}`}>{h.name}</div>
+                    </div>
+                    <div className={styles.mRight}>
+                      <div className={`${styles.mPrice} ${styles.mono}`}>{h.value}</div>
+                      <div className={`${styles.mChg} ${h.changePct >= 0 ? styles.pos : styles.neg}`}>
+                        {formatPct(h.changePct)}
+                      </div>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -1126,9 +1181,8 @@ export function HudDashboard() {
                   <div>PAIR</div>
                   <div>TIME</div>
                 </div>
-                <ScrollHintArea>
-                  <div className={styles.tradeBody}>
-                    {recentTrades.map((t, idx) => (
+                <div className={`flex-1 min-h-0 overflow-y-auto custom-scrollbar ${styles.tradeBody}`}>
+                  {recentTrades.map((t, idx) => (
                     <div key={idx} className={styles.tradeRow}>
                       <div>
                         <span className={`${styles.tradeType} ${t.type === 'BUY' ? styles.tradeBuy : styles.tradeSell}`}>{t.type}</span>
@@ -1137,8 +1191,7 @@ export function HudDashboard() {
                       <div className={`${styles.mono} ${styles.muted}`}>{t.time}</div>
                     </div>
                   ))}
-                  </div>
-                </ScrollHintArea>
+                </div>
               </div>
             </section>
 
@@ -1157,24 +1210,31 @@ export function HudDashboard() {
                   </button>
                 </div>
               </div>
-              <div className={styles.allocWrap}>
-                <div className={styles.donut} aria-label="Allocation donut" />
-                <div className={styles.legend}>
-                  {[
-                    { k: 'SOL', v: '52%', color: 'rgba(255,178,74,.95)' },
-                    { k: 'ADA', v: '31%', color: 'rgba(45,212,191,.92)' },
-                    { k: 'Other', v: '17%', color: 'rgba(42,48,60,.92)' },
-                  ].map((item) => (
-                    <div key={item.k} className={styles.legendItem}>
-                      <div className={styles.liLeft}>
-                        <span className={styles.swatch} style={{ background: item.color }} />
-                        <span className={styles.mono}>{item.k}</span>
+              <ScrollHintArea className="flex-1">
+                <div className={styles.allocWrap}>
+                  <DonutChart 
+                    solPct={solPct}
+                    adaPct={adaPct}
+                    otherPct={otherPct}
+                    // svgPath="/path/to/allocation-donut.svg" // Uncomment and set path when SVG is ready
+                  />
+                  <div className={styles.legend}>
+                    {[
+                      { k: 'SOL', v: `${solPct}%`, color: 'rgba(255,178,74,.95)' },
+                      { k: 'ADA', v: `${adaPct}%`, color: 'rgba(45,212,191,.92)' },
+                      { k: 'Other', v: `${otherPct}%`, color: 'rgba(42,48,60,.92)' },
+                    ].map((item) => (
+                      <div key={item.k} className={styles.legendItem}>
+                        <div className={styles.liLeft}>
+                          <span className={styles.swatch} style={{ background: item.color }} />
+                          <span className={styles.mono}>{item.k}</span>
+                        </div>
+                        <div className={`${styles.liRight} ${styles.mono}`}>{item.v}</div>
                       </div>
-                      <div className={`${styles.liRight} ${styles.mono}`}>{item.v}</div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
+              </ScrollHintArea>
             </section>
           </div>
 
@@ -1188,24 +1248,19 @@ export function HudDashboard() {
                 </button>
               </div>
             </div>
-            <ScrollHintArea>
-              <div className={styles.sysList}>
-                {systemStatus.map((sys) => (
+            <div className={`flex-1 ${styles.sysList}`}>
+              {systemStatus.map((sys) => (
                 <div key={sys.label} className={styles.sysRow}>
+                  <span
+                    className={`${styles.sysDot} ${sys.tone === 'ok' ? styles.ok : sys.tone === 'warn' ? styles.warn : styles.bad} ${
+                      sys.pulse ? styles.pulse : ''
+                    }`}
+                    aria-hidden="true"
+                  />
                   <div className={styles.sysName}>{sys.label}</div>
-                  <div className={styles.sysState}>
-                    <span
-                      className={`${styles.sysDot} ${sys.tone === 'ok' ? styles.ok : sys.tone === 'warn' ? styles.warn : styles.bad} ${
-                        sys.pulse ? styles.pulse : ''
-                      }`}
-                      aria-hidden="true"
-                    />
-                    <span className={styles.mono}>{sys.status}</span>
-                  </div>
                 </div>
               ))}
-              </div>
-            </ScrollHintArea>
+            </div>
           </section>
         </main>
 
@@ -1370,13 +1425,6 @@ export function HudDashboard() {
             </div>
           </div>
         )}
-
-        <footer className={styles.hudFooter}>
-          <div className={`${styles.footerHint} ${styles.mono}`}>Less clutter · Bigger panels · Click ⤢ to expand · Double‑click any panel</div>
-          <div className={`${styles.footerHint} ${styles.mono}`}>
-            Tip: Stop an agent to turn its indicator light off
-          </div>
-        </footer>
       </div>
 
       {/* Modal Overlay for expanded views */}
@@ -1406,8 +1454,8 @@ export function HudDashboard() {
                     <div className={styles.subNote}>Same agents as the Classic dashboard roster.</div>
                     <div style={{ height: 12 }} />
 
-                    <ScrollHintArea>
-                      <div className={styles.agentList} style={{ maxHeight: '58vh' }}>
+                    <ScrollHintArea className="flex-1">
+                        <div className={styles.agentList} style={{ maxHeight: '58vh' }}>
                         {agents.map((a) => {
                         const isActive = a.id === selectedAgentId;
                         const dotTone =
@@ -1559,8 +1607,8 @@ export function HudDashboard() {
                     <div className={styles.subTitle}>HOLDINGS</div>
                     <div className={styles.subNote}>Same holdings list as the Classic dashboard.</div>
                     <div style={{ height: 12 }} />
-                    <ScrollHintArea>
-                      <div className={styles.marketList}>
+            <ScrollHintArea className="flex-1">
+                <div className={styles.marketList}>
                         {holdings.map((h) => (
                         <div key={h.symbol} className={styles.marketCard}>
                           <div className={styles.mLeft}>
@@ -1569,6 +1617,9 @@ export function HudDashboard() {
                           </div>
                           <div className={styles.mRight}>
                             <div className={`${styles.mPrice} ${styles.mono}`}>{h.value}</div>
+                            <div className={`${styles.mChg} ${h.changePct >= 0 ? styles.pos : styles.neg}`}>
+                              {formatPct(h.changePct)}
+                            </div>
                           </div>
                         </div>
                       ))}
@@ -1607,7 +1658,7 @@ export function HudDashboard() {
                     <div className={styles.subNote}>Expanded view of the same Recent Trades list shown on the dashboard.</div>
                   </div>
 
-                  <ScrollHintArea>
+                  <ScrollHintArea className="flex-1">
                     <div className={styles.tradeTable} style={{ maxHeight: '66vh' }}>
                       <div className={styles.tradeHead}>
                         <div>TYPE</div>
@@ -1639,13 +1690,23 @@ export function HudDashboard() {
                     <div className={styles.subTitle}>ALLOCATION</div>
                     <div className={styles.subNote}>Same allocation breakdown shown on the Classic dashboard.</div>
                     <div style={{ height: 12 }} />
-                    <div className={styles.allocWrap} style={{ gridTemplateColumns: '220px 1fr' }}>
-                      <div className={styles.donut} style={{ width: 220, height: 220 }} />
+                    <div className={styles.allocWrap} style={{ gridTemplateColumns: 'minmax(180px, 220px) 1fr', padding: '8px 4px 24px 4px' }}>
+                      <DonutChart 
+                        solPct={solPct}
+                        adaPct={adaPct}
+                        otherPct={otherPct}
+                        style={{ 
+                          maxWidth: '220px',
+                          minWidth: '180px',
+                          minHeight: '180px'
+                        }}
+                        // svgPath="/path/to/allocation-donut.svg" // Uncomment and set path when SVG is ready
+                      />
                       <div className={styles.legend}>
                         {[
-                          { k: 'SOL', v: '52%', color: 'rgba(255,178,74,.95)' },
-                          { k: 'ADA', v: '31%', color: 'rgba(45,212,191,.92)' },
-                          { k: 'Other', v: '17%', color: 'rgba(42,48,60,.92)' },
+                          { k: 'SOL', v: `${solPct}%`, color: 'rgba(255,178,74,.95)' },
+                          { k: 'ADA', v: `${adaPct}%`, color: 'rgba(45,212,191,.92)' },
+                          { k: 'Other', v: `${otherPct}%`, color: 'rgba(42,48,60,.92)' },
                         ].map((item) => (
                           <div key={item.k} className={styles.legendItem}>
                             <div className={styles.liLeft}>
@@ -1678,8 +1739,8 @@ export function HudDashboard() {
                     <div className={styles.subTitle}>SYSTEM STATUS</div>
                     <div className={styles.subNote}>Same system status list as the Classic dashboard.</div>
                     <div style={{ height: 12 }} />
-                    <ScrollHintArea>
-                      <div className={styles.sysList}>
+            <ScrollHintArea className="flex-1">
+                <div className={styles.sysList}>
                         {systemStatus.map((sys) => (
                         <div key={sys.label} className={styles.sysRow}>
                           <div className={styles.sysName}>{sys.label}</div>
@@ -1728,6 +1789,7 @@ export function HudDashboard() {
             ? 'opacity-100 translate-y-0 scale-100 pointer-events-auto'
             : 'opacity-0 translate-y-8 scale-[0.92] pointer-events-none')
         }
+        style={{ display: view === 'chatFull' ? 'block' : 'none' }}
         onClick={(e) => {
           if (e.target === e.currentTarget) {
             setView('dashboard');
@@ -1907,8 +1969,7 @@ export function HudDashboard() {
                       aria-label="Send"
                     >
                       <ArrowUp size={18} />
-                    </button>
-                  </div>
+                  </button>
                 </div>
               </div>
             </div>
@@ -1916,27 +1977,30 @@ export function HudDashboard() {
         </div>
       </div>
 
+      </div>
+
       {/* CHAT POPUP (Glass) */}
       <div
         className={
           'fixed inset-0 z-[11040] transition-opacity duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ' +
-          (isChatDockOpen ? 'opacity-100 pointer-events-none' : 'opacity-0 pointer-events-none')
+          (isChatDockOpen ? 'opacity-100' : 'opacity-0 pointer-events-none')
         }
+        style={{ display: isChatDockOpen ? 'block' : 'none' }}
       >
-        {/* No backdrop - background remains normal */}
+          {/* No backdrop - background remains normal */}
 
-        {/* Window (fade/scale) */}
-        <div
-          role="dialog"
-          aria-label="Agent T chat"
-          className={
-            'absolute right-[clamp(16px,2.2vw,28px)] bottom-[clamp(16px,2.2vw,28px)] ' +
-            'w-[min(460px,92vw)] h-[min(72vh,680px)] origin-bottom-right ' +
-            'transition-[opacity,transform,filter] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ' +
-            'will-change-[opacity,transform,filter] pointer-events-auto ' +
-            (isChatDockOpen ? 'opacity-100 translate-y-0 scale-100 blur-0' : 'opacity-0 translate-y-4 scale-[0.96] blur-[2px]')
-          }
-        >
+          {/* Window (fade/scale) */}
+          <div
+            role="dialog"
+            aria-label="Agent T chat"
+            className={
+              'absolute right-[clamp(16px,2.2vw,28px)] bottom-[clamp(16px,2.2vw,28px)] ' +
+              'w-[min(460px,92vw)] h-[min(72vh,680px)] origin-bottom-right ' +
+              'transition-[opacity,transform,filter] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ' +
+              'will-change-[opacity,transform,filter] pointer-events-auto ' +
+              'opacity-100 translate-y-0 scale-100 blur-0'
+            }
+          >
           <div className="relative h-full rounded-[28px] overflow-hidden border border-white/12 bg-[#0E131C]/95 backdrop-blur-xl shadow-[0_40px_120px_rgba(0,0,0,0.65)]">
             {/* Frost gradients */}
             <div
@@ -2125,15 +2189,15 @@ export function HudDashboard() {
           <button
             type="button"
             onClick={() => setIsChatDockOpen(true)}
-            className="w-14 h-14 rounded-full flex items-center justify-center relative shadow-[0_10px_30px_rgba(217,119,6,0.4)] hover:scale-110 transition-transform group"
+            className="w-[70px] h-[70px] rounded-full flex items-center justify-center relative shadow-[0_10px_30px_rgba(217,119,6,0.4)] hover:scale-110 transition-transform group"
             aria-label="Talk to Agent T"
           >
-            <LiquidMetalRim size={56}>
+            <LiquidMetalRim size={70}>
               <Image
                 src="/agents/agent-t-portrait-512.jpg"
                 alt="Agent T"
                 fill
-                sizes="56px"
+                sizes="70px"
                 className="object-cover"
               />
             </LiquidMetalRim>

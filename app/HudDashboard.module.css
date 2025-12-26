@@ -390,8 +390,8 @@
 /* Dashboard grid: larger sections, less clutter */
 .dashboard {
   display: grid;
-  grid-template-columns: 340px 1fr 380px;
-  grid-template-rows: 1fr 320px;
+  grid-template-columns: 340px 1fr 400px;
+  grid-template-rows: 1.25fr 240px;
   grid-template-areas:
     "agents performance market"
     "agents bottom system";
@@ -402,6 +402,8 @@
 
 .panel {
   position: relative;
+  display: flex;
+  flex-direction: column;
   border-radius: var(--r);
   padding: var(--pad);
   background: linear-gradient(180deg, rgba(var(--tintR), var(--tintG), var(--tintB), 0.07), rgba(0, 0, 0, 0.44));
@@ -440,6 +442,7 @@
   justify-content: space-between;
   gap: 10px;
   margin-bottom: 14px;
+  flex-shrink: 0;
 }
 .panelTitle {
   font-weight: 800;
@@ -527,7 +530,6 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  overflow: auto;
   padding-right: 2px;
 }
 .agentItem {
@@ -629,21 +631,16 @@
   color: rgba(255, 178, 74, 0.95);
   background: rgba(255, 178, 74, 0.06);
 }
-.agentFooter {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  gap: 10px;
-  margin-top: 12px;
-}
-.agentFooter .btnPrimary,
-.agentFooter .btnGhost {
-  flex: 1;
-}
 
 /* Performance panel */
 .panelPerformance {
   grid-area: performance;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  min-height: 0;
+  z-index: 5;
+  overflow: hidden;
 }
 .perfTop {
   position: relative;
@@ -743,28 +740,44 @@
 /* Market panel */
 .panelMarket {
   grid-area: market;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  min-height: 0;
+  z-index: 5;
+  overflow: hidden;
 }
+
+.panelMarket > *:not(.panelHeader) {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
 .marketList {
   position: relative;
   z-index: 1;
   display: flex;
   flex-direction: column;
   gap: 12px;
+  padding-right: 0;
+  width: 100%;
 }
 .marketCard {
   border: 1px solid rgba(255, 178, 74, 0.14);
   background: rgba(0, 0, 0, 0.18);
   border-radius: 18px;
-  padding: 14px 14px;
+  padding: 14px 18px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  width: 100%;
 }
 .mLeft {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  min-width: 0;
 }
 .mTicker {
   font-weight: 800;
@@ -777,6 +790,7 @@
 }
 .mRight {
   text-align: right;
+  min-width: 0;
 }
 .mPrice {
   font-weight: 800;
@@ -807,10 +821,14 @@
 .tradeTable {
   position: relative;
   z-index: 1;
+  display: flex;
+  flex-direction: column;
   border: 1px solid rgba(255, 178, 74, 0.12);
   background: rgba(0, 0, 0, 0.14);
   border-radius: 18px;
   overflow: hidden;
+  min-height: 0;
+  flex: 1;
 }
 .tradeHead,
 .tradeRow {
@@ -828,8 +846,8 @@
   border-bottom: 1px solid rgba(255, 178, 74, 0.1);
 }
 .tradeBody {
-  max-height: 210px;
-  overflow: auto;
+  display: flex;
+  flex-direction: column;
 }
 .tradeRow {
   padding: 12px 14px;
@@ -870,13 +888,17 @@
   position: relative;
   z-index: 1;
   display: grid;
-  grid-template-columns: 160px 1fr;
+  grid-template-columns: minmax(120px, 160px) 1fr;
   gap: 14px;
-  align-items: center;
+  align-items: start;
+  padding: 8px 4px 24px 4px;
+  min-height: min-content;
+  width: 100%;
 }
 .donut {
-  width: 160px;
-  height: 160px;
+  width: 100%;
+  max-width: 160px;
+  aspect-ratio: 1;
   border-radius: 999px;
   background: conic-gradient(
     rgba(255, 178, 74, 0.95) 0% 52%,
@@ -886,11 +908,16 @@
   box-shadow: 0 0 calc(40px * var(--hudGlowBoost)) rgba(255, 178, 74, 0.12);
   border: 1px solid rgba(255, 178, 74, 0.16);
   position: relative;
+  flex-shrink: 0;
+  margin: 0 auto;
+  overflow: visible;
+  min-width: 120px;
+  min-height: 120px;
 }
 .donut::after {
   content: "";
   position: absolute;
-  inset: 20px;
+  inset: 20%;
   border-radius: 999px;
   background: rgba(0, 0, 0, 0.55);
   border: 1px solid rgba(255, 178, 74, 0.12);
@@ -899,6 +926,8 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+  min-width: 0;
+  flex: 1;
 }
 .legendItem {
   display: flex;
@@ -907,6 +936,7 @@
   gap: 10px;
   font-size: 12px;
   letter-spacing: 0.06em;
+  min-width: 0;
 }
 .swatch {
   width: 10px;
@@ -914,15 +944,20 @@
   border-radius: 99px;
   margin-right: 10px;
   display: inline-block;
+  flex-shrink: 0;
 }
 .liLeft {
   display: flex;
   align-items: center;
   gap: 10px;
   color: rgba(232, 232, 238, 0.88);
+  min-width: 0;
+  flex: 1;
 }
 .liRight {
   color: rgba(232, 232, 238, 0.78);
+  flex-shrink: 0;
+  font-weight: 600;
 }
 
 /* System */
@@ -939,9 +974,9 @@
 .sysRow {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  gap: 10px;
   padding: 12px 12px;
+  padding-right: 90px;
   border-radius: 16px;
   border: 1px solid rgba(255, 178, 74, 0.12);
   background: rgba(0, 0, 0, 0.16);
@@ -949,13 +984,7 @@
 .sysName {
   letter-spacing: 0.1em;
   font-size: 12px;
-}
-.sysState {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  color: rgba(232, 232, 238, 0.8);
-  font-size: 12px;
+  flex: 1;
 }
 .sysDot {
   width: 10px;
@@ -1025,6 +1054,8 @@
   gap: 14px;
 }
 .subPanel {
+  display: flex;
+  flex-direction: column;
   border: 1px solid rgba(255, 178, 74, 0.12);
   background: rgba(0, 0, 0, 0.16);
   border-radius: 18px;
@@ -1042,18 +1073,6 @@
   letter-spacing: 0.08em;
   margin-top: 8px;
   line-height: 1.4;
-}
-
-.hudFooter {
-  padding: 0 6px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.footerHint {
-  color: rgba(167, 167, 181, 0.85);
-  font-size: 10px;
-  letter-spacing: 0.1em;
 }
 
 /* Self-test + state toast */
@@ -1098,19 +1117,11 @@
   background: rgba(255, 59, 59, 0.1);
 }
 
-/* Scrollbars hidden (using ScrollHintArea instead) */
-.agentList,
-.tradeBody,
-.modalPanel,
-.marketList,
-.sysList {
+/* Scrollbars hidden for modal panel only */
+.modalPanel {
   scrollbar-width: none;
 }
-.agentList::-webkit-scrollbar,
-.tradeBody::-webkit-scrollbar,
-.modalPanel::-webkit-scrollbar,
-.marketList::-webkit-scrollbar,
-.sysList::-webkit-scrollbar {
+.modalPanel::-webkit-scrollbar {
   width: 0;
   height: 0;
 }
