@@ -1,12 +1,14 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Bell, Wallet, Mic, Rocket, ChevronDown, ArrowUp, Paperclip, Lightbulb, Minimize2, X } from 'lucide-react';
 import { UiStyleToggle } from './UiStyleToggle';
 import { ScrollHintArea } from './ScrollHintArea';
 import { LiquidMetal } from '@paper-design/shaders-react';
+import { useEquitySeries, type PortfolioRange as EquityRange } from './hooks/useEquitySeries';
+import { useUiStyle } from './UiStyleProvider';
 import styles from './HudDashboard.module.css';
 
 type PanelKey = 'agents' | 'performance' | 'market' | 'trades' | 'allocation' | 'system';
@@ -16,18 +18,118 @@ type AgentRuntimeState = 'running' | 'idle' | 'alert' | 'stopped';
 type PortfolioSeriesPoint = { time: number; value: number };
 
 // --- REUSABLE COMPONENTS ---
-const LiquidMetalRim = ({ children, className = "", size = 36 }: { children: React.ReactNode, className?: string, size?: number }) => {
+
+const HudPanel = ({ 
+  children, 
+  className = "", 
+  title, 
+  onDoubleClick, 
+  onExpandClick,
+  "aria-label": ariaLabel,
+  accentVariant = 'both',
+  shapeVariant = 'a',
+  isCloseVariant = false,
+  variant = 'default'
+}: { 
+  children: React.ReactNode, 
+  className?: string, 
+  title?: string, 
+  onDoubleClick?: () => void,
+  onExpandClick?: () => void,
+  "aria-label"?: string,
+  accentVariant?: 'both' | 'horizontal' | 'vertical' | 'none',
+  shapeVariant?: 'a' | 'b',
+  isCloseVariant?: boolean,
+  variant?: 'default' | 'glass'
+}) => {
+  const shapeClass = shapeVariant === 'b' ? styles.shapeB : styles.shapeA;
+  const variantClass = variant === 'glass' ? styles.panelGlass : '';
+
   return (
-    <div className={`relative rounded-full flex items-center justify-center overflow-hidden ${className}`} style={{ width: size, height: size }}>
+    <section 
+      className={`${styles.panel} ${shapeClass} ${variantClass} ${className}`} 
+      onClick={() => !isCloseVariant && onExpandClick?.()}
+      onDoubleClick={onDoubleClick}
+      aria-label={ariaLabel}
+    >
+      {/* Frame Decorations */}
+      <div className={styles.panelFrame}>
+        <div className={styles.frameLines} />
+        <div className={styles.frameAccents}>
+          {/* Corner Accents - Always visible for HUD feel */}
+          <div className={`${styles.accent} ${styles.accentTL}`} />
+          <div className={`${styles.accent} ${styles.accentTR}`} />
+          <div className={`${styles.accent} ${styles.accentBL}`} />
+          <div className={`${styles.accent} ${styles.accentBR}`} />
+          
+          {/* Edge Middle Accents - Alternated based on variant */}
+          {(accentVariant === 'both' || accentVariant === 'horizontal') && (
+            <>
+              <div className={`${styles.accent} ${styles.accentTM}`} />
+              <div className={`${styles.accent} ${styles.accentBM}`} />
+            </>
+          )}
+          {(accentVariant === 'both' || accentVariant === 'vertical') && (
+            <>
+              <div className={`${styles.accent} ${styles.accentLM}`} />
+              <div className={`${styles.accent} ${styles.accentRM}`} />
+            </>
+          )}
+        </div>
+        
+        {onExpandClick && (
+          <button 
+            type="button"
+            className={`${styles.plusDetail} ${isCloseVariant ? styles.isCloseVariant : ''}`} 
+            onClick={(e) => {
+              e.stopPropagation();
+              onExpandClick();
+            }}
+            aria-label={isCloseVariant ? "Close Panel" : "Expand Panel"}
+          >
+            <span className={styles.plusItem}>+</span>
+            <span className={styles.plusItem}>+</span>
+            <span className={styles.plusItem}>+</span>
+          </button>
+        )}
+        
+        <div className={styles.panelInnerGlow} />
+      </div>
+
+      <div className={styles.panelContent}>
+        {title && (
+          <div className={styles.panelHeader}>
+            <div className={styles.panelTitle}>{title}</div>
+          </div>
+        )}
+        {children}
+      </div>
+    </section>
+  );
+};
+
+const LiquidMetalRim = ({ 
+  children, 
+  className = "", 
+  size = 36,
+  rounded = "rounded-sm"
+}: { 
+  children: React.ReactNode, 
+  className?: string, 
+  size?: number,
+  rounded?: string
+}) => {
+  return (
+    <div className={`relative ${rounded} flex items-center justify-center overflow-hidden ${className}`} style={{ width: size, height: size }}>
       <div className="absolute inset-0 z-0">
         <LiquidMetal 
           speed={1} softness={0.24} repetition={2} shiftRed={0} shiftBlue={0} 
-          distortion={0.21} contour={0.31} scale={1.16} rotation={0} shape="circle" 
-          angle={322} frame={166287.5} colorBack="#00000000" colorTint="#D08F2C" 
+          distortion={0.21} contour={0.31} scale={1.16} rotation={0} shape={rounded === 'rounded-full' ? 'circle' : 'none'} 
+          angle={322} frame={166287.5} colorBack="#00000000" colorTint="#cba135" 
           style={{ width: '100%', height: '100%' }} 
         />
       </div>
-      <div className="relative z-10 rounded-full overflow-hidden border border-black/20 bg-[#0E131C]" style={{ width: size - 4, height: size - 4 }}>
+      <div className={`relative z-10 ${rounded} overflow-hidden border border-black/20 bg-[#0E131C]`} style={{ width: size - 4, height: size - 4 }}>
         {children}
       </div>
     </div>
@@ -51,8 +153,8 @@ const DonutChart = ({ solPct, adaPct, otherPct, className = '', style = {}, svgP
         <Image
           src={svgPath}
           alt="Allocation donut chart"
-          width={160}
-          height={160}
+          width={130}
+          height={130}
           className="w-full h-full object-contain"
           style={{ aspectRatio: '1' }}
         />
@@ -102,12 +204,12 @@ type TradeRow = {
 };
 
 const PANEL_TITLES: Record<PanelKey, string> = {
-  agents: 'Agent Roster',
-  performance: 'Portfolio Performance',
-  market: 'Holdings',
-  trades: 'Recent Trades',
-  allocation: 'Asset Allocation',
-  system: 'System Status',
+  agents: 'AGENT ROSTER',
+  performance: 'PORTFOLIO PERFORMANCE',
+  market: 'HOLDINGS',
+  trades: 'RECENT TRADES',
+  allocation: 'ASSET ALLOCATION',
+  system: 'SYSTEM STATUS',
 };
 
 function clamp(n: number, min: number, max: number) {
@@ -160,6 +262,7 @@ function drawLineChart(args: {
   host: HTMLElement;
   series: PortfolioSeriesPoint[];
   range: PortfolioRange;
+  formatMoney: (x: number) => string;
 }) {
   const sized = sizeCanvasTo(args.canvas, args.wrap);
   if (!sized) return;
@@ -280,16 +383,6 @@ function drawLineChart(args: {
   ctx.restore();
 }
 
-function formatMoney(x: number) {
-  return (
-    '$' +
-    x.toLocaleString(undefined, {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    })
-  );
-}
-
 function formatPct(x: number) {
   const s = (x >= 0 ? '+' : '') + x.toFixed(2) + '%';
   return s;
@@ -301,12 +394,14 @@ function HudPerfChart({
   range,
   height,
   redrawKey,
+  formatMoney,
 }: {
   hostRef: React.RefObject<HTMLElement | null>;
   series: PortfolioSeriesPoint[];
   range: PortfolioRange;
   height?: number;
   redrawKey?: string | number;
+  formatMoney: (x: number) => string;
 }) {
   const wrapRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -319,8 +414,8 @@ function HudPerfChart({
     const wrap = wrapRef.current;
     const canvas = canvasRef.current;
     if (!host || !wrap || !canvas) return;
-    drawLineChart({ canvas, wrap, host, series, range });
-  }, [hostRef, range, series]);
+    drawLineChart({ canvas, wrap, host, series, range, formatMoney });
+  }, [hostRef, range, series, formatMoney]);
 
   useEffect(() => {
     redraw();
@@ -409,6 +504,8 @@ export function HudDashboard() {
   const bgCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const noiseCanvasRef = useRef<HTMLCanvasElement | null>(null);
 
+  const { style: currentStyle, setStyle: setGlobalStyle } = useUiStyle();
+
   const threeControlsRef = useRef<{
     setBloom: (strength: number, radius: number, threshold: number) => void;
     setExposure: (exposure: number) => void;
@@ -418,10 +515,75 @@ export function HudDashboard() {
   const router = useRouter();
   const [view, setView] = useState<'dashboard' | 'portfolio' | 'chatFull' | 'settings'>('dashboard');
   const [activeRange, setActiveRange] = useState<PortfolioRange>('1H');
-  const [equityPoints, setEquityPoints] = useState<PortfolioSeriesPoint[]>([]);
-  const [equitySummary, setEquitySummary] = useState<{ endValue: number; changePct: number } | null>(null);
-  const [equityIsLive, setEquityIsLive] = useState(false);
+  
+  // Use equity series hook (supports demo/backend mode switching)
+  const equitySeries = useEquitySeries(activeRange as EquityRange);
+  const equityPoints = equitySeries.points;
+  const equitySummary = equitySeries.summary;
+  const equityIsLive = equitySeries.isLive;
+
   const [modalPanel, setModalPanel] = useState<PanelKey | null>(null);
+
+  // Settings State
+  const [settings, setSettings] = useState({
+    uiStyle: currentStyle, // Synchronize with global provider
+    displayCurrency: 'USD', // 'USD' | 'token'
+    animationsEnabled: true,
+    theme: 'dark', // 'dark' | 'light'
+    notificationsEnabled: true,
+  });
+
+  // Persistence: Load settings from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem('adam_settings');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        setSettings(prev => ({ ...prev, ...parsed, uiStyle: currentStyle }));
+      } catch (e) {
+        console.error('Failed to parse settings', e);
+      }
+    }
+  }, [currentStyle]);
+
+  // Persistence: Save settings to localStorage when they change
+  useEffect(() => {
+    localStorage.setItem('adam_settings', JSON.stringify(settings));
+    
+    // Apply theme to document if needed
+    if (settings.theme === 'light') {
+      document.documentElement.classList.add('light-mode');
+    } else {
+      document.documentElement.classList.remove('light-mode');
+    }
+  }, [settings]);
+
+  const updateSetting = (key: keyof typeof settings, value: any) => {
+    setSettings(prev => ({ ...prev, [key]: value }));
+    
+    // If we're changing the global UI style, trigger the provider
+    if (key === 'uiStyle') {
+      setGlobalStyle(value);
+    }
+  };
+
+  const formatUSD = useCallback((x: number) => {
+    return (
+      '$' +
+      x.toLocaleString(undefined, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })
+    );
+  }, []);
+
+  const formatMoney = useCallback((x: number) => {
+    if (settings.displayCurrency === 'token') {
+      // Mock conversion: 1 ADA = $0.40, 1 SOL = $100. Let's just use a generic "Tokens" mock.
+      return (x * 2.5).toFixed(2) + ' ADA'; 
+    }
+    return formatUSD(x);
+  }, [settings.displayCurrency, formatUSD]);
 
   const [isChatDockOpen, setIsChatDockOpen] = useState(false);
   const [chatMode, setChatMode] = useState<'auto' | 'fast' | 'thinking'>('auto');
@@ -604,85 +766,6 @@ export function HudDashboard() {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [modalPanel, closeModal, view, isChatDockOpen]);
 
-  // Equity curve (live via /api/portfolio/equity when env is configured, otherwise demo).
-  useEffect(() => {
-    const controller = new AbortController();
-
-    const setDemo = () => {
-      const now = Math.floor(Date.now() / 1000);
-      const dur =
-        activeRange === '1H'
-          ? 60 * 60
-          : activeRange === '24H'
-            ? 60 * 60 * 24
-            : activeRange === '7D'
-              ? 60 * 60 * 24 * 7
-              : activeRange === '30D'
-                ? 60 * 60 * 24 * 30
-                : 60 * 60 * 24 * 120;
-
-      const n = activeRange === '1H' ? 50 : activeRange === '24H' ? 72 : activeRange === '7D' ? 90 : activeRange === '30D' ? 110 : 140;
-      const base = 12403.92;
-      const pts: PortfolioSeriesPoint[] = [];
-      for (let i = 0; i < n; i++) {
-        const t = n <= 1 ? 0 : i / (n - 1);
-        const time = Math.floor(now - (1 - t) * dur);
-        const wave = Math.sin(i * 0.22) * 120 + Math.sin(i * 0.07) * 180;
-        const trend = t * 680;
-        const value = base + wave + trend;
-        pts.push({ time, value });
-      }
-
-      const first = pts[0]?.value ?? base;
-      const last = pts[pts.length - 1]?.value ?? base;
-      const changePct = first === 0 ? 0 : ((last - first) / first) * 100;
-
-      setEquityPoints(pts);
-      setEquitySummary({ endValue: last, changePct });
-      setEquityIsLive(false);
-    };
-
-    const run = async () => {
-      const address = process.env.NEXT_PUBLIC_DEFAULT_STAKE_ADDRESS;
-      if (!address) {
-        setDemo();
-        return;
-      }
-
-      try {
-        const params = new URLSearchParams({
-          address,
-          range: activeRange,
-          quote: 'USD',
-        });
-        const res = await fetch(`/api/portfolio/equity?${params.toString()}`, { signal: controller.signal });
-        if (!res.ok) throw new Error(`equity fetch failed: ${res.status}`);
-
-        const data = (await res.json()) as {
-          points?: PortfolioSeriesPoint[];
-          summary?: { endValue?: number; changePct?: number };
-        };
-
-        const series = (data.points ?? []).slice().sort((a, b) => a.time - b.time);
-        if (series.length === 0) throw new Error('no series points');
-
-        const first = series[0]!.value;
-        const last = series[series.length - 1]!.value;
-        const changePct = data.summary?.changePct ?? (first === 0 ? 0 : ((last - first) / first) * 100);
-
-        setEquityPoints(series);
-        setEquitySummary({ endValue: data.summary?.endValue ?? last, changePct });
-        setEquityIsLive(true);
-      } catch (err) {
-        if (err instanceof Error && err.name === 'AbortError') return;
-        setDemo();
-      }
-    };
-
-    run();
-    return () => controller.abort();
-  }, [activeRange]);
-
   // Initialize HUD background (Three.js) + procedural noise overlay.
   useEffect(() => {
     let rafId = 0;
@@ -699,6 +782,14 @@ export function HudDashboard() {
       const noiseCanvas = noiseCanvasRef.current;
       const rootEl = rootRef.current;
       if (!bgCanvas || !noiseCanvas || !rootEl) return;
+
+      if (!settings.animationsEnabled) {
+        const nctx = noiseCanvas.getContext('2d');
+        if (nctx) nctx.clearRect(0, 0, noiseCanvas.width, noiseCanvas.height);
+        const bctx = bgCanvas.getContext('2d');
+        if (bctx) bctx.clearRect(0, 0, bgCanvas.width, bgCanvas.height);
+        return;
+      }
 
       try {
         const THREE = await import('three');
@@ -826,7 +917,7 @@ export function HudDashboard() {
           size: 0.95,
           sizeAttenuation: true,
           transparent: true,
-          opacity: 0.1,
+          opacity: 0.10,
           blending: THREE.AdditiveBlending,
           depthWrite: false,
         });
@@ -894,7 +985,7 @@ export function HudDashboard() {
           stars.rotation.y = t * 0.5;
           stars.rotation.x = t * 0.16;
 
-          dust.rotation.y = -t * 0.3;
+          dust.rotation.y = t * -0.3;
           dust.rotation.x = t * 0.09;
 
           composer.render();
@@ -936,7 +1027,7 @@ export function HudDashboard() {
       threeControlsRef.current = null;
       noiseControlsRef.current = null;
     };
-  }, []);
+  }, [settings.animationsEnabled]);
 
   return (
     <div ref={rootRef} className={styles.root}>
@@ -999,8 +1090,6 @@ export function HudDashboard() {
           </nav>
 
           <div className={styles.topRight}>
-            <UiStyleToggle className={styles.uiStyleToggle} />
-
             <button type="button" className={styles.iconBtn} aria-label="Notifications">
               <Bell size={18} />
             </button>
@@ -1010,91 +1099,96 @@ export function HudDashboard() {
               <span className={styles.walletAddr}>0x...8a22</span>
             </button>
           </div>
+          <UiStyleToggle className={styles.uiStyleToggle} />
         </header>
 
         <main className={styles.dashboard} aria-label="Dashboard">
           {/* LEFT: AGENTS */}
-          <section
-            className={`${styles.panel} ${styles.panelAgents}`}
+          <HudPanel
+            className={styles.panelAgents}
+            title="AGENT ROSTER"
             aria-label="Agent Roster"
             onDoubleClick={() => openModal('agents')}
+            onExpandClick={() => openModal('agents')}
+            accentVariant="vertical"
+            shapeVariant="a"
           >
-            <div className={styles.panelHeader}>
-              <div className={styles.panelTitle}>Agent Roster</div>
-              <div className={styles.panelMeta}>
-                <button className={styles.expandBtn} type="button" title="Expand" aria-label="Expand agents" onClick={() => openModal('agents')}>
-                  ⤢
-                </button>
-              </div>
-            </div>
-
             <div className={styles.agentsTop}>
-              <div className={styles.muted} style={{ letterSpacing: '.12em', fontSize: 11 }}>
+              <div className={styles.muted} style={{ letterSpacing: '.12em', fontSize: 11, marginLeft: 12, marginRight: 12 }}>
                 Active agents
               </div>
             </div>
 
-            <div className={`flex-1 min-h-0 overflow-y-auto custom-scrollbar ${styles.agentList}`}>
-              {agents.map((a) => {
-                const isActive = a.id === selectedAgentId;
-                const dotTone =
-                  a.runtimeState === 'running'
-                    ? styles.dotRunning
-                    : a.runtimeState === 'idle'
-                      ? styles.dotIdle
-                      : a.runtimeState === 'alert'
-                        ? styles.dotAlert
-                        : styles.dotStopped;
-                const pnlTone = a.pnlPct > 0 ? styles.pos : styles.neg;
-                return (
-                  <div
-                    key={a.id}
-                    className={`${styles.agentItem} ${isActive ? styles.isActive : ''}`}
-                    role="button"
-                    tabIndex={0}
-                    aria-pressed={isActive}
-                    onClick={() => setSelectedAgentId(a.id)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        setSelectedAgentId(a.id);
-                      }
-                    }}
-                  >
-                    <div className={styles.agentIcon}>{a.chip}</div>
-                    <div>
-                      <div className={styles.agentName}>
-                        <span className={`${styles.dot} ${dotTone}`} aria-hidden="true" />
-                        {a.name}
+            <ScrollHintArea className="flex-1">
+              <div className={styles.agentList}>
+                {agents.map((a, index) => {
+                  const isActive = a.id === selectedAgentId;
+                  const dotTone =
+                    a.runtimeState === 'running'
+                      ? styles.dotRunning
+                      : a.runtimeState === 'idle'
+                        ? styles.dotIdle
+                        : a.runtimeState === 'alert'
+                          ? styles.dotAlert
+                          : styles.dotStopped;
+                  const pnlTone = a.pnlPct > 0 ? styles.pos : styles.neg;
+                  return (
+                    <React.Fragment key={a.id}>
+                      <div
+                        className={`${styles.agentItem} ${isActive ? styles.isActive : ''}`}
+                        role="button"
+                        tabIndex={0}
+                        aria-pressed={isActive}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedAgentId(a.id);
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            setSelectedAgentId(a.id);
+                          }
+                        }}
+                      >
+                        <div className={styles.agentIcon}>{a.chip}</div>
+                        <div>
+                          <div className={styles.agentName}>
+                            <span className={`${styles.dot} ${dotTone}`} aria-hidden="true" />
+                            {a.name}
+                          </div>
+                          <div className={styles.agentSub}>
+                            {a.role} · {a.chain}
+                          </div>
+                        </div>
+                        <div className={styles.agentRight}>
+                          <div className={`${styles.agentPnl} ${pnlTone}`}>{formatPct(a.pnlPct)}</div>
+                        </div>
                       </div>
-                      <div className={styles.agentSub}>
-                        {a.role} · {a.chain}
-                      </div>
-                    </div>
-                    <div className={styles.agentRight}>
-                      <div className={`${styles.agentPnl} ${pnlTone}`}>{formatPct(a.pnlPct)}</div>
-                    </div>
-                  </div>
-                );
-              })}
+                    </React.Fragment>
+                  );
+                })}
 
-              <button type="button" className={styles.deployBtn}>
-                Deploy New Agent
-              </button>
-            </div>
-          </section>
-
-          {/* CENTER: PERFORMANCE */}
-          <section className={`${styles.panel} ${styles.panelPerformance}`} aria-label="Portfolio performance" onDoubleClick={() => openModal('performance')}>
-            <div className={styles.panelHeader}>
-              <div className={styles.panelTitle}>Portfolio Performance</div>
-              <div className={styles.panelMeta}>
-                <button className={styles.expandBtn} type="button" title="Expand" aria-label="Expand performance" onClick={() => openModal('performance')}>
-                  ⤢
+                <button 
+                  type="button" 
+                  className={styles.deployBtn}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  Deploy New Agent
                 </button>
               </div>
-            </div>
+            </ScrollHintArea>
+          </HudPanel>
 
+          {/* CENTER: PERFORMANCE */}
+          <HudPanel 
+            className={styles.panelPerformance} 
+            title="PORTFOLIO PERFORMANCE"
+            aria-label="Portfolio performance" 
+            onDoubleClick={() => openModal('performance')}
+            onExpandClick={() => openModal('performance')}
+            accentVariant="horizontal"
+            shapeVariant="a"
+          >
             <div className={styles.perfTop}>
               <div className={styles.seg} role="tablist" aria-label="Performance range">
                 {(['1H', '24H', '7D', '30D', 'ALL'] as const).map((t) => (
@@ -1102,7 +1196,10 @@ export function HudDashboard() {
                     key={t}
                     type="button"
                     className={`${styles.segBtn} ${activeRange === t ? styles.isOn : ''}`}
-                    onClick={() => setActiveRange(t)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setActiveRange(t);
+                    }}
                   >
                     {t}
                   </button>
@@ -1113,17 +1210,22 @@ export function HudDashboard() {
               </div>
             </div>
 
-            <HudPerfChart hostRef={rootRef} series={equityPoints} range={activeRange} />
+            <HudPerfChart 
+              hostRef={rootRef} 
+              series={equityPoints} 
+              range={activeRange} 
+              formatMoney={formatUSD} 
+            />
 
             <div className={styles.kpis}>
               <div className={styles.kpi}>
                 <div className={styles.kpiKey}>CURRENT</div>
-                <div className={styles.kpiVal}>{formatMoney(equitySummary?.endValue ?? 0)}</div>
+                <div className={styles.kpiVal}>{formatUSD(equitySummary.endValue)}</div>
               </div>
               <div className={styles.kpi}>
                 <div className={styles.kpiKey}>CHANGE ({activeRange})</div>
-                <div className={`${styles.kpiVal} ${(equitySummary?.changePct ?? 0) >= 0 ? styles.pos : styles.neg}`}>
-                  {formatPct(equitySummary?.changePct ?? 0)}
+                <div className={`${styles.kpiVal} ${equitySummary.changePct >= 0 ? styles.pos : styles.neg}`}>
+                  {formatPct(equitySummary.changePct)}
                 </div>
               </div>
               <div className={styles.kpi}>
@@ -1131,19 +1233,18 @@ export function HudDashboard() {
                 <div className={styles.kpiVal}>{equityIsLive ? 'LIVE' : 'DEMO'}</div>
               </div>
             </div>
-          </section>
+          </HudPanel>
 
           {/* RIGHT: MARKET */}
-          <section className={`${styles.panel} ${styles.panelMarket}`} aria-label="Holdings" onDoubleClick={() => openModal('market')}>
-            <div className={styles.panelHeader}>
-              <div className={styles.panelTitle}>Holdings</div>
-              <div className={styles.panelMeta}>
-                <button className={styles.expandBtn} type="button" title="Expand" aria-label="Expand market" onClick={() => openModal('market')}>
-                  ⤢
-                </button>
-              </div>
-            </div>
-
+          <HudPanel 
+            className={styles.panelMarket} 
+            title="HOLDINGS"
+            aria-label="Holdings" 
+            onDoubleClick={() => openModal('market')}
+            onExpandClick={() => openModal('market')}
+            accentVariant="vertical"
+            shapeVariant="a"
+          >
             <ScrollHintArea className="flex-1">
               <div className={styles.marketList}>
                 {holdings.map((h) => (
@@ -1153,7 +1254,12 @@ export function HudDashboard() {
                       <div className={`${styles.mSub} ${styles.mono}`}>{h.name}</div>
                     </div>
                     <div className={styles.mRight}>
-                      <div className={`${styles.mPrice} ${styles.mono}`}>{h.value}</div>
+                      <div className={`${styles.mPrice} ${styles.mono}`}>
+                        {settings.displayCurrency === 'token' 
+                          ? (parseFloat(h.value.replace(/[$,]/g, '')) * 2.5).toFixed(2) + ' ' + h.symbol
+                          : h.value
+                        }
+                      </div>
                       <div className={`${styles.mChg} ${h.changePct >= 0 ? styles.pos : styles.neg}`}>
                         {formatPct(h.changePct)}
                       </div>
@@ -1162,54 +1268,48 @@ export function HudDashboard() {
                 ))}
               </div>
             </ScrollHintArea>
-          </section>
+          </HudPanel>
 
           {/* BOTTOM CENTER: Trades + Allocation */}
           <div className={styles.bottomWrap}>
-            <section className={styles.panel} aria-label="Recent trades" onDoubleClick={() => openModal('trades')}>
-              <div className={styles.panelHeader}>
-                <div className={styles.panelTitle}>Recent Trades</div>
-                <div className={styles.panelMeta}>
-                  <button className={styles.expandBtn} type="button" title="Expand" aria-label="Expand trades" onClick={() => openModal('trades')}>
-                    ⤢
-                  </button>
-                </div>
-              </div>
-              <div className={styles.tradeTable}>
-                <div className={styles.tradeHead}>
-                  <div>TYPE</div>
-                  <div>PAIR</div>
-                  <div>TIME</div>
-                </div>
-                <div className={`flex-1 min-h-0 overflow-y-auto custom-scrollbar ${styles.tradeBody}`}>
-                  {recentTrades.map((t, idx) => (
-                    <div key={idx} className={styles.tradeRow}>
-                      <div>
-                        <span className={`${styles.tradeType} ${t.type === 'BUY' ? styles.tradeBuy : styles.tradeSell}`}>{t.type}</span>
+            <HudPanel 
+              title="RECENT TRADES"
+              aria-label="Recent trades" 
+              onDoubleClick={() => openModal('trades')}
+              onExpandClick={() => openModal('trades')}
+              accentVariant="vertical"
+              shapeVariant="b"
+            >
+              <ScrollHintArea className="flex-1">
+                <div className={styles.tradeTable}>
+                  <div className={styles.tradeHead}>
+                    <div>TYPE</div>
+                    <div>PAIR</div>
+                    <div>TIME</div>
+                  </div>
+                  <div className={styles.tradeBody}>
+                    {recentTrades.map((t, idx) => (
+                      <div key={idx} className={styles.tradeRow}>
+                        <div>
+                          <span className={`${styles.tradeType} ${t.type === 'BUY' ? styles.tradeBuy : styles.tradeSell}`}>{t.type}</span>
+                        </div>
+                        <div className={styles.mono}>{t.pair}</div>
+                        <div className={`${styles.mono} ${styles.muted}`}>{t.time}</div>
                       </div>
-                      <div className={styles.mono}>{t.pair}</div>
-                      <div className={`${styles.mono} ${styles.muted}`}>{t.time}</div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
-            </section>
+              </ScrollHintArea>
+            </HudPanel>
 
-            <section className={styles.panel} aria-label="Asset allocation" onDoubleClick={() => openModal('allocation')}>
-              <div className={styles.panelHeader}>
-                <div className={styles.panelTitle}>Asset Allocation</div>
-                <div className={styles.panelMeta}>
-                  <button
-                    className={styles.expandBtn}
-                    type="button"
-                    title="Expand"
-                    aria-label="Expand allocation"
-                    onClick={() => openModal('allocation')}
-                  >
-                    ⤢
-                  </button>
-                </div>
-              </div>
+            <HudPanel 
+              title="ASSET ALLOCATION"
+              aria-label="Asset allocation" 
+              onDoubleClick={() => openModal('allocation')}
+              onExpandClick={() => openModal('allocation')}
+              accentVariant="horizontal"
+              shapeVariant="b"
+            >
               <ScrollHintArea className="flex-1">
                 <div className={styles.allocWrap}>
                   <DonutChart 
@@ -1220,7 +1320,7 @@ export function HudDashboard() {
                   />
                   <div className={styles.legend}>
                     {[
-                      { k: 'SOL', v: `${solPct}%`, color: 'rgba(255,178,74,.95)' },
+                      { k: 'SOL', v: `${solPct}%`, color: 'rgba(203, 161, 53, .95)' },
                       { k: 'ADA', v: `${adaPct}%`, color: 'rgba(45,212,191,.92)' },
                       { k: 'Other', v: `${otherPct}%`, color: 'rgba(42,48,60,.92)' },
                     ].map((item) => (
@@ -1235,19 +1335,19 @@ export function HudDashboard() {
                   </div>
                 </div>
               </ScrollHintArea>
-            </section>
+            </HudPanel>
           </div>
 
           {/* RIGHT BOTTOM: System status */}
-          <section className={`${styles.panel} ${styles.panelSystem}`} aria-label="System status" onDoubleClick={() => openModal('system')}>
-            <div className={styles.panelHeader}>
-              <div className={styles.panelTitle}>System Status</div>
-              <div className={styles.panelMeta}>
-                <button className={styles.expandBtn} type="button" title="Expand" aria-label="Expand system" onClick={() => openModal('system')}>
-                  ⤢
-                </button>
-              </div>
-            </div>
+          <HudPanel 
+            className={styles.panelSystem} 
+            title="SYSTEM STATUS"
+            aria-label="System status" 
+            onDoubleClick={() => openModal('system')}
+            onExpandClick={() => openModal('system')}
+            accentVariant="horizontal"
+            shapeVariant="a"
+          >
             <div className={`flex-1 ${styles.sysList}`}>
               {systemStatus.map((sys) => (
                 <div key={sys.label} className={styles.sysRow}>
@@ -1261,7 +1361,7 @@ export function HudDashboard() {
                 </div>
               ))}
             </div>
-          </section>
+          </HudPanel>
         </main>
 
         {/* EXPANDED PORTFOLIO VIEW */}
@@ -1283,7 +1383,7 @@ export function HudDashboard() {
                   <button
                     type="button"
                     onClick={() => setView('dashboard')}
-                    className="p-2 rounded-full border border-white/10 text-white/80 bg-white/5 hover:bg-white/10 transition-colors"
+                    className="p-2 rounded-sm border border-white/10 text-white/80 bg-white/5 hover:bg-white/10 transition-colors"
                     aria-label="Close"
                   >
                     <X size={16} />
@@ -1292,12 +1392,9 @@ export function HudDashboard() {
               </div>
 
               {/* Send / Receive */}
-              <div className="relative rounded-[22px] overflow-hidden shadow-[0_18px_55px_rgba(0,0,0,0.65)]">
-                <div aria-hidden className="absolute inset-0 p-[2px] rounded-[22px] copperRim" />
-                <div aria-hidden className="absolute inset-[2px] rounded-[20px] bg-[#0E131C]/88 border border-white/5 backdrop-blur-2xl" />
-                <div className="relative p-6 z-10">
+              <HudPanel title="SEND / RECEIVE" variant="glass" accentVariant="horizontal" shapeVariant="a">
+                <div className="p-2 space-y-4">
                   <div className="flex items-center justify-between">
-                    <h2 className="text-lg font-semibold text-white">Send / Receive</h2>
                     <div className="text-[11px] text-white/50">{receiveWallet.label}</div>
                   </div>
 
@@ -1306,7 +1403,7 @@ export function HudDashboard() {
                       <select
                         value={receiveWalletId}
                         onChange={(e) => setReceiveWalletId(e.target.value as (typeof botWallets)[number]['id'])}
-                        className="h-11 rounded-xl bg-[#0F131B]/80 border border-white/10 px-3 text-sm text-white/80 focus:outline-none focus:border-amber-300/40"
+                        className="h-11 rounded-sm bg-[#0F131B]/80 border border-white/10 px-3 text-sm text-white/80 focus:outline-none focus:border-amber-300/40"
                       >
                         {botWallets.map((w) => (
                           <option key={w.id} value={w.id}>
@@ -1318,13 +1415,13 @@ export function HudDashboard() {
                       <input
                         value={receiveWallet.address}
                         readOnly
-                        className="h-11 w-full rounded-xl bg-[#0F131B]/80 border border-white/10 px-3 text-sm text-white/70 focus:outline-none"
+                        className="h-11 w-full rounded-sm bg-[#0F131B]/80 border border-white/10 px-3 text-sm text-white/70 focus:outline-none"
                       />
 
                       <button
                         type="button"
                         onClick={() => copyText(receiveWallet.address)}
-                        className="h-11 px-4 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-white/80 transition-colors"
+                        className="h-11 px-4 rounded-sm border border-white/10 bg-white/5 hover:bg-white/10 text-white/80 transition-colors"
                       >
                         {copied ? 'Copied' : 'Copy'}
                       </button>
@@ -1337,7 +1434,7 @@ export function HudDashboard() {
                           value={sendRecipient}
                           onChange={(e) => setSendRecipient(e.target.value)}
                           placeholder="Recipient addr1..."
-                          className="h-11 w-full rounded-xl bg-[#0F131B]/80 border border-white/10 px-3 text-sm text-white/80 placeholder:text-white/30 focus:outline-none focus:border-amber-300/40"
+                          className="h-11 w-full rounded-sm bg-[#0F131B]/80 border border-white/10 px-3 text-sm text-white/80 placeholder:text-white/30 focus:outline-none focus:border-amber-300/40"
                         />
                       </div>
 
@@ -1346,7 +1443,7 @@ export function HudDashboard() {
                         <select
                           value={sendAsset}
                           onChange={(e) => setSendAsset(e.target.value as typeof sendAsset)}
-                          className="h-11 w-full rounded-xl bg-[#0F131B]/80 border border-white/10 px-3 text-sm text-white/80 focus:outline-none focus:border-amber-300/40"
+                          className="h-11 w-full rounded-sm bg-[#0F131B]/80 border border-white/10 px-3 text-sm text-white/80 focus:outline-none focus:border-amber-300/40"
                         >
                           <option value="ADA">ADA</option>
                           <option value="USDC">USDC</option>
@@ -1360,13 +1457,13 @@ export function HudDashboard() {
                           value={sendAmount}
                           onChange={(e) => setSendAmount(e.target.value)}
                           placeholder="Amount"
-                          className="h-11 w-full rounded-xl bg-[#0F131B]/80 border border-white/10 px-3 text-sm text-white/80 placeholder:text-white/30 focus:outline-none focus:border-amber-300/40"
+                          className="h-11 w-full rounded-sm bg-[#0F131B]/80 border border-white/10 px-3 text-sm text-white/80 placeholder:text-white/30 focus:outline-none focus:border-amber-300/40"
                         />
                       </div>
 
                       <button
                         type="button"
-                        className="h-11 px-6 rounded-xl copperButtonRaised text-white shadow-[0_10px_24px_rgba(200,137,93,0.25),inset_0_1px_0_rgba(255,255,255,0.22)]"
+                        className="h-11 px-6 rounded-sm copperButtonRaised text-white shadow-[0_10px_24px_rgba(200,137,93,0.25),inset_0_1px_0_rgba(255,255,255,0.22)]"
                       >
                         Send
                       </button>
@@ -1380,19 +1477,15 @@ export function HudDashboard() {
                     </div>
                   </div>
                 </div>
-              </div>
+              </HudPanel>
 
               {/* Portfolio positions */}
-              <div className="relative rounded-[22px] overflow-hidden shadow-[0_18px_55px_rgba(0,0,0,0.65)]">
-                <div aria-hidden className="absolute inset-0 p-[2px] rounded-[22px] copperRim" />
-                <div aria-hidden className="absolute inset-[2px] rounded-[20px] bg-[#0E131C]/88 border border-white/5 backdrop-blur-2xl" />
-
-                <div className="relative p-6 z-10">
+              <HudPanel title="PORTFOLIO" variant="glass" accentVariant="vertical" shapeVariant="b">
+                <div className="p-2 space-y-4">
                   <div className="flex items-center justify-between">
-                    <h2 className="text-lg font-semibold text-white">Portfolio</h2>
                     <button
                       type="button"
-                      className="px-4 py-2 rounded-full copperButtonRaised text-white shadow-[0_10px_24px_rgba(200,137,93,0.25),inset_0_1px_0_rgba(255,255,255,0.22)]"
+                      className="px-4 py-2 rounded-sm copperButtonRaised text-white shadow-[0_10px_24px_rgba(200,137,93,0.25),inset_0_1px_0_rgba(255,255,255,0.22)]"
                     >
                       Sell all
                     </button>
@@ -1402,10 +1495,10 @@ export function HudDashboard() {
                     {heldPositions.map((pos) => (
                       <div
                         key={pos.symbol}
-                        className="group relative flex items-center justify-between gap-6 p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/7 transition-colors"
+                        className="group relative flex items-center justify-between gap-6 p-4 rounded-sm bg-white/5 border border-white/5 hover:bg-white/7 transition-colors"
                       >
                         <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400/20 to-amber-600/10 border border-amber-400/20 flex items-center justify-center">
+                          <div className="w-10 h-10 rounded-sm bg-gradient-to-br from-amber-400/20 to-amber-600/10 border border-amber-400/20 flex items-center justify-center">
                             <span className="text-xs font-bold text-amber-200">{pos.symbol}</span>
                           </div>
                           <div>
@@ -1421,6 +1514,166 @@ export function HudDashboard() {
                     ))}
                   </div>
                 </div>
+              </HudPanel>
+            </div>
+          </div>
+        )}
+
+        {/* SETTINGS VIEW */}
+        {view === 'settings' && (
+          <div className="fixed inset-0 z-[11000] bg-[radial-gradient(circle_at_50%_42%,rgba(0,0,0,0.95)_0%,rgba(0,0,0,0.92)_48%,rgba(0,0,0,0.88)_100%)] backdrop-blur-[40px] overflow-y-auto custom-scrollbar px-[12%] pt-[clamp(92px,10vh,140px)] pb-[12%]"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                setView('dashboard');
+              }
+            }}
+          >
+            <div className="max-w-[800px] mx-auto space-y-6">
+              <div className="flex items-start justify-between gap-6">
+                <div>
+                  <div className="text-3xl font-semibold text-white">System Settings</div>
+                  <div className="text-sm text-white/50 mt-1">Configure your tactical interface and preferences.</div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setView('dashboard')}
+                  className="p-2 rounded-sm border border-white/10 text-white/80 bg-white/5 hover:bg-white/10 transition-colors"
+                  aria-label="Close"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+
+              <div className="grid gap-6">
+                {/* Interface Style */}
+                <HudPanel title="INTERFACE STYLE" accentVariant="horizontal" shapeVariant="a" variant="glass">
+                  <div className="p-2 space-y-4">
+                    <div className="text-xs text-white/40 uppercase tracking-widest mb-4">Select Default View</div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <button
+                        onClick={() => updateSetting('uiStyle', 'hud')}
+                        className={`p-4 rounded-sm border transition-all flex flex-col items-center gap-3 ${
+                          settings.uiStyle === 'hud' 
+                          ? 'border-amber-500/50 bg-amber-500/10 text-white' 
+                          : 'border-white/10 bg-white/5 text-white/50 hover:bg-white/10'
+                        }`}
+                      >
+                        <div className="text-lg font-bold uppercase tracking-tighter">Tactical HUD</div>
+                        <div className="text-[10px] opacity-60">High-fidelity data visualization</div>
+                      </button>
+                      <button
+                        onClick={() => updateSetting('uiStyle', 'classic')}
+                        className={`p-4 rounded-sm border transition-all flex flex-col items-center gap-3 ${
+                          settings.uiStyle === 'classic' 
+                          ? 'border-amber-500/50 bg-amber-500/10 text-white' 
+                          : 'border-white/10 bg-white/5 text-white/50 hover:bg-white/10'
+                        }`}
+                      >
+                        <div className="text-lg font-bold uppercase tracking-tighter">Classic Dashboard</div>
+                        <div className="text-[10px] opacity-60">Streamlined, traditional management</div>
+                      </button>
+                    </div>
+                  </div>
+                </HudPanel>
+
+                {/* Currency & Display */}
+                <HudPanel title="DISPLAY PREFERENCES" accentVariant="vertical" shapeVariant="b" variant="glass">
+                  <div className="p-2 space-y-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="text-sm font-semibold text-white">Base Currency</div>
+                        <div className="text-xs text-white/40">Select how values are displayed across the HUD.</div>
+                      </div>
+                      <div className="flex bg-black/40 p-1 rounded-sm border border-white/10">
+                        <button
+                          onClick={() => updateSetting('displayCurrency', 'USD')}
+                          className={`px-4 py-1.5 rounded-sm text-xs transition-all ${
+                            settings.displayCurrency === 'USD' ? 'bg-amber-500/20 text-white border border-amber-500/30' : 'text-white/40 hover:text-white'
+                          }`}
+                        >
+                          USD
+                        </button>
+                        <button
+                          onClick={() => updateSetting('displayCurrency', 'token')}
+                          className={`px-4 py-1.5 rounded-sm text-xs transition-all ${
+                            settings.displayCurrency === 'token' ? 'bg-amber-500/20 text-white border border-amber-500/30' : 'text-white/40 hover:text-white'
+                          }`}
+                        >
+                          TOKEN
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="text-sm font-semibold text-white">Visual Theme</div>
+                        <div className="text-xs text-white/40">Switch between tactical dark and high-visibility light modes.</div>
+                      </div>
+                      <div className="flex bg-black/40 p-1 rounded-sm border border-white/10">
+                        <button
+                          onClick={() => updateSetting('theme', 'dark')}
+                          className={`px-4 py-1.5 rounded-sm text-xs transition-all ${
+                            settings.theme === 'dark' ? 'bg-amber-500/20 text-white border border-amber-500/30' : 'text-white/40 hover:text-white'
+                          }`}
+                        >
+                          DARK
+                        </button>
+                        <button
+                          onClick={() => updateSetting('theme', 'light')}
+                          className={`px-4 py-1.5 rounded-sm text-xs transition-all ${
+                            settings.theme === 'light' ? 'bg-amber-500/20 text-white border border-amber-500/30' : 'text-white/40 hover:text-white'
+                          }`}
+                        >
+                          LIGHT
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </HudPanel>
+
+                {/* Performance & Features */}
+                <HudPanel title="PERFORMANCE & FEATURES" accentVariant="horizontal" shapeVariant="a" variant="glass">
+                  <div className="p-2 space-y-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="text-sm font-semibold text-white">HUD Animations</div>
+                        <div className="text-xs text-white/40">Enable/disable heavy Three.js background and UI transitions.</div>
+                      </div>
+                      <button
+                        onClick={() => updateSetting('animationsEnabled', !settings.animationsEnabled)}
+                        className={`w-12 h-6 rounded-full transition-all relative ${
+                          settings.animationsEnabled ? 'bg-amber-500' : 'bg-white/10'
+                        }`}
+                      >
+                        <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${
+                          settings.animationsEnabled ? 'right-1' : 'left-1'
+                        }`} />
+                      </button>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="text-sm font-semibold text-white">System Notifications</div>
+                        <div className="text-xs text-white/40">Receive real-time alerts for trade execution and agent status.</div>
+                      </div>
+                      <button
+                        onClick={() => updateSetting('notificationsEnabled', !settings.notificationsEnabled)}
+                        className={`w-12 h-6 rounded-full transition-all relative ${
+                          settings.notificationsEnabled ? 'bg-amber-500' : 'bg-white/10'
+                        }`}
+                      >
+                        <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${
+                          settings.notificationsEnabled ? 'right-1' : 'left-1'
+                        }`} />
+                      </button>
+                    </div>
+                  </div>
+                </HudPanel>
+              </div>
+
+              <div className="pt-6 text-center">
+                <div className="text-[10px] text-white/20 uppercase tracking-[0.3em]">ADAM v2.4.0 · System Operational</div>
               </div>
             </div>
           </div>
@@ -1436,16 +1689,14 @@ export function HudDashboard() {
         }}
       >
         <div className={styles.modalShell}>
-          <div className={`${styles.panel} ${styles.modalPanel}`}>
-            <div className={styles.panelHeader}>
-              <div className={styles.panelTitle}>{modalPanel ? PANEL_TITLES[modalPanel] : 'DETAILS'}</div>
-              <div className={styles.panelMeta}>
-                <button className={`${styles.btnGhost} ${styles.sm}`} type="button" onClick={closeModal}>
-                  CLOSE
-                </button>
-              </div>
-            </div>
-
+          <HudPanel 
+            className={styles.modalPanel}
+            title={modalPanel ? PANEL_TITLES[modalPanel] : 'DETAILS'}
+            onExpandClick={closeModal}
+            accentVariant="none"
+            isCloseVariant={true}
+            variant="glass"
+          >
             <div className={styles.modalBody}>
               {modalPanel === 'agents' ? (
                 <div className={styles.modalGrid}>
@@ -1474,7 +1725,10 @@ export function HudDashboard() {
                             role="button"
                             tabIndex={0}
                             aria-pressed={isActive}
-                            onClick={() => setSelectedAgentId(a.id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedAgentId(a.id);
+                            }}
                           >
                             <div className={styles.agentIcon}>{a.chip}</div>
                             <div>
@@ -1493,7 +1747,11 @@ export function HudDashboard() {
                         );
                       })}
 
-                      <button type="button" className={styles.deployBtn}>
+                      <button 
+                        type="button" 
+                        className={styles.deployBtn}
+                        onClick={(e) => e.stopPropagation()}
+                      >
                         Deploy New Agent
                       </button>
                       </div>
@@ -1574,23 +1832,32 @@ export function HudDashboard() {
                           key={t}
                           type="button"
                           className={`${styles.segBtn} ${activeRange === t ? styles.isOn : ''}`}
-                          onClick={() => setActiveRange(t)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setActiveRange(t);
+                          }}
                         >
                           {t}
                         </button>
                       ))}
                     </div>
                   </div>
-                  <HudPerfChart hostRef={rootRef} series={equityPoints} range={activeRange} height={520} />
+                  <HudPerfChart 
+                    hostRef={rootRef} 
+                    series={equityPoints} 
+                    range={activeRange} 
+                    height={520} 
+                    formatMoney={formatUSD}
+                  />
                   <div className={styles.kpis} style={{ marginTop: 14 }}>
                     <div className={styles.kpi}>
                       <div className={styles.kpiKey}>CURRENT</div>
-                      <div className={styles.kpiVal}>{formatMoney(equitySummary?.endValue ?? 0)}</div>
+                      <div className={styles.kpiVal}>{formatUSD(equitySummary.endValue)}</div>
                     </div>
                     <div className={styles.kpi}>
                       <div className={styles.kpiKey}>CHANGE ({activeRange})</div>
-                      <div className={`${styles.kpiVal} ${(equitySummary?.changePct ?? 0) >= 0 ? styles.pos : styles.neg}`}>
-                        {formatPct(equitySummary?.changePct ?? 0)}
+                      <div className={`${styles.kpiVal} ${equitySummary.changePct >= 0 ? styles.pos : styles.neg}`}>
+                        {formatPct(equitySummary.changePct)}
                       </div>
                     </div>
                     <div className={styles.kpi}>
@@ -1616,7 +1883,12 @@ export function HudDashboard() {
                             <div className={`${styles.mSub} ${styles.mono}`}>{h.name}</div>
                           </div>
                           <div className={styles.mRight}>
-                            <div className={`${styles.mPrice} ${styles.mono}`}>{h.value}</div>
+                            <div className={`${styles.mPrice} ${styles.mono}`}>
+                              {settings.displayCurrency === 'token' 
+                                ? (parseFloat(h.value.replace(/[$,]/g, '')) * 2.5).toFixed(2) + ' ' + h.symbol
+                                : h.value
+                              }
+                            </div>
                             <div className={`${styles.mChg} ${h.changePct >= 0 ? styles.pos : styles.neg}`}>
                               {formatPct(h.changePct)}
                             </div>
@@ -1704,7 +1976,7 @@ export function HudDashboard() {
                       />
                       <div className={styles.legend}>
                         {[
-                          { k: 'SOL', v: `${solPct}%`, color: 'rgba(255,178,74,.95)' },
+                          { k: 'SOL', v: `${solPct}%`, color: 'rgba(203, 161, 53, .95)' },
                           { k: 'ADA', v: `${adaPct}%`, color: 'rgba(45,212,191,.92)' },
                           { k: 'Other', v: `${otherPct}%`, color: 'rgba(42,48,60,.92)' },
                         ].map((item) => (
@@ -1777,11 +2049,12 @@ export function HudDashboard() {
                 </div>
               ) : null}
             </div>
-          </div>
+          </HudPanel>
         </div>
       </div>
 
       {/* FULL CHAT OVERLAY (Agent T) */}
+      {view === 'chatFull' && (
       <div
         className={
           'fixed inset-0 z-[11050] transition-[opacity,transform] duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] origin-center will-change-[opacity,transform] ' +
@@ -1812,7 +2085,7 @@ export function HudDashboard() {
                     setView('dashboard');
                     setIsChatDockOpen(true);
                   }}
-                  className="p-2 rounded-full border border-white/10 text-white/80 bg-white/5 hover:bg-white/10 transition-colors"
+                  className="p-2 rounded-sm border border-white/10 text-white/80 bg-white/5 hover:bg-white/10 transition-colors"
                   aria-label="Minimize"
                 >
                   <Minimize2 size={16} />
@@ -1821,7 +2094,7 @@ export function HudDashboard() {
                 <button
                   type="button"
                   onClick={() => setView('dashboard')}
-                  className="p-2 rounded-full border border-white/10 text-white/80 bg-white/5 hover:bg-white/10 transition-colors"
+                  className="p-2 rounded-sm border border-white/10 text-white/80 bg-white/5 hover:bg-white/10 transition-colors"
                   aria-label="Close"
                 >
                   <X size={16} />
@@ -1829,12 +2102,9 @@ export function HudDashboard() {
               </div>
             </div>
 
-            <div className="relative rounded-[22px] overflow-hidden shadow-[0_18px_55px_rgba(0,0,0,0.65)]">
-              <div aria-hidden className="absolute inset-0 p-[2px] rounded-[22px] copperRim" />
-              <div aria-hidden className="absolute inset-[2px] rounded-[20px] bg-[#0E131C]/88 border border-white/5 backdrop-blur-2xl" />
-
+            <HudPanel title="ASK AGENT T" variant="glass" accentVariant="horizontal" shapeVariant="a">
               {/* T-chat-logo background - barely visible */}
-              <div aria-hidden className="absolute inset-[2px] rounded-[20px] overflow-hidden pointer-events-none flex items-center justify-center">
+              <div aria-hidden className="absolute inset-[2px] rounded-sm overflow-hidden pointer-events-none flex items-center justify-center">
                 <Image
                   src="/agents/t-chat-logo.svg"
                   alt=""
@@ -1850,7 +2120,7 @@ export function HudDashboard() {
                   {chatMessages.map((m, idx) => (
                     <div key={idx} className={'flex items-start gap-3 ' + (m.role === 'user' ? 'justify-end' : 'justify-start')}>
                       {m.role === 'assistant' && (
-                        <LiquidMetalRim size={32} className="flex-shrink-0 mt-1">
+                        <LiquidMetalRim size={32} rounded="rounded-full" className="flex-shrink-0 mt-1">
                           <Image
                             src="/agents/agent-t-portrait-512.jpg"
                             alt="Agent T"
@@ -1862,7 +2132,7 @@ export function HudDashboard() {
                       )}
                       <div
                         className={
-                          'max-w-[78%] rounded-2xl px-4 py-3 text-sm leading-relaxed border ' +
+                          'max-w-[78%] rounded-sm px-4 py-3 text-sm leading-relaxed border ' +
                           (m.role === 'user'
                             ? 'bg-white/10 text-white border-white/10'
                             : 'bg-black/25 text-white/85 border-white/5')
@@ -1884,7 +2154,7 @@ export function HudDashboard() {
                             key={q}
                             type="button"
                             onClick={() => sendChatText(q)}
-                            className="text-left px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white/80 text-sm transition-colors"
+                            className="text-left px-4 py-3 rounded-sm bg-white/5 hover:bg-white/10 border border-white/10 text-white/80 text-sm transition-colors"
                           >
                             {q}
                           </button>
@@ -1907,7 +2177,7 @@ export function HudDashboard() {
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      className="h-11 w-11 flex items-center justify-center rounded-xl bg-[#0F131B]/80 border border-white/10 text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+                      className="h-11 w-11 flex items-center justify-center rounded-sm bg-[#0F131B]/80 border border-white/10 text-white/70 hover:text-white hover:bg-white/10 transition-colors"
                       aria-label="Attach file"
                     >
                       <Paperclip size={18} />
@@ -1924,7 +2194,7 @@ export function HudDashboard() {
                         }
                       }}
                       placeholder="What do you want to know?"
-                      className="h-11 flex-1 rounded-xl bg-[#0F131B]/80 border border-white/10 px-4 text-sm text-white/85 placeholder:text-white/30 focus:outline-none focus:border-amber-300/40"
+                      className="h-11 flex-1 rounded-sm bg-[#0F131B]/80 border border-white/10 px-4 text-sm text-white/85 placeholder:text-white/30 focus:outline-none focus:border-amber-300/40"
                     />
 
                     {/* Mode selector */}
@@ -1932,14 +2202,14 @@ export function HudDashboard() {
                       <button
                         type="button"
                         onClick={() => setChatModeOpen((v) => !v)}
-                        className="h-11 px-3 flex items-center gap-2 rounded-xl bg-[#0F131B]/80 border border-white/10 text-white/70 hover:text-white hover:bg-white/10 transition-colors text-sm"
+                        className="h-11 px-3 flex items-center gap-2 rounded-sm bg-[#0F131B]/80 border border-white/10 text-white/70 hover:text-white hover:bg-white/10 transition-colors text-sm"
                       >
                         {chatMode === 'thinking' ? <Lightbulb size={16} /> : chatMode === 'fast' ? <Rocket size={16} /> : null}
                         <span className="capitalize">{chatMode}</span>
-                        <ChevronDown size={14} />
+                        <span className="ml-1"><ChevronDown size={14} /></span>
                       </button>
                       {chatModeOpen && (
-                        <div className="absolute bottom-full right-0 mb-2 w-32 rounded-lg bg-[#0F131B]/95 border border-white/10 shadow-lg overflow-hidden z-50">
+                        <div className="absolute bottom-full right-0 mb-2 w-32 rounded-sm bg-[#0F131B]/95 border border-white/10 shadow-lg overflow-hidden z-50">
                           {(['auto', 'fast', 'thinking'] as const).map((mode) => (
                             <button
                               key={mode}
@@ -1965,21 +2235,22 @@ export function HudDashboard() {
                     <button
                       type="button"
                       onClick={sendChat}
-                      className="h-11 w-11 flex items-center justify-center rounded-full bg-white/10 border border-white/10 text-white hover:bg-white/20 transition-colors"
+                      className="h-11 w-11 flex items-center justify-center rounded-sm bg-white/10 border border-white/10 text-white hover:bg-white/20 transition-colors"
                       aria-label="Send"
                     >
                       <ArrowUp size={18} />
-                  </button>
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
+            </HudPanel>
           </div>
         </div>
       </div>
-
-      </div>
+      )}
 
       {/* CHAT POPUP (Glass) */}
+      {isChatDockOpen && (
       <div
         className={
           'fixed inset-0 z-[11040] transition-opacity duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ' +
@@ -2001,7 +2272,7 @@ export function HudDashboard() {
               'opacity-100 translate-y-0 scale-100 blur-0'
             }
           >
-          <div className="relative h-full rounded-[28px] overflow-hidden border border-white/12 bg-[#0E131C]/95 backdrop-blur-xl shadow-[0_40px_120px_rgba(0,0,0,0.65)]">
+          <div className="relative h-full rounded-sm overflow-hidden border border-white/12 bg-[#0E131C]/95 backdrop-blur-xl shadow-[0_40px_120px_rgba(0,0,0,0.65)]">
             {/* Frost gradients */}
             <div
               aria-hidden
@@ -2022,7 +2293,7 @@ export function HudDashboard() {
               {/* Header */}
               <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
                 <div className="flex items-center gap-3">
-                  <LiquidMetalRim size={36}>
+                  <LiquidMetalRim size={36} rounded="rounded-full">
                     <Image
                       src="/agents/agent-t-portrait-512.jpg"
                       alt="Agent T"
@@ -2044,14 +2315,14 @@ export function HudDashboard() {
                       setIsChatDockOpen(false);
                       setView('chatFull');
                     }}
-                    className="px-3 py-1.5 rounded-lg border border-white/10 text-xs text-white/70 bg-white/5 hover:bg-white/10 transition-colors"
+                    className="px-3 py-1.5 rounded-sm border border-white/10 text-xs text-white/70 bg-white/5 hover:bg-white/10 transition-colors"
                   >
                     Expand
                   </button>
                   <button
                     type="button"
                     onClick={() => setIsChatDockOpen(false)}
-                    className="p-1.5 rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-colors"
+                    className="p-1.5 rounded-sm text-white/50 hover:text-white hover:bg-white/10 transition-colors"
                     aria-label="Close"
                   >
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -2067,7 +2338,7 @@ export function HudDashboard() {
                   <div key={idx} className={'flex ' + (m.role === 'user' ? 'justify-end' : 'justify-start')}>
                     <div
                       className={
-                        'max-w-[85%] rounded-xl px-3 py-2 text-xs leading-relaxed border ' +
+                        'max-w-[85%] rounded-sm px-3 py-2 text-xs leading-relaxed border ' +
                         (m.role === 'user'
                           ? 'bg-white/10 text-white border-white/10'
                           : 'bg-black/25 text-white/85 border-white/5')
@@ -2090,7 +2361,7 @@ export function HudDashboard() {
                           key={q}
                           type="button"
                           onClick={() => sendChatText(q)}
-                          className="text-left px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white/80 text-xs transition-colors"
+                          className="text-left px-3 py-2 rounded-sm bg-white/5 hover:bg-white/10 border border-white/10 text-white/80 text-xs transition-colors"
                         >
                           {q}
                         </button>
@@ -2113,7 +2384,7 @@ export function HudDashboard() {
                   <button
                     type="button"
                     onClick={() => fileInputDockRef.current?.click()}
-                    className="h-9 w-9 flex items-center justify-center rounded-lg bg-white/5 border border-white/10 text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+                    className="h-9 w-9 flex items-center justify-center rounded-sm bg-white/5 border border-white/10 text-white/70 hover:text-white hover:bg-white/10 transition-colors"
                     aria-label="Attach file"
                   >
                     <Paperclip size={16} />
@@ -2130,7 +2401,7 @@ export function HudDashboard() {
                       }
                     }}
                     placeholder="What do you want to know?"
-                    className="h-9 flex-1 rounded-lg bg-white/5 border border-white/10 px-3 text-xs text-white/85 placeholder:text-white/30 focus:outline-none focus:border-amber-300/40"
+                    className="h-9 flex-1 rounded-sm bg-white/5 border border-white/10 px-3 text-xs text-white/85 placeholder:text-white/30 focus:outline-none focus:border-amber-300/40"
                   />
 
                   {/* Mode selector */}
@@ -2138,14 +2409,14 @@ export function HudDashboard() {
                     <button
                       type="button"
                       onClick={() => setChatModeOpen((v) => !v)}
-                      className="h-9 px-2.5 flex items-center gap-1.5 rounded-lg bg-white/5 border border-white/10 text-white/70 hover:text-white hover:bg-white/10 transition-colors text-[10px]"
+                      className="h-9 px-2.5 flex items-center gap-1.5 rounded-sm bg-white/5 border border-white/10 text-white/70 hover:text-white hover:bg-white/10 transition-colors text-[10px]"
                     >
                       {chatMode === 'thinking' ? <Lightbulb size={12} /> : chatMode === 'fast' ? <Rocket size={12} /> : null}
                       <span className="capitalize">{chatMode}</span>
                       <ChevronDown size={10} />
                     </button>
                     {chatModeOpen && (
-                      <div className="absolute bottom-full right-0 mb-2 w-28 rounded-lg bg-[#0F131B]/95 border border-white/10 shadow-lg overflow-hidden z-50">
+                      <div className="absolute bottom-full right-0 mb-2 w-28 rounded-sm bg-[#0F131B]/95 border border-white/10 shadow-lg overflow-hidden z-50">
                         {(['auto', 'fast', 'thinking'] as const).map((mode) => (
                           <button
                             key={mode}
@@ -2171,7 +2442,7 @@ export function HudDashboard() {
                   <button
                     type="button"
                     onClick={sendChat}
-                    className="h-9 w-9 flex items-center justify-center rounded-full bg-white/10 border border-white/10 text-white hover:bg-white/20 transition-colors"
+                    className="h-9 w-9 flex items-center justify-center rounded-sm bg-white/10 border border-white/10 text-white hover:bg-white/20 transition-colors"
                     aria-label="Send"
                   >
                     <ArrowUp size={14} />
@@ -2182,6 +2453,7 @@ export function HudDashboard() {
           </div>
         </div>
       </div>
+      )}
 
       {/* FLOATING CHAT FAB */}
       {!isChatDockOpen && view !== 'chatFull' && (
@@ -2192,7 +2464,7 @@ export function HudDashboard() {
             className="w-[70px] h-[70px] rounded-full flex items-center justify-center relative shadow-[0_10px_30px_rgba(217,119,6,0.4)] hover:scale-110 transition-transform group"
             aria-label="Talk to Agent T"
           >
-            <LiquidMetalRim size={70}>
+            <LiquidMetalRim size={70} rounded="rounded-full">
               <Image
                 src="/agents/agent-t-portrait-512.jpg"
                 alt="Agent T"

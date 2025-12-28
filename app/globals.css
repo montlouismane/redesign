@@ -57,8 +57,8 @@
   --ui-text: #e8e8ee;
   --ui-muted: #a7a7b5;
 
-  --ui-accent-rgb: 213,139,106;
-  --ui-accentHot-rgb: 255,178,74;
+  --ui-accent-rgb: 196, 124, 72;
+  --ui-accentHot-rgb: 213, 139, 106;
 
   --ui-line: rgba(var(--ui-accent-rgb), 0.28);
   --ui-lineSoft: rgba(var(--ui-accent-rgb), 0.18);
@@ -151,7 +151,7 @@ body {
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
   background: rgba(var(--ui-accentHot-rgb), 0.25);
-  border-radius: 9999px;
+  border-radius: 2px;
   border: 1px solid rgba(var(--ui-accentHot-rgb), 0.25);
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
@@ -178,9 +178,11 @@ body {
 }
 /* Hide native scrollbars (we use a subtle "more below" hint instead on some panels) */
 .scrollbar-hide {
-  scrollbar-width: none;
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
 }
 .scrollbar-hide::-webkit-scrollbar {
+  display: none;
   width: 0;
   height: 0;
 }
