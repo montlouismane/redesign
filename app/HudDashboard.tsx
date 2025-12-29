@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
+import DynamicAllocationChart from './components/DynamicAllocationChart';
 import { useRouter } from 'next/navigation';
 import { Bell, Wallet, Mic, Rocket, ChevronDown, ArrowUp, Paperclip, Lightbulb, Minimize2, X } from 'lucide-react';
 import { UiStyleToggle } from './UiStyleToggle';
@@ -29,7 +30,8 @@ const HudPanel = ({
   accentVariant = 'both',
   shapeVariant = 'a',
   isCloseVariant = false,
-  variant = 'default'
+  variant = 'default',
+  disableBodyClick = false
 }: { 
   children: React.ReactNode, 
   className?: string, 
@@ -40,7 +42,8 @@ const HudPanel = ({
   accentVariant?: 'both' | 'horizontal' | 'vertical' | 'none',
   shapeVariant?: 'a' | 'b',
   isCloseVariant?: boolean,
-  variant?: 'default' | 'glass'
+  variant?: 'default' | 'glass',
+  disableBodyClick?: boolean
 }) => {
   const shapeClass = shapeVariant === 'b' ? styles.shapeB : styles.shapeA;
   const variantClass = variant === 'glass' ? styles.panelGlass : '';
@@ -48,7 +51,11 @@ const HudPanel = ({
   return (
     <section 
       className={`${styles.panel} ${shapeClass} ${variantClass} ${className}`} 
-      onClick={() => !isCloseVariant && onExpandClick?.()}
+      onClick={() => {
+        if (!isCloseVariant && !disableBodyClick) {
+          onExpandClick?.();
+        }
+      }}
       onDoubleClick={onDoubleClick}
       aria-label={ariaLabel}
     >
@@ -136,48 +143,6 @@ const LiquidMetalRim = ({
   );
 };
 
-type DonutChartProps = {
-  solPct: number;
-  adaPct: number;
-  otherPct: number;
-  className?: string;
-  style?: React.CSSProperties;
-  svgPath?: string; // Optional path to SVG file
-};
-
-const DonutChart = ({ solPct, adaPct, otherPct, className = '', style = {}, svgPath }: DonutChartProps) => {
-  // If SVG is provided, use it; otherwise fall back to CSS gradient
-  if (svgPath) {
-    return (
-      <div className={`${styles.donut} ${className}`} style={style}>
-        <Image
-          src={svgPath}
-          alt="Allocation donut chart"
-          width={130}
-          height={130}
-          className="w-full h-full object-contain"
-          style={{ aspectRatio: '1' }}
-        />
-      </div>
-    );
-  }
-
-  // CSS-based donut chart (current implementation)
-  return (
-    <div 
-      className={`${styles.donut} ${className}`}
-      aria-label="Allocation donut" 
-      style={{
-        background: `conic-gradient(
-          rgba(255, 178, 74, 0.95) 0% ${solPct}%,
-          rgba(45, 212, 191, 0.92) ${solPct}% ${solPct + adaPct}%,
-          rgba(42, 48, 60, 0.92) ${solPct + adaPct}% 100%
-        )`,
-        ...style
-      }}
-    />
-  );
-};
 
 type AgentRow = {
   id: string;
@@ -1112,6 +1077,7 @@ export function HudDashboard() {
             onExpandClick={() => openModal('agents')}
             accentVariant="vertical"
             shapeVariant="a"
+            disableBodyClick={true}
           >
             <div className={styles.agentsTop}>
               <div className={styles.muted} style={{ letterSpacing: '.12em', fontSize: 11, marginLeft: 12, marginRight: 12 }}>
@@ -1188,6 +1154,7 @@ export function HudDashboard() {
             onExpandClick={() => openModal('performance')}
             accentVariant="horizontal"
             shapeVariant="a"
+            disableBodyClick={true}
           >
             <div className={styles.perfTop}>
               <div className={styles.seg} role="tablist" aria-label="Performance range">
@@ -1244,6 +1211,7 @@ export function HudDashboard() {
             onExpandClick={() => openModal('market')}
             accentVariant="vertical"
             shapeVariant="a"
+            disableBodyClick={true}
           >
             <ScrollHintArea className="flex-1">
               <div className={styles.marketList}>
@@ -1279,6 +1247,7 @@ export function HudDashboard() {
               onExpandClick={() => openModal('trades')}
               accentVariant="vertical"
               shapeVariant="b"
+              disableBodyClick={true}
             >
               <ScrollHintArea className="flex-1">
                 <div className={styles.tradeTable}>
@@ -1309,14 +1278,13 @@ export function HudDashboard() {
               onExpandClick={() => openModal('allocation')}
               accentVariant="horizontal"
               shapeVariant="b"
+              disableBodyClick={true}
             >
-              <ScrollHintArea className="flex-1">
+              <div className="flex-1 flex flex-col justify-center min-h-0 overflow-hidden">
                 <div className={styles.allocWrap}>
-                  <DonutChart 
-                    solPct={solPct}
-                    adaPct={adaPct}
-                    otherPct={otherPct}
-                    // svgPath="/path/to/allocation-donut.svg" // Uncomment and set path when SVG is ready
+                  <DynamicAllocationChart
+                    data={{ solPct, adaPct, otherPct, totalValue: `$${totalValue.toLocaleString()}` }}
+                    size="medium"
                   />
                   <div className={styles.legend}>
                     {[
@@ -1334,7 +1302,7 @@ export function HudDashboard() {
                     ))}
                   </div>
                 </div>
-              </ScrollHintArea>
+              </div>
             </HudPanel>
           </div>
 
@@ -1347,6 +1315,7 @@ export function HudDashboard() {
             onExpandClick={() => openModal('system')}
             accentVariant="horizontal"
             shapeVariant="a"
+            disableBodyClick={true}
           >
             <div className={`flex-1 ${styles.sysList}`}>
               {systemStatus.map((sys) => (
@@ -1963,16 +1932,9 @@ export function HudDashboard() {
                     <div className={styles.subNote}>Same allocation breakdown shown on the Classic dashboard.</div>
                     <div style={{ height: 12 }} />
                     <div className={styles.allocWrap} style={{ gridTemplateColumns: 'minmax(180px, 220px) 1fr', padding: '8px 4px 24px 4px' }}>
-                      <DonutChart 
-                        solPct={solPct}
-                        adaPct={adaPct}
-                        otherPct={otherPct}
-                        style={{ 
-                          maxWidth: '220px',
-                          minWidth: '180px',
-                          minHeight: '180px'
-                        }}
-                        // svgPath="/path/to/allocation-donut.svg" // Uncomment and set path when SVG is ready
+                      <DynamicAllocationChart
+                        data={{ solPct, adaPct, otherPct, totalValue: `$${totalValue.toLocaleString()}` }}
+                        size="large"
                       />
                       <div className={styles.legend}>
                         {[
