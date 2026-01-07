@@ -1,0 +1,417 @@
+/* AllocationEditor - Token Allocation Management
+   ================================================
+   Metallic copper design consistent with slider controls
+*/
+
+/* CSS Variables */
+.allocationEditor {
+  --copper: #b87333;
+  --copper-light: #e2a76f;
+  --copper-dark: #8b4513;
+  --copper-glow: rgba(184, 115, 51, 0.5);
+  --bg: rgba(0, 0, 0, 0.2);
+  --bgDark: rgba(0, 0, 0, 0.4);
+  --border: rgba(184, 115, 51, 0.22);
+  --borderLight: rgba(184, 115, 51, 0.12);
+  --text: #e8e8ee;
+  --textMuted: #a7a7b5;
+  --positive: #35ff9b;
+  --warning: #f59e0b;
+  --negative: #ff3b3b;
+
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+.allocationEditor[data-disabled="true"] {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* Header */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px;
+}
+
+.headerTitle {
+  font-family: var(--font-display, 'Orbitron', sans-serif);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--textMuted);
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Total badge */
+.totalBadge {
+  font-family: var(--font-display, 'Orbitron', sans-serif);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 4px 10px;
+  border-radius: 4px;
+  background: var(--bgDark);
+  border: 1px solid var(--border);
+  color: var(--copper-light);
+  transition: all 0.2s ease;
+}
+
+.totalBadge[data-valid="true"] {
+  color: var(--positive);
+  border-color: rgba(53, 255, 155, 0.3);
+  background: rgba(53, 255, 155, 0.1);
+}
+
+.totalBadge[data-valid="false"][data-over="true"] {
+  color: var(--negative);
+  border-color: rgba(255, 59, 59, 0.3);
+  background: rgba(255, 59, 59, 0.1);
+}
+
+.totalBadge[data-valid="false"][data-over="false"] {
+  color: var(--warning);
+  border-color: rgba(245, 158, 11, 0.3);
+  background: rgba(245, 158, 11, 0.1);
+}
+
+/* Auto-balance button */
+.autoBalanceBtn {
+  font-family: var(--font-display, 'Orbitron', sans-serif);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(184, 115, 51, 0.3) 0%,
+      rgba(184, 115, 51, 0.15) 100%
+    );
+  border: 1px solid var(--border);
+  color: var(--copper-light);
+}
+
+.autoBalanceBtn:hover:not(:disabled) {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(184, 115, 51, 0.4) 0%,
+      rgba(184, 115, 51, 0.2) 100%
+    );
+  border-color: var(--copper);
+  box-shadow: 0 0 12px var(--copper-glow);
+}
+
+.autoBalanceBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Allocation list */
+.allocationList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  background: var(--bgDark);
+  border: 1px solid var(--borderLight);
+  border-radius: 6px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+/* Scrollbar styling */
+.allocationList::-webkit-scrollbar {
+  width: 6px;
+}
+
+.allocationList::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
+.allocationList::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+.allocationList::-webkit-scrollbar-thumb:hover {
+  background: var(--copper);
+}
+
+/* Empty state */
+.emptyState {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
+  font-size: 12px;
+  color: var(--textMuted);
+  text-align: center;
+  letter-spacing: 0.04em;
+}
+
+/* Individual allocation row */
+.allocationRow {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--borderLight);
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.allocationRow:hover {
+  border-color: var(--border);
+  background: rgba(184, 115, 51, 0.05);
+}
+
+/* Token info row */
+.tokenInfo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.tokenSymbol {
+  font-family: var(--font-display, 'Orbitron', sans-serif);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--copper-light);
+}
+
+/* Remove button */
+.removeBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  background: transparent;
+  border: 1px solid var(--borderLight);
+  border-radius: 4px;
+  color: var(--textMuted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.removeBtn:hover:not(:disabled) {
+  background: rgba(255, 59, 59, 0.15);
+  border-color: rgba(255, 59, 59, 0.4);
+  color: var(--negative);
+}
+
+.removeBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Slider wrapper */
+.sliderWrapper {
+  width: 100%;
+}
+
+/* Add token section */
+.addTokenSection {
+  position: relative;
+}
+
+.addTokenBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  font-family: var(--font-display, 'Orbitron', sans-serif);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+
+  background: var(--bg);
+  border: 1px dashed var(--border);
+  color: var(--copper-light);
+}
+
+.addTokenBtn:hover:not(:disabled) {
+  background: rgba(184, 115, 51, 0.1);
+  border-style: solid;
+  border-color: var(--copper);
+}
+
+.addTokenBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.chevron {
+  transition: transform 0.2s ease;
+  margin-left: auto;
+}
+
+.chevron[data-open="true"] {
+  transform: rotate(180deg);
+}
+
+/* Dropdown */
+.dropdown {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  margin-top: 4px;
+  z-index: 100;
+
+  background: rgba(12, 16, 22, 0.98);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(184, 115, 51, 0.1);
+  overflow: hidden;
+}
+
+.dropdownSearch {
+  padding: 12px;
+  border-bottom: 1px solid var(--borderLight);
+}
+
+.searchInput {
+  width: 100%;
+  padding: 10px 14px;
+  background: var(--bgDark);
+  border: 1px solid var(--borderLight);
+  border-radius: 4px;
+  font-family: var(--font-display, 'Orbitron', sans-serif);
+  font-size: 12px;
+  color: var(--text);
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.searchInput::placeholder {
+  color: var(--textMuted);
+  opacity: 0.6;
+}
+
+.searchInput:focus {
+  border-color: var(--copper);
+  box-shadow: 0 0 0 2px rgba(184, 115, 51, 0.2);
+}
+
+.dropdownList {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.dropdownEmpty {
+  padding: 16px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--textMuted);
+}
+
+.dropdownItem {
+  display: block;
+  width: 100%;
+  padding: 12px 16px;
+  text-align: left;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--borderLight);
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  font-family: var(--font-display, 'Orbitron', sans-serif);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--text);
+}
+
+.dropdownItem:last-child {
+  border-bottom: none;
+}
+
+.dropdownItem:hover {
+  background: rgba(184, 115, 51, 0.15);
+  color: var(--copper-light);
+}
+
+/* Validation message */
+.validationMessage {
+  padding: 10px 14px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-align: center;
+  animation: fadeIn 0.2s ease;
+}
+
+.validationMessage[data-over="true"] {
+  background: rgba(255, 59, 59, 0.1);
+  border: 1px solid rgba(255, 59, 59, 0.3);
+  color: var(--negative);
+}
+
+.validationMessage[data-over="false"] {
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  color: var(--warning);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .headerRight {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .allocationRow {
+    padding: 10px;
+  }
+}

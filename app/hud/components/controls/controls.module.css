@@ -1,0 +1,891 @@
+/* HUD Control Components Styles */
+/* Copper/bronze accents with glass morphism aesthetic */
+
+/* ============================================================================
+   CSS Variables & Theme
+   ============================================================================ */
+
+.rotaryDial,
+.horizontalSlider,
+.verticalSlider,
+.toggleSwitch,
+.segmentSelector,
+.collapsibleSection,
+.valueInputContainer,
+.tagInput {
+  --copper: #c47c48;
+  --copperLight: #d58b6a;
+  --copperDark: #b36a38;
+  --bg: rgba(0, 0, 0, 0.16);
+  --bgDark: rgba(0, 0, 0, 0.4);
+  --border: rgba(196, 124, 72, 0.22);
+  --borderLight: rgba(196, 124, 72, 0.12);
+  --text: #e8e8ee;
+  --textMuted: #a7a7b5;
+  --positive: #35ff9b;
+  --warning: #f59e0b;
+  --negative: #ff3b3b;
+  --glass: rgba(12, 16, 22, 0.95);
+}
+
+/* ============================================================================
+   Shared Control Elements
+   ============================================================================ */
+
+.controlLabel {
+  font-family: var(--font-display, 'Orbitron', sans-serif);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--textMuted);
+  margin-bottom: 8px;
+}
+
+.stepperButtons {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 12px;
+}
+
+.stepperBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--copper);
+  border-radius: 4px;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.stepperBtn:hover:not(:disabled) {
+  background: rgba(196, 124, 72, 0.15);
+  border-color: var(--copperLight);
+  transform: scale(1.05);
+}
+
+.stepperBtn:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.stepperBtn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* ============================================================================
+   Rotary Dial
+   ============================================================================ */
+
+.rotaryDial {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.rotaryDial[data-disabled="true"] {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.dialContainer {
+  position: relative;
+  width: 160px;
+  height: 160px;
+}
+
+.dialSvg {
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+  user-select: none;
+}
+
+.dialSvg:active {
+  cursor: grabbing;
+}
+
+.dialValue {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.dialValue:hover {
+  transform: scale(1.05);
+}
+
+.dialValueNumber {
+  font-family: var(--font-display, 'Orbitron', sans-serif);
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: var(--text);
+}
+
+.dialValueUnit {
+  font-family: var(--font-display, 'Orbitron', sans-serif);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: var(--textMuted);
+  text-transform: uppercase;
+}
+
+/* Dial value button (clickable to edit) */
+.dialValueButton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 4px;
+  transition: background 0.2s ease;
+}
+
+.dialValueButton:hover:not(:disabled) {
+  background: rgba(196, 124, 72, 0.1);
+}
+
+/* Dial value inline input */
+.dialValueInput {
+  width: 80px;
+  padding: 4px 8px;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid var(--copper);
+  border-radius: 4px;
+  font-family: var(--font-display, 'Orbitron', sans-serif);
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--text);
+  text-align: center;
+  outline: none;
+}
+
+.dialValueInput:focus {
+  border-color: var(--copperLight);
+  box-shadow: 0 0 12px rgba(196, 124, 72, 0.4);
+}
+
+/* ============================================================================
+   Horizontal Slider
+   ============================================================================ */
+
+.horizontalSlider {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+  width: 100%;
+  max-width: 320px;
+}
+
+.horizontalSlider[data-disabled="true"] {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.sliderRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sliderTrack {
+  position: relative;
+  flex: 1;
+  height: 12px;
+  background: var(--bgDark);
+  border: 1px solid var(--borderLight);
+  border-radius: 6px;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.sliderSafeZone {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  background: rgba(53, 255, 155, 0.12);
+  border-left: 1px solid rgba(53, 255, 155, 0.3);
+  border-right: 1px solid rgba(53, 255, 155, 0.3);
+  pointer-events: none;
+}
+
+.sliderFill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  border-radius: 6px 0 0 6px;
+  pointer-events: none;
+  transition: width 0.1s ease;
+}
+
+.sliderThumb {
+  position: absolute;
+  top: 50%;
+  width: 20px;
+  height: 20px;
+  background: var(--glass);
+  border: 2px solid var(--copper);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.sliderValue {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px 16px;
+  background: var(--bg);
+  border: 1px solid var(--borderLight);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sliderValue:hover {
+  background: rgba(196, 124, 72, 0.1);
+  border-color: var(--border);
+}
+
+.sliderValueNumber {
+  font-family: var(--mono, 'JetBrains Mono', monospace);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.sliderValueUnit {
+  font-family: var(--font-display, 'Orbitron', sans-serif);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: var(--textMuted);
+  text-transform: uppercase;
+}
+
+/* Slider value inline edit mode */
+.sliderValueEdit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: var(--bg);
+  border: 1px solid var(--copper);
+  border-radius: 4px;
+}
+
+.sliderValueInput {
+  width: 80px;
+  padding: 4px 8px;
+  background: transparent;
+  border: none;
+  font-family: var(--mono, 'JetBrains Mono', monospace);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  text-align: center;
+  outline: none;
+}
+
+/* ============================================================================
+   Vertical Slider
+   ============================================================================ */
+
+.verticalSlider {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 80px;
+}
+
+.verticalSlider[data-disabled="true"] {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.sliderColumn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  height: 160px;
+}
+
+.sliderTrackVertical {
+  position: relative;
+  width: 12px;
+  flex: 1;
+  background: var(--bgDark);
+  border: 1px solid var(--borderLight);
+  border-radius: 6px;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.sliderSafeZoneVertical {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  background: rgba(53, 255, 155, 0.12);
+  border-top: 1px solid rgba(53, 255, 155, 0.3);
+  border-bottom: 1px solid rgba(53, 255, 155, 0.3);
+  pointer-events: none;
+}
+
+.sliderFillVertical {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  border-radius: 0 0 6px 6px;
+  pointer-events: none;
+  transition: height 0.1s ease;
+}
+
+.sliderThumbVertical {
+  position: absolute;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  background: var(--glass);
+  border: 2px solid var(--copper);
+  border-radius: 50%;
+  transform: translate(-50%, 50%);
+  pointer-events: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* ============================================================================
+   Toggle Switch
+   ============================================================================ */
+
+.toggleSwitch {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.toggleSwitch[data-disabled="true"] {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.toggleTrack {
+  position: relative;
+  width: 56px;
+  height: 28px;
+  padding: 0;
+  background: transparent;
+  border: 1px solid var(--borderLight);
+  border-radius: 14px;
+  cursor: pointer;
+  overflow: hidden;
+  transition: border-color 0.2s ease;
+}
+
+.toggleTrack:hover {
+  border-color: var(--border);
+}
+
+.toggleBackground {
+  position: absolute;
+  inset: 0;
+  border-radius: 14px;
+  transition: background-color 0.2s ease;
+}
+
+.toggleLed {
+  position: absolute;
+  top: 4px;
+  left: 6px;
+  width: 10px;
+  height: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.toggleLed[data-on="true"] {
+  opacity: 1;
+}
+
+.toggleLedCore {
+  width: 6px;
+  height: 6px;
+  background: var(--positive);
+  border-radius: 50%;
+  box-shadow: 0 0 12px var(--positive), 0 0 24px var(--positive);
+}
+
+.toggleLever {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  background: linear-gradient(180deg, rgba(196, 124, 72, 0.9), rgba(196, 124, 72, 0.7));
+  border: 1px solid var(--copperLight);
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.toggleLeverNotch {
+  width: 8px;
+  height: 2px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 1px;
+}
+
+.toggleLabelOff,
+.toggleLabelOn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: var(--font-display, 'Orbitron', sans-serif);
+  font-size: 7px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--textMuted);
+  pointer-events: none;
+}
+
+.toggleLabelOff {
+  right: 6px;
+}
+
+.toggleLabelOn {
+  left: 6px;
+  color: transparent;
+}
+
+/* ============================================================================
+   Segment Selector
+   ============================================================================ */
+
+.segmentSelector {
+  width: 100%;
+}
+
+.segmentSelector[data-disabled="true"] {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.segmentTrack {
+  position: relative;
+  display: flex;
+  background: var(--bgDark);
+  border: 1px solid var(--borderLight);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.segmentIndicator {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: linear-gradient(180deg, rgba(196, 124, 72, 0.22), rgba(196, 124, 72, 0.1));
+  border-left: 1px solid var(--borderLight);
+  border-right: 1px solid var(--borderLight);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.segmentBtn {
+  flex: 1;
+  position: relative;
+  z-index: 1;
+  padding: 12px 16px;
+  background: transparent;
+  border: none;
+  color: var(--textMuted);
+  font-family: var(--font-display, 'Orbitron', sans-serif);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.segmentBtn:hover {
+  color: var(--text);
+}
+
+.segmentBtn[data-active="true"] {
+  color: var(--copper);
+}
+
+/* ============================================================================
+   Collapsible Section
+   ============================================================================ */
+
+.collapsibleSection {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--borderLight);
+  background: var(--bg);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.collapsibleHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 14px 16px;
+  background: var(--bgDark);
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.collapsibleHeader:hover {
+  background: rgba(196, 124, 72, 0.08);
+}
+
+.collapsibleHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.collapsibleIcon {
+  color: var(--copper);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.collapsibleTitle {
+  font-family: var(--font-display, 'Orbitron', sans-serif);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+
+.collapsibleHelpBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  background: var(--bg);
+  border: 1px solid var(--borderLight);
+  border-radius: 50%;
+  color: var(--textMuted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.collapsibleHelpBtn:hover {
+  border-color: var(--border);
+  color: var(--copper);
+  background: rgba(196, 124, 72, 0.1);
+}
+
+.collapsibleContent {
+  overflow: hidden;
+}
+
+.collapsibleInner {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ============================================================================
+   Value Input Overlay
+   ============================================================================ */
+
+.valueInputContainer {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+}
+
+.valueInputOverlay {
+  width: 280px;
+  background: var(--glass);
+  backdrop-filter: blur(40px);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6);
+  overflow: hidden;
+}
+
+.valueInputOverlay[data-error="true"] {
+  border-color: var(--negative);
+}
+
+.valueInputHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--bgDark);
+  border-bottom: 1px solid var(--borderLight);
+}
+
+.valueInputTitle {
+  font-family: var(--font-display, 'Orbitron', sans-serif);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+
+.valueInputCloseBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  background: transparent;
+  border: 1px solid var(--borderLight);
+  border-radius: 4px;
+  color: var(--textMuted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.valueInputCloseBtn:hover {
+  border-color: var(--border);
+  color: var(--copper);
+}
+
+.valueInputBody {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.valueInputField {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bgDark);
+  border: 1px solid var(--borderLight);
+  border-radius: 4px;
+  padding: 4px;
+}
+
+.valueInputInput {
+  flex: 1;
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: var(--mono, 'JetBrains Mono', monospace);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text);
+  text-align: center;
+}
+
+.valueInputInput[data-error="true"] {
+  color: var(--negative);
+}
+
+.valueInputUnit {
+  padding: 8px 12px;
+  font-family: var(--font-display, 'Orbitron', sans-serif);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: var(--textMuted);
+  text-transform: uppercase;
+  background: var(--bg);
+  border-radius: 2px;
+}
+
+.valueInputError {
+  font-size: 11px;
+  color: var(--negative);
+  text-align: center;
+}
+
+.valueInputRange {
+  font-size: 10px;
+  color: var(--textMuted);
+  text-align: center;
+  letter-spacing: 0.06em;
+}
+
+.valueInputFooter {
+  display: flex;
+  gap: 8px;
+  padding: 12px 16px;
+  background: var(--bgDark);
+  border-top: 1px solid var(--borderLight);
+}
+
+.valueInputBtn,
+.valueInputBtnPrimary {
+  flex: 1;
+  padding: 10px 16px;
+  border-radius: 4px;
+  font-family: var(--font-display, 'Orbitron', sans-serif);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.valueInputBtn {
+  background: transparent;
+  border: 1px solid var(--borderLight);
+  color: var(--textMuted);
+}
+
+.valueInputBtn:hover {
+  border-color: var(--border);
+  color: var(--text);
+}
+
+.valueInputBtnPrimary {
+  background: linear-gradient(180deg, rgba(196, 124, 72, 0.3), rgba(196, 124, 72, 0.15));
+  border: 1px solid var(--border);
+  color: var(--copper);
+}
+
+.valueInputBtnPrimary:hover:not(:disabled) {
+  background: linear-gradient(180deg, rgba(196, 124, 72, 0.4), rgba(196, 124, 72, 0.2));
+  border-color: var(--copperLight);
+}
+
+.valueInputBtnPrimary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ============================================================================
+   Tag Input
+   ============================================================================ */
+
+.tagInput {
+  width: 100%;
+}
+
+.tagInput[data-disabled="true"] {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.tagInputContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px;
+  background: var(--bgDark);
+  border: 1px solid var(--borderLight);
+  border-radius: 4px;
+  min-height: 48px;
+  transition: border-color 0.2s ease;
+}
+
+.tagInputContainer:focus-within {
+  border-color: var(--border);
+}
+
+.tagChip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px 4px 12px;
+  background: rgba(196, 124, 72, 0.15);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+
+.tagChipLabel {
+  font-family: var(--mono, 'JetBrains Mono', monospace);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--copper);
+  letter-spacing: 0.04em;
+}
+
+.tagChipRemove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  color: var(--copper);
+  opacity: 0.6;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.tagChipRemove:hover {
+  opacity: 1;
+}
+
+.tagInputField {
+  flex: 1;
+  min-width: 80px;
+  padding: 4px 0;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: var(--mono, 'JetBrains Mono', monospace);
+  font-size: 12px;
+  color: var(--text);
+}
+
+.tagInputField::placeholder {
+  color: var(--textMuted);
+  opacity: 0.6;
+}

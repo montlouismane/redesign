@@ -1,0 +1,585 @@
+/* MetallicSlider - Premium Copper Aesthetic
+   ============================================
+   Uses native range input as foundation with custom visual overlay.
+   Colors: #b87333 (copper), #e2a76f (highlight), #8b4513 (shadow)
+*/
+
+/* CSS Variables */
+.metallicSlider {
+  --copper: #b87333;
+  --copper-light: #e2a76f;
+  --copper-dark: #8b4513;
+  --copper-glow: rgba(184, 115, 51, 0.5);
+  --track-height: 8px;
+  --thumb-size: 28px;
+  --tick-height: 12px;
+  --tick-height-major: 18px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 400px;
+  padding: 8px 0;
+}
+
+.metallicSlider[data-disabled="true"] {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* Label */
+.sliderLabel {
+  font-family: var(--font-display, 'Orbitron', sans-serif);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(167, 167, 181, 0.9);
+  margin-bottom: 4px;
+}
+
+/* Main slider container */
+.sliderContainer {
+  position: relative;
+  width: 100%;
+  height: 60px;
+  padding: 20px 14px 16px;
+  cursor: pointer;
+}
+
+/* Track background with brushed metal effect */
+.trackBackground {
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  top: 50%;
+  height: var(--track-height);
+  transform: translateY(-50%);
+  border-radius: calc(var(--track-height) / 2);
+  overflow: hidden;
+
+  /* 3D brushed copper track */
+  background:
+    linear-gradient(
+      180deg,
+      rgba(0, 0, 0, 0.4) 0%,
+      rgba(30, 20, 10, 0.6) 20%,
+      rgba(50, 35, 20, 0.4) 50%,
+      rgba(30, 20, 10, 0.6) 80%,
+      rgba(0, 0, 0, 0.5) 100%
+    );
+  box-shadow:
+    inset 0 2px 4px rgba(0, 0, 0, 0.5),
+    inset 0 -1px 2px rgba(139, 69, 19, 0.2),
+    0 1px 0 rgba(226, 167, 111, 0.1);
+  border: 1px solid rgba(139, 69, 19, 0.3);
+}
+
+/* Filled portion of track */
+.trackFill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  border-radius: calc(var(--track-height) / 2) 0 0 calc(var(--track-height) / 2);
+  transition: width 0.05s ease-out;
+
+  /* Brushed copper fill with highlight */
+  background:
+    linear-gradient(
+      180deg,
+      var(--copper-light) 0%,
+      var(--copper) 30%,
+      var(--copper-dark) 70%,
+      var(--copper) 100%
+    );
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.3),
+    0 0 8px var(--copper-glow);
+}
+
+/* Tick marks container */
+.tickContainer {
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  top: calc(50% + var(--track-height) / 2 + 4px);
+  height: var(--tick-height-major);
+  pointer-events: none;
+}
+
+/* Individual tick mark */
+.tick {
+  position: absolute;
+  width: 2px;
+  height: var(--tick-height);
+  transform: translateX(-50%);
+  border-radius: 1px;
+  transition: all 0.15s ease;
+
+  /* Inactive tick - subtle copper tint */
+  background:
+    linear-gradient(
+      180deg,
+      rgba(139, 69, 19, 0.4) 0%,
+      rgba(139, 69, 19, 0.2) 100%
+    );
+}
+
+/* Active tick (value passed) */
+.tick[data-active="true"] {
+  background:
+    linear-gradient(
+      180deg,
+      var(--copper-light) 0%,
+      var(--copper) 50%,
+      var(--copper-dark) 100%
+    );
+  box-shadow: 0 0 4px var(--copper-glow);
+}
+
+/* Major ticks (start, middle, end) */
+.tick[data-major="true"] {
+  height: var(--tick-height-major);
+  width: 3px;
+}
+
+/* Floating value label */
+.valueLabel {
+  position: absolute;
+  top: -4px;
+  transform: translateX(-50%) translateY(-100%);
+  padding: 4px 10px;
+  border-radius: 4px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+
+  /* Brushed copper tooltip */
+  background:
+    linear-gradient(
+      135deg,
+      var(--copper-light) 0%,
+      var(--copper) 50%,
+      var(--copper-dark) 100%
+    );
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(139, 69, 19, 0.5);
+}
+
+.valueLabel[data-visible="true"] {
+  opacity: 1;
+  transform: translateX(-50%) translateY(-100%) scale(1);
+}
+
+.valueLabelText {
+  font-family: var(--font-display, 'Orbitron', sans-serif);
+  font-size: 12px;
+  font-weight: 700;
+  color: #1a0f08;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.3);
+  white-space: nowrap;
+}
+
+.valueLabelUnit {
+  font-size: 9px;
+  font-weight: 600;
+  margin-left: 2px;
+  opacity: 0.7;
+}
+
+/* Arrow pointing down from label */
+.valueLabelArrow {
+  position: absolute;
+  left: 50%;
+  bottom: -6px;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 6px solid var(--copper-dark);
+}
+
+/* Custom thumb visual overlay */
+.thumbVisual {
+  position: absolute;
+  top: 50%;
+  width: var(--thumb-size);
+  height: var(--thumb-size);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 10;
+  transition: transform 0.1s ease;
+}
+
+.thumbVisual[data-dragging="true"] {
+  transform: translate(-50%, -50%) scale(1.1);
+}
+
+.thumbInner {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  position: relative;
+  overflow: hidden;
+
+  /* 3D brushed copper sphere */
+  background:
+    radial-gradient(
+      ellipse 80% 50% at 50% 20%,
+      var(--copper-light) 0%,
+      var(--copper) 40%,
+      var(--copper-dark) 100%
+    );
+  box-shadow:
+    /* Outer glow */
+    0 0 12px var(--copper-glow),
+    /* Bottom shadow */
+    0 4px 8px rgba(0, 0, 0, 0.4),
+    /* Inner highlight */
+    inset 0 2px 4px rgba(255, 255, 255, 0.3),
+    /* Inner shadow */
+    inset 0 -2px 4px rgba(0, 0, 0, 0.3);
+  border: 2px solid var(--copper);
+}
+
+/* Top highlight on thumb */
+.thumbHighlight {
+  position: absolute;
+  top: 3px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60%;
+  height: 6px;
+  border-radius: 3px;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.5) 0%,
+      rgba(255, 255, 255, 0.1) 100%
+    );
+}
+
+/* Grooves on thumb for grip texture */
+.thumbGroove {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 50%;
+  height: 2px;
+  border-radius: 1px;
+  background:
+    linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(0, 0, 0, 0.2) 20%,
+      rgba(0, 0, 0, 0.3) 50%,
+      rgba(0, 0, 0, 0.2) 80%,
+      transparent 100%
+    );
+}
+
+.thumbGroove:nth-child(2) {
+  top: 45%;
+}
+
+.thumbGroove:nth-child(3) {
+  top: 55%;
+}
+
+/* Native range input - invisible but functional */
+.rangeInput {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 100%;
+  height: var(--thumb-size);
+  margin: 0;
+  padding: 0 14px;
+  background: transparent;
+  cursor: pointer;
+  z-index: 20;
+
+  /* Reset appearance */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+/* WebKit thumb (invisible) */
+.rangeInput::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: var(--thumb-size);
+  height: var(--thumb-size);
+  border-radius: 50%;
+  background: transparent;
+  cursor: grab;
+  border: none;
+}
+
+.rangeInput::-webkit-slider-thumb:active {
+  cursor: grabbing;
+}
+
+/* Firefox thumb (invisible) */
+.rangeInput::-moz-range-thumb {
+  width: var(--thumb-size);
+  height: var(--thumb-size);
+  border-radius: 50%;
+  background: transparent;
+  cursor: grab;
+  border: none;
+}
+
+.rangeInput::-moz-range-thumb:active {
+  cursor: grabbing;
+}
+
+/* Firefox track */
+.rangeInput::-moz-range-track {
+  background: transparent;
+  border: none;
+  height: var(--track-height);
+}
+
+/* WebKit track */
+.rangeInput::-webkit-slider-runnable-track {
+  background: transparent;
+  border: none;
+  height: var(--track-height);
+}
+
+/* Focus state */
+.rangeInput:focus {
+  outline: none;
+}
+
+.rangeInput:focus-visible ~ .thumbVisual .thumbInner {
+  box-shadow:
+    0 0 0 3px rgba(184, 115, 51, 0.3),
+    0 0 12px var(--copper-glow),
+    0 4px 8px rgba(0, 0, 0, 0.4),
+    inset 0 2px 4px rgba(255, 255, 255, 0.3),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Static value display below slider */
+.valueDisplay {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px 16px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(184, 115, 51, 0.2);
+}
+
+.valueNumber {
+  font-family: var(--font-display, 'Orbitron', sans-serif);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--copper-light);
+  letter-spacing: 0.05em;
+}
+
+.valueUnit {
+  font-family: var(--font-display, 'Orbitron', sans-serif);
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(184, 115, 51, 0.7);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+/* Hover effects */
+.sliderContainer:hover .trackFill {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.3),
+    0 0 12px var(--copper-glow);
+}
+
+.sliderContainer:hover .thumbInner {
+  box-shadow:
+    0 0 16px var(--copper-glow),
+    0 4px 8px rgba(0, 0, 0, 0.4),
+    inset 0 2px 4px rgba(255, 255, 255, 0.4),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Dragging state enhancements */
+.metallicSlider[data-dragging="true"] .trackFill {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.3),
+    0 0 20px rgba(184, 115, 51, 0.6);
+}
+
+.metallicSlider[data-dragging="true"] .thumbInner {
+  box-shadow:
+    0 0 24px rgba(184, 115, 51, 0.7),
+    0 6px 12px rgba(0, 0, 0, 0.5),
+    inset 0 2px 4px rgba(255, 255, 255, 0.5),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.4);
+}
+
+/* ============================================
+   Safe Zone Styles
+   ============================================ */
+
+/* Safe zone highlight on track */
+.safeZone {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  background: rgba(53, 255, 155, 0.15);
+  border-left: 1px solid rgba(53, 255, 155, 0.4);
+  border-right: 1px solid rgba(53, 255, 155, 0.4);
+  pointer-events: none;
+}
+
+/* Safe zone tick color */
+.tick[data-safe="true"] {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(53, 255, 155, 0.4) 0%,
+      rgba(53, 255, 155, 0.2) 100%
+    );
+}
+
+.tick[data-safe="true"][data-active="true"] {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(53, 255, 155, 0.9) 0%,
+      rgba(53, 255, 155, 0.6) 50%,
+      rgba(40, 200, 120, 0.8) 100%
+    );
+  box-shadow: 0 0 4px rgba(53, 255, 155, 0.5);
+}
+
+/* Green tint when in safe zone */
+.trackFill[data-safe="true"] {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(100, 220, 160, 0.9) 0%,
+      rgba(53, 200, 130, 0.8) 30%,
+      rgba(40, 160, 100, 0.9) 70%,
+      rgba(53, 180, 120, 0.8) 100%
+    );
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.3),
+    0 0 8px rgba(53, 255, 155, 0.4);
+}
+
+/* Safe zone thumb styling */
+.thumbInner[data-safe="true"] {
+  background:
+    radial-gradient(
+      ellipse 80% 50% at 50% 20%,
+      rgba(100, 220, 160, 0.9) 0%,
+      rgba(53, 200, 130, 0.8) 40%,
+      rgba(40, 160, 100, 0.9) 100%
+    );
+  border-color: rgba(53, 200, 130, 0.8);
+  box-shadow:
+    0 0 12px rgba(53, 255, 155, 0.4),
+    0 4px 8px rgba(0, 0, 0, 0.4),
+    inset 0 2px 4px rgba(255, 255, 255, 0.3),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Safe zone value label */
+.valueLabel[data-safe="true"] {
+  background:
+    linear-gradient(
+      135deg,
+      rgba(100, 220, 160, 0.9) 0%,
+      rgba(53, 200, 130, 0.8) 50%,
+      rgba(40, 160, 100, 0.9) 100%
+    );
+  border-color: rgba(53, 200, 130, 0.6);
+}
+
+.valueLabel[data-safe="true"] .valueLabelArrow {
+  border-top-color: rgba(40, 160, 100, 0.9);
+}
+
+/* Safe zone value display */
+.valueDisplay[data-safe="true"] {
+  border-color: rgba(53, 255, 155, 0.3);
+}
+
+.valueDisplay[data-safe="true"] .valueNumber {
+  color: rgba(100, 220, 160, 0.9);
+}
+
+/* ============================================
+   Inline Edit Mode
+   ============================================ */
+
+.valueEditContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 4px 12px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--copper);
+}
+
+.valueInput {
+  width: 100px;
+  padding: 6px 8px;
+  background: transparent;
+  border: none;
+  font-family: var(--font-display, 'Orbitron', sans-serif);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--copper-light);
+  text-align: center;
+  outline: none;
+  letter-spacing: 0.05em;
+}
+
+.valueInput:focus {
+  color: #fff;
+}
+
+/* Make value display a button for clickability */
+.valueDisplay {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px 16px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(184, 115, 51, 0.2);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.valueDisplay:hover:not(:disabled) {
+  background: rgba(184, 115, 51, 0.1);
+  border-color: rgba(184, 115, 51, 0.4);
+}
+
+.valueDisplay:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
