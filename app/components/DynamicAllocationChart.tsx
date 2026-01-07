@@ -5,29 +5,40 @@ import { BarChart3, PieChart } from 'lucide-react';
 import { interpolate } from 'flubber';
 import { useSpring, animated } from '@react-spring/web';
 
-interface AllocationData {
-  solPct: number;
-  adaPct: number;
-  otherPct: number;
-  totalValue?: string;
+export interface ChartItem {
+  id: string;
+  label: string;
+  value: number; // Percentage (0-100)
+  color: string;
 }
 
 interface DynamicAllocationChartProps {
-  data: AllocationData;
+  data: ChartItem[];
   className?: string;
   size?: 'small' | 'medium' | 'large';
+  externalHover?: string | null;
+  onHover?: (id: string | null) => void;
 }
 
 const DynamicAllocationChart: React.FC<DynamicAllocationChartProps> = ({
   data,
   className = '',
-  size = 'medium'
+  size = 'medium',
+  externalHover,
+  onHover
 }) => {
   const [chartMode, setChartMode] = useState<'donut' | 'bar'>('donut');
   const [isAnimating, setIsAnimating] = useState(false);
-  const [hoveredAsset, setHoveredAsset] = useState<'sol' | 'ada' | 'other' | null>(null);
+  const [internalHover, setInternalHover] = useState<string | null>(null);
 
-  // React Spring animation for morphing (gallery-style physics)
+  // Use external control if provided, otherwise internal state
+  const hoveredAsset = externalHover !== undefined ? externalHover : internalHover;
+  const setHoveredAsset = (id: string | null) => {
+    if (onHover) onHover(id);
+    else setInternalHover(id);
+  };
+
+  // React Spring animation for morphing
   const { progress } = useSpring({
     progress: chartMode === 'donut' ? 0 : 1,
     config: {
@@ -40,27 +51,6 @@ const DynamicAllocationChart: React.FC<DynamicAllocationChartProps> = ({
     onRest: () => setIsAnimating(false),
   });
 
-  // Spring for hover highlights
-  const solHover = useSpring({ transform: hoveredAsset === 'sol' ? 'scale(1.02)' : 'scale(1)', opacity: hoveredAsset === 'sol' ? 1 : 0.85 });
-  const adaHover = useSpring({ transform: hoveredAsset === 'ada' ? 'scale(1.02)' : 'scale(1)', opacity: hoveredAsset === 'ada' ? 1 : 0.75 });
-  const otherHover = useSpring({ transform: hoveredAsset === 'other' ? 'scale(1.02)' : 'scale(1)', opacity: hoveredAsset === 'other' ? 1 : 0.7 });
-
-  // Subtle copper-themed color palette
-  const colors = {
-    sol: {
-      primary: 'rgba(196, 124, 72, 0.85)',    // copper
-      accent: 'rgba(196, 124, 72, 0.95)'      // copper highlight
-    },
-    ada: {
-      primary: 'rgba(45, 212, 191, 0.75)',    // teal
-      accent: 'rgba(45, 212, 191, 0.9)'       // bright teal
-    },
-    other: {
-      primary: 'rgba(42, 48, 60, 0.7)',       // dark slate
-      accent: 'rgba(42, 48, 60, 0.85)'        // slate highlight
-    }
-  };
-
   const sizeClasses = {
     small: { chart: 'w-24 h-24', bar: 'h-2', text: 'text-xs' },
     medium: { chart: 'w-32 h-32', bar: 'h-3', text: 'text-sm' },
@@ -71,10 +61,9 @@ const DynamicAllocationChart: React.FC<DynamicAllocationChartProps> = ({
 
   // Helper function to generate arc paths for donut segments
   const generateArcPath = (cx: number, cy: number, innerR: number, outerR: number, startAngle: number, endAngle: number) => {
-    // Ensure we don't have exactly 0 or 360 degrees which can break paths
     const start = startAngle;
-    const end = Math.max(start + 0.01, endAngle);
-    
+    const end = Math.max(start + 0.01, endAngle); // Ensure at least tiny segment
+
     const startAngleRad = (start * Math.PI) / 180;
     const endAngleRad = (end * Math.PI) / 180;
 
@@ -92,63 +81,77 @@ const DynamicAllocationChart: React.FC<DynamicAllocationChartProps> = ({
     return `M ${x1} ${y1} L ${x2} ${y2} A ${outerR} ${outerR} 0 ${largeArcFlag} 1 ${x3} ${y3} L ${x4} ${y4} A ${innerR} ${innerR} 0 ${largeArcFlag} 0 ${x1} ${y1} Z`;
   };
 
-  // Memoize path segments to avoid unnecessary re-calculations
+  // Memoize path segments
   const segments = useMemo(() => {
-    const { solPct, adaPct, otherPct } = data;
+    // Sort data for consistent rendering order (optional, but good for donuts)
+    // For now we assume data is passed in desired order
+
+    // Config
     const centerX = 50;
     const centerY = 50;
     const outerRadius = 40;
     const innerRadius = 20;
 
-    // Donut Paths
-    const solD = generateArcPath(centerX, centerY, innerRadius, outerRadius, -90, -90 + (solPct / 100) * 360);
-    const adaStart = -90 + (solPct / 100) * 360;
-    const adaD = generateArcPath(centerX, centerY, innerRadius, outerRadius, adaStart, adaStart + (adaPct / 100) * 360);
-    const otherStart = adaStart + (adaPct / 100) * 360;
-    const otherD = generateArcPath(centerX, centerY, innerRadius, outerRadius, otherStart, otherStart + (otherPct / 100) * 360);
+    // --- Donut Calculations ---
+    let currentAngle = -90;
+    const donutPaths: string[] = [];
 
-    // Bar Paths
-    const values = [solPct, adaPct, otherPct];
-    const maxValue = Math.max(...values, 1);
-    const barWidth = 16;
-    const barSpacing = 8;
-    const totalBarWidth = (barWidth * 3) + (barSpacing * 2);
-    const startX = (100 - totalBarWidth) / 2;
+    // --- Bar Calculations ---
+    const barWidth = 12; // Slightly narrower to fit more
+    const barSpacing = 6;
+    const totalContentWidth = (barWidth * data.length) + (barSpacing * (data.length - 1));
+    const startX = (100 - totalContentWidth) / 2;
+    const maxValue = Math.max(...data.map(d => d.value), 10); // avoid div/0, generic scaling
+    const barPaths: string[] = [];
+    const barLabelPositions: { x: number, y: number }[] = [];
 
-    const getBarPath = (index: number, value: number) => {
-      const barHeight = Math.max((value / maxValue) * 70, 2); // Min height of 2
-      const x = startX + (index * (barWidth + barSpacing));
-      const y = 85 - barHeight;
-      return `M${x},${85} L${x + barWidth},${85} L${x + barWidth},${y} L${x},${y} Z`;
-    };
+    // IMPORTANT: Make sure total sum matches 360 for donut, or scales appropriate if < 100%
+    // If input is percentages that sum to 100, we map 0-100 to 0-360.
+    const totalPercentage = data.reduce((acc, d) => acc + d.value, 0);
+    // If total < 100, we might want to normalize or just show partial donut. 
+    // Let's assume typical usage corresponds to 100% or "rest is empty". 
+    // For visual coherence, if total is significantly less (e.g. top 5 don't sum to 100), 
+    // the donut will have a gap. That is actually correct representation.
 
-    const solB = getBarPath(0, solPct);
-    const adaB = getBarPath(1, adaPct);
-    const otherB = getBarPath(2, otherPct);
+    data.forEach((item, index) => {
+      // 1. Donut Segment
+      const sweepAngle = (item.value / 100) * 360;
+      const endAngle = currentAngle + sweepAngle;
+      donutPaths.push(generateArcPath(centerX, centerY, innerRadius, outerRadius, currentAngle, endAngle));
+      currentAngle = endAngle;
 
-    // Interpolators
+      // 2. Bar Segment
+      const barHeight = Math.max((item.value / maxValue) * 60, 2); // Max height 60 to leave room
+      const bx = startX + (index * (barWidth + barSpacing));
+      const by = 85 - barHeight;
+      const barPath = `M${bx},${85} L${bx + barWidth},${85} L${bx + barWidth},${by} L${bx},${by} Z`;
+      barPaths.push(barPath);
+
+      barLabelPositions.push({
+        x: bx + barWidth / 2,
+        y: 85
+      });
+    });
+
+    // Create interpolators
+    const interpolators = donutPaths.map((dp, i) =>
+      interpolate(dp, barPaths[i], { maxSegmentLength: 2, string: true })
+    );
+
     return {
-      sol: interpolate(solD, solB, { maxSegmentLength: 2, string: true }),
-      ada: interpolate(adaD, adaB, { maxSegmentLength: 2, string: true }),
-      other: interpolate(otherD, otherB, { maxSegmentLength: 2, string: true }),
-      solPos: { x: startX + barWidth / 2, y: 85 - (solPct / maxValue) * 70 },
-      adaPos: { x: startX + barWidth + barSpacing + barWidth / 2, y: 85 - (adaPct / maxValue) * 70 },
-      otherPos: { x: startX + (barWidth + barSpacing) * 2 + barWidth / 2, y: 85 - (otherPct / maxValue) * 70 },
-      solCenter: { x: centerX + (innerRadius + outerRadius) / 2 * Math.cos(((-90 + (solPct / 200) * 360) * Math.PI) / 180), y: centerY + (innerRadius + outerRadius) / 2 * Math.sin(((-90 + (solPct / 200) * 360) * Math.PI) / 180) },
-      adaCenter: { x: centerX + (innerRadius + outerRadius) / 2 * Math.cos(((adaStart + (adaPct / 200) * 360) * Math.PI) / 180), y: centerY + (innerRadius + outerRadius) / 2 * Math.sin(((adaStart + (adaPct / 200) * 360) * Math.PI) / 180) },
-      otherCenter: { x: centerX + (innerRadius + outerRadius) / 2 * Math.cos(((otherStart + (otherPct / 200) * 360) * Math.PI) / 180), y: centerY + (innerRadius + outerRadius) / 2 * Math.sin(((otherStart + (otherPct / 200) * 360) * Math.PI) / 180) }
+      interpolators,
+      barLabelPositions
     };
   }, [data]);
 
-  const toggleChartType = useCallback(() => {
+  const toggleChartType = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent modal opening
     if (isAnimating) return;
     setChartMode(prev => prev === 'donut' ? 'bar' : 'donut');
-    setHoveredAsset(null); // Clear hover when switching to avoid glitchy text
+    setHoveredAsset(null);
   }, [isAnimating]);
 
   const renderChart = () => {
-    const { solPct, adaPct, otherPct, totalValue } = data;
-
     return (
       <div className="relative">
         <svg
@@ -161,7 +164,7 @@ const DynamicAllocationChart: React.FC<DynamicAllocationChartProps> = ({
         >
           <defs>
             <pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse">
-              <path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(196,124,72,0.05)" strokeWidth="0.5"/>
+              <path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(196,124,72,0.05)" strokeWidth="0.5" />
             </pattern>
           </defs>
 
@@ -178,97 +181,64 @@ const DynamicAllocationChart: React.FC<DynamicAllocationChartProps> = ({
 
           {/* Axis lines */}
           <animated.g opacity={progress.to([0, 0.5, 1], [0, 0, 0.4])}>
-            <line x1="5" y1="85" x2="95" y2="85" stroke="rgba(196, 124, 72, 0.3)" strokeWidth="0.5"/>
-            <line x1="5" y1="85" x2="5" y2="10" stroke="rgba(196, 124, 72, 0.3)" strokeWidth="0.5"/>
+            <line x1="5" y1="85" x2="95" y2="85" stroke="rgba(196, 124, 72, 0.3)" strokeWidth="0.5" />
+            <line x1="5" y1="85" x2="5" y2="10" stroke="rgba(196, 124, 72, 0.3)" strokeWidth="0.5" />
           </animated.g>
 
-          {/* SOL Segment */}
-          <animated.path
-            d={progress.to(p => segments.sol(p))}
-            fill={colors.sol.primary}
-            stroke="rgba(0,0,0,0.2)"
-            strokeWidth="0.5"
-            style={solHover}
-            onMouseEnter={() => setHoveredAsset('sol')}
-            onMouseLeave={() => setHoveredAsset(null)}
-            className="cursor-pointer transition-colors duration-200"
-          />
+          {/* Segments */}
+          {data.map((item, i) => {
+            const isHovered = hoveredAsset === item.id;
+            // We can't use simple useSpring here for dynamic list efficiently inside the loop 
+            // without strict key management or useSprings. 
+            // To keep it simple and performant, we'll use CSS based transforms for the "pop" effect
+            // applied to the path via class/style, since the path string itself is the heavy animated part via 'progress'.
 
-          {/* ADA Segment */}
-          <animated.path
-            d={progress.to(p => segments.ada(p))}
-            fill={colors.ada.primary}
-            stroke="rgba(0,0,0,0.2)"
-            strokeWidth="0.5"
-            style={adaHover}
-            onMouseEnter={() => setHoveredAsset('ada')}
-            onMouseLeave={() => setHoveredAsset(null)}
-            className="cursor-pointer transition-colors duration-200"
-          />
+            return (
+              <animated.path
+                key={item.id}
+                d={progress.to(p => segments.interpolators[i](p))}
+                fill={item.color}
+                stroke="rgba(0,0,0,0.2)"
+                strokeWidth="0.5"
+                style={{
+                  transformOrigin: '50% 50%',
+                  transform: isHovered ? 'scale(1.05)' : 'scale(1)',
+                  opacity: hoveredAsset ? (isHovered ? 1 : 0.5) : 0.9,
+                }}
+                onMouseEnter={() => setHoveredAsset(item.id)}
+                onMouseLeave={() => setHoveredAsset(null)}
+                className="cursor-pointer transition-all duration-200 ease-out"
+              />
+            );
+          })}
 
-          {/* Other Segment */}
-          <animated.path
-            d={progress.to(p => segments.other(p))}
-            fill={colors.other.primary}
-            stroke="rgba(0,0,0,0.2)"
-            strokeWidth="0.5"
-            style={otherHover}
-            onMouseEnter={() => setHoveredAsset('other')}
-            onMouseLeave={() => setHoveredAsset(null)}
-            className="cursor-pointer transition-colors duration-200"
-          />
-
-          {/* Value labels on bars */}
-          <animated.g opacity={progress.to([0, 0.8, 1], [0, 0, 1])}>
-            <text 
-              x={segments.solPos.x} 
-              y={segments.solPos.y - 6} 
-              textAnchor="middle" 
-              className={`transition-colors duration-200 ${hoveredAsset === 'sol' ? 'fill-[#c47c48]' : 'fill-[#e8e8ee]'} font-bold`}
-              style={{ fontSize: '8px' }}
-            >
-              {solPct}%
-            </text>
-            <text 
-              x={segments.adaPos.x} 
-              y={segments.adaPos.y - 6} 
-              textAnchor="middle" 
-              className={`transition-colors duration-200 ${hoveredAsset === 'ada' ? 'fill-[#2dd4bf]' : 'fill-[#e8e8ee]'} font-bold`}
-              style={{ fontSize: '8px' }}
-            >
-              {adaPct}%
-            </text>
-            <text 
-              x={segments.otherPos.x} 
-              y={segments.otherPos.y - 6} 
-              textAnchor="middle" 
-              className={`transition-colors duration-200 ${hoveredAsset === 'other' ? 'fill-[#a7a7b5]' : 'fill-[#e8e8ee]'} font-bold`}
-              style={{ fontSize: '8px' }}
-            >
-              {otherPct}%
-            </text>
-          </animated.g>
         </svg>
 
         {/* Floating Tooltip/Label (Donut Mode Only) */}
-        <animated.div 
+        <animated.div
           className="absolute inset-0 flex items-center justify-center pointer-events-none"
           style={{
             opacity: progress.to(p => (1 - p) * (hoveredAsset ? 1 : 0)),
             transform: progress.to(p => `scale(${hoveredAsset ? 1 : 0.95})`)
           }}
         >
-          <div className="text-center">
-            <div className={`font-bold ${size === 'large' ? 'text-lg' : 'text-base'} text-[#e8e8ee] leading-tight uppercase`}>
-              {hoveredAsset === 'sol' ? 'SOL' : hoveredAsset === 'ada' ? 'ADA' : 'Other'}
-            </div>
-            <div className="text-[12px] text-[#c47c48] font-bold">
-              {hoveredAsset === 'sol' ? solPct : hoveredAsset === 'ada' ? adaPct : otherPct}%
-            </div>
-          </div>
+          {hoveredAsset && (() => {
+            const item = data.find(d => d.id === hoveredAsset);
+            if (!item) return null;
+            return (
+              <div className="text-center">
+                <div className={`font-bold ${size === 'large' ? 'text-lg' : 'text-base'} text-[#e8e8ee] leading-tight uppercase`}>
+                  {item.label}
+                </div>
+                <div className="text-[12px] font-bold" style={{ color: item.color }}>
+                  {item.value}%
+                </div>
+              </div>
+            );
+          })()}
         </animated.div>
 
-        {/* Bar labels (gallery-style positioning) */}
+        {/* Bar labels (Simple list at bottom) */}
         <animated.div
           className="absolute bottom-0 left-0 right-0 px-2 pb-0.5 pointer-events-none"
           style={{
@@ -276,38 +246,26 @@ const DynamicAllocationChart: React.FC<DynamicAllocationChartProps> = ({
             transform: progress.to(p => `translateY(${(1 - p) * 10}px)`)
           }}
         >
-          {(() => {
-            const values = [solPct, adaPct, otherPct];
-            const maxValue = Math.max(...values, 1);
-            const barWidth = 16;
-            const barSpacing = 8;
-            const totalBarWidth = (barWidth * 3) + (barSpacing * 2);
-            const startX = (100 - totalBarWidth) / 2;
-
-            return (
-              <div className="relative w-full h-4">
-                {['SOL', 'ADA', 'Other'].map((label, index) => {
-                  const x = startX + (index * (barWidth + barSpacing)) + barWidth / 2;
-                  const asset = label.toLowerCase() as 'sol' | 'ada' | 'other';
-                  return (
-                    <div 
-                      key={label}
-                      className={`absolute top-0 font-bold uppercase transition-colors duration-200 text-[10px]`}
-                      style={{ 
-                        left: `${x}%`, 
-                        transform: 'translateX(-50%)',
-                        color: hoveredAsset === asset 
-                          ? (asset === 'sol' ? '#c47c48' : asset === 'ada' ? '#2dd4bf' : '#a7a7b5') 
-                          : '#e8e8ee'
-                      }}
-                    >
-                      {label}
-                    </div>
-                  );
-                })}
-              </div>
-            );
-          })()}
+          <div className="relative w-full h-4">
+            {data.map((item, i) => {
+              const pos = segments.barLabelPositions[i];
+              const isHovered = hoveredAsset === item.id;
+              return (
+                <div
+                  key={item.id}
+                  className={`absolute top-0 font-bold uppercase transition-colors duration-200 text-[8px] text-center w-8`}
+                  style={{
+                    left: `${pos.x}%`,
+                    transform: 'translateX(-50%)',
+                    color: isHovered ? item.color : 'rgba(255,255,255,0.4)',
+                    opacity: hoveredAsset && !isHovered ? 0.3 : 1
+                  }}
+                >
+                  {item.label.substring(0, 3)}
+                </div>
+              );
+            })}
+          </div>
         </animated.div>
       </div>
     );
@@ -315,13 +273,13 @@ const DynamicAllocationChart: React.FC<DynamicAllocationChartProps> = ({
 
   return (
     <div className={`flex flex-col items-center ${className}`}>
-      <div 
+      <div
         className="cursor-pointer group relative overflow-hidden transition-all duration-300 w-full flex justify-center py-4"
         onClick={toggleChartType}
       >
         {renderChart()}
 
-        {/* Morph hint (fades in on hover) */}
+        {/* Morph hint */}
         {!isAnimating && (
           <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-30 transition-opacity">
             {chartMode === 'donut' ? <BarChart3 className="w-3 h-3 text-[#a7a7b5]" /> : <PieChart className="w-3 h-3 text-[#a7a7b5]" />}

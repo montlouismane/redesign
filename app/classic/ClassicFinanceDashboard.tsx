@@ -9,6 +9,7 @@ import {
   Rocket, 
   Lightbulb, 
   Minimize2, 
+  Maximize2,
   X, 
   ChevronDown,
   ShieldCheck 
@@ -20,6 +21,7 @@ import { RecentActivityCard } from './components/RecentActivityCard';
 import { AssetAllocationCard } from './components/AssetAllocationCard';
 import { CashTransfersCard, SupportGuidanceCard } from './components/SupportCashCards';
 import { StrategyUpdatesCard } from './components/StrategyUpdatesCard';
+import { StrategiesListView } from './views/StrategiesListView';
 
 export function ClassicFinanceDashboard() {
   const router = useRouter();
@@ -67,14 +69,19 @@ export function ClassicFinanceDashboard() {
 
   const sendChat = () => sendChatText(chatInput);
 
-  // Handle cross-navigation for "Strategies" to /squad
-  useEffect(() => {
-    if (view === 'strategies') {
-      router.push('/squad');
-      // Reset view to dashboard so if they come back it's correct
-      setTimeout(() => setView('dashboard'), 500);
-    }
-  }, [view, router]);
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    // Handle file upload - for now, just show a message
+    const fileNames = Array.from(files).map((f) => f.name).join(', ');
+    sendChatText(`[File uploaded: ${fileNames}]`);
+    
+    // Reset the input so the same file can be selected again
+    e.target.value = '';
+  };
+
+  // Note: Strategies view is now handled in renderContent below
 
   const renderContent = () => {
     switch (view) {
@@ -120,6 +127,10 @@ export function ClassicFinanceDashboard() {
             </div>
           </div>
         );
+      case 'strategies':
+        return (
+          <StrategiesListView className="animate-in fade-in slide-in-from-bottom-4 duration-700" />
+        );
       case 'portfolios':
       case 'markets':
       case 'support':
@@ -162,14 +173,26 @@ export function ClassicFinanceDashboard() {
                     <div className="w-16 h-16 rounded-full border-2 border-amber-400/20 overflow-hidden shadow-lg">
                       <Image src="/agents/agent-t-portrait-512.jpg" alt="Agent T" width={64} height={64} />
                     </div>
-                    <div>
-                      <h2 className="text-2xl font-bold text-gray-900 leading-tight">Agent T</h2>
-                      <p className="text-sm text-[#c47c48] font-bold uppercase tracking-widest">Portfolio Assistant</p>
-                    </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900 leading-tight">Agent T</h2>
+                    <p className="text-sm text-[#c47c48] font-bold uppercase tracking-widest">Portfolio Assistant</p>
                   </div>
-                  <button onClick={() => setView('dashboard')} className="p-3 rounded-full hover:bg-gray-200 text-gray-400 transition-colors">
+                </div>
+                <div className="flex items-center gap-2">
+                  <button 
+                    onClick={() => { 
+                      setView('dashboard'); 
+                      setIsChatDockOpen(true); 
+                    }} 
+                    className="p-3 rounded-full hover:bg-gray-200 text-gray-400 transition-colors"
+                    aria-label="Minimize to pop-up"
+                  >
+                    <Minimize2 size={24} />
+                  </button>
+                  <button onClick={() => setView('dashboard')} className="p-3 rounded-full hover:bg-gray-200 text-gray-400 transition-colors" aria-label="Close">
                     <X size={28} />
                   </button>
+                </div>
                 </div>
 
                 <div className="flex-1 p-10 space-y-8 overflow-y-auto classic-scrollbar bg-white">
@@ -194,16 +217,71 @@ export function ClassicFinanceDashboard() {
                       ))}
                     </div>
                   )}
-                  <div className="flex items-center gap-4 bg-white border border-gray-200 rounded-3xl p-3 focus-within:border-[#c47c48] focus-within:ring-4 focus-within:ring-[#c47c48]/5 transition-all shadow-inner">
-                    <button className="p-3 text-gray-400 hover:text-gray-600 transition-colors"><Paperclip size={24} /></button>
+                  <div className="flex items-center gap-4">
+                    {/* Hidden file input */}
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      multiple
+                      className="hidden"
+                      onChange={handleFileSelect}
+                      accept="*/*"
+                    />
+                    {/* Attach button on left */}
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="h-11 w-11 flex items-center justify-center rounded-xl bg-white border border-gray-200 text-gray-400 hover:text-gray-600 hover:bg-gray-50 transition-colors"
+                      aria-label="Attach file"
+                    >
+                      <Paperclip size={18} />
+                    </button>
+
+                    {/* Input field */}
                     <input 
                       value={chatInput}
                       onChange={e => setChatInput(e.target.value)}
                       onKeyDown={e => e.key === 'Enter' && sendChat()}
                       placeholder="Ask anything about your portfolio..." 
-                      className="flex-1 bg-transparent border-none focus:ring-0 text-xl text-gray-900 placeholder:text-gray-300" 
+                      className="h-11 flex-1 rounded-xl bg-white border border-gray-200 px-4 text-xl text-gray-900 placeholder:text-gray-300 focus:outline-none focus:border-[#c47c48] focus:ring-4 focus:ring-[#c47c48]/5 transition-all" 
                     />
-                    <button onClick={sendChat} className="w-14 h-14 rounded-full bg-[#c47c48] flex items-center justify-center text-white shadow-lg hover:bg-[#a66a3d] transition-all"><ArrowUp size={28} /></button>
+
+                    {/* Mode selector */}
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={() => setChatModeOpen((v) => !v)}
+                        className="h-11 px-3 flex items-center gap-2 rounded-xl bg-white border border-gray-200 text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors text-sm"
+                      >
+                        {chatMode === 'thinking' ? <Lightbulb size={16} /> : chatMode === 'fast' ? <Rocket size={16} /> : null}
+                        <span className="capitalize">{chatMode}</span>
+                        <ChevronDown size={14} />
+                      </button>
+                      {chatModeOpen && (
+                        <div className="absolute bottom-full right-0 mb-2 w-32 rounded-lg bg-white border border-gray-200 shadow-lg overflow-hidden z-50">
+                          {(['auto', 'fast', 'thinking'] as const).map((mode) => (
+                            <button
+                              key={mode}
+                              type="button"
+                              onClick={() => {
+                                setChatMode(mode);
+                                setChatModeOpen(false);
+                              }}
+                              className={`w-full px-3 py-2 text-left text-sm transition-colors ${
+                                chatMode === mode
+                                  ? 'bg-gray-100 text-gray-900'
+                                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                              }`}
+                            >
+                              <span className="capitalize">{mode}</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Send button */}
+                    <button onClick={sendChat} className="h-11 w-11 rounded-full bg-[#c47c48] flex items-center justify-center text-white shadow-lg hover:bg-[#a66a3d] transition-all"><ArrowUp size={20} /></button>
                   </div>
                 </div>
               </div>
@@ -215,9 +293,9 @@ export function ClassicFinanceDashboard() {
         {!isChatDockOpen && view !== 'chatFull' && (
           <button
             onClick={() => setIsChatDockOpen(true)}
-            className="fixed bottom-8 right-8 w-16 h-16 rounded-full bg-[#0a1120] border-2 border-[#c47c48]/30 shadow-[0_10px_40px_rgba(0,0,0,0.4)] flex items-center justify-center group hover:scale-110 active:scale-95 transition-all z-[90]"
+            className="fixed bottom-8 right-8 w-20 h-20 rounded-full bg-[#0a1120] border-2 border-blue-400/80 shadow-[0_10px_40px_rgba(0,0,0,0.4)] flex items-center justify-center group hover:scale-110 active:scale-95 transition-all z-[90]"
           >
-            <div className="relative w-14 h-14 rounded-full overflow-hidden border border-[#c47c48]/20">
+            <div className="relative w-[70px] h-[70px] rounded-full overflow-hidden border border-blue-400/70">
               <Image src="/agents/agent-t-portrait-512.jpg" alt="Talk to Agent T" fill className="object-cover" />
             </div>
             <div className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-[#0a1120] animate-pulse" />
@@ -235,11 +313,11 @@ export function ClassicFinanceDashboard() {
                   </div>
                   <div>
                     <p className="text-[16px] font-bold text-gray-900">Agent T</p>
-                    <p className="text-[11px] text-[#c47c48] font-bold uppercase tracking-widest">Assistant</p>
+                    <p className="text-[11px] text-[#c47c48] font-bold uppercase tracking-widest">Portfolio Assistant</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-1">
-                  <button onClick={() => { setIsChatDockOpen(false); setView('chatFull'); }} className="p-2.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-all"><Minimize2 size={20} /></button>
+                  <button onClick={() => { setIsChatDockOpen(false); setView('chatFull'); }} className="p-2.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-all"><Maximize2 size={20} /></button>
                   <button onClick={() => setIsChatDockOpen(false)} className="p-2.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-all"><X size={20} /></button>
                 </div>
               </div>
@@ -255,15 +333,71 @@ export function ClassicFinanceDashboard() {
                 ))}
               </div>
               <div className="p-5 border-t border-gray-100 space-y-4 bg-gray-50/30">
-                <div className="flex items-center gap-3 bg-white border border-gray-200 rounded-2xl p-2 focus-within:border-[#c47c48] transition-all shadow-inner">
+                {/* Hidden file input */}
+                <input
+                  ref={fileInputDockRef}
+                  type="file"
+                  multiple
+                  className="hidden"
+                  onChange={handleFileSelect}
+                  accept="*/*"
+                />
+                <div className="flex items-center gap-2">
+                  {/* Attach button on left */}
+                  <button
+                    type="button"
+                    onClick={() => fileInputDockRef.current?.click()}
+                    className="h-9 w-9 flex items-center justify-center rounded-lg bg-white border border-gray-200 text-gray-400 hover:text-gray-600 hover:bg-gray-50 transition-colors"
+                    aria-label="Attach file"
+                  >
+                    <Paperclip size={16} />
+                  </button>
+
+                  {/* Input field */}
                   <input 
                     value={chatInput}
                     onChange={e => setChatInput(e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && sendChat()}
                     placeholder="Ask Agent T..." 
-                    className="flex-1 bg-transparent border-none focus:ring-0 text-[16px] text-gray-900 placeholder:text-gray-300" 
+                    className="h-9 flex-1 rounded-lg bg-white border border-gray-200 px-3 text-[16px] text-gray-900 placeholder:text-gray-300 focus:outline-none focus:border-[#c47c48]" 
                   />
-                  <button onClick={sendChat} className="w-10 h-10 rounded-full bg-[#c47c48] flex items-center justify-center text-white shadow-md hover:bg-[#a66a3d] transition-all"><ArrowUp size={20} /></button>
+
+                  {/* Mode selector */}
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setChatModeOpen((v) => !v)}
+                      className="h-9 px-2.5 flex items-center gap-1.5 rounded-lg bg-white border border-gray-200 text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors text-[10px]"
+                    >
+                      {chatMode === 'thinking' ? <Lightbulb size={12} /> : chatMode === 'fast' ? <Rocket size={12} /> : null}
+                      <span className="capitalize">{chatMode}</span>
+                      <ChevronDown size={10} />
+                    </button>
+                    {chatModeOpen && (
+                      <div className="absolute bottom-full right-0 mb-2 w-28 rounded-lg bg-white border border-gray-200 shadow-lg overflow-hidden z-50">
+                        {(['auto', 'fast', 'thinking'] as const).map((mode) => (
+                          <button
+                            key={mode}
+                            type="button"
+                            onClick={() => {
+                              setChatMode(mode);
+                              setChatModeOpen(false);
+                            }}
+                            className={`w-full px-2.5 py-1.5 text-left text-[10px] transition-colors ${
+                              chatMode === mode
+                                ? 'bg-gray-100 text-gray-900'
+                                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                            }`}
+                          >
+                            <span className="capitalize">{mode}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Send button */}
+                  <button onClick={sendChat} className="h-9 w-9 rounded-full bg-[#c47c48] flex items-center justify-center text-white shadow-md hover:bg-[#a66a3d] transition-all"><ArrowUp size={16} /></button>
                 </div>
               </div>
             </div>
