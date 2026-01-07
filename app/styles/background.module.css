@@ -1,0 +1,26 @@
+/* Ported from HudDashboard.module.css */
+
+.bg {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+    z-index: 0;
+}
+
+.noise {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+    pointer-events: none;
+    opacity: var(--noiseOpacity);
+    filter: blur(var(--noiseBlur)) brightness(var(--noiseBrightness));
+    mix-blend-mode: overlay;
+
+    --noiseOpacity: 0.1;
+    --noiseBlur: 0.25px;
+    --noiseBrightness: 1;
+}

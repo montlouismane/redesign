@@ -1,0 +1,82 @@
+/* Ported from HudDashboard.module.css */
+
+.tradeTable {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid rgba(var(--tintR), var(--tintG), var(--tintB), 0.12);
+    background: rgba(0, 0, 0, 0.14);
+    border-radius: 2px;
+    overflow: hidden;
+    min-height: 0;
+    flex: 1;
+}
+
+.tradeHead,
+.tradeRow {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+    align-items: center;
+}
+
+.tradeHead {
+    padding: 12px 14px;
+    font-size: 11px;
+    color: rgba(232, 232, 238, 0.7);
+    letter-spacing: 0.14em;
+    background: rgba(var(--tintR), var(--tintG), var(--tintB), 0.05);
+    border-bottom: 1px solid rgba(var(--tintR), var(--tintG), var(--tintB), 0.1);
+}
+
+.tradeBody {
+    display: flex;
+    flex-direction: column;
+}
+
+.tradeRow {
+    padding: 12px 14px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    font-size: 12px;
+    letter-spacing: 0.06em;
+}
+
+.tradeRow:last-child {
+    border-bottom: none;
+}
+
+.tradeType {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 54px;
+    padding: 4px 10px;
+    border-radius: 2px;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    border: 1px solid rgba(var(--tintR), var(--tintG), var(--tintB), 0.18);
+    background: rgba(0, 0, 0, 0.16);
+}
+
+.tradeBuy {
+    border-color: rgba(45, 212, 191, 0.24);
+    background: rgba(45, 212, 191, 0.10);
+    color: rgba(45, 212, 191, 0.92);
+}
+
+.tradeSell {
+    border-color: rgba(var(--tintR), var(--tintG), var(--tintB), 0.24);
+    background: rgba(var(--tintR), var(--tintG), var(--tintB), 0.10);
+    color: rgba(var(--tintR), var(--tintG), var(--tintB), 0.92);
+}
+
+.mono {
+    font-family: var(--mono);
+    letter-spacing: 0.02em;
+}
+
+.muted {
+    color: var(--muted);
+}
