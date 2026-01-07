@@ -1,0 +1,400 @@
+/* HUD Create Agent Modal */
+
+.overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+    animation: fadeIn 0.2s ease-out;
+}
+
+.modal {
+    position: relative;
+    width: 90%;
+    max-width: 900px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient(135deg,
+            rgba(11, 11, 16, 0.98) 0%,
+            rgba(7, 7, 10, 0.99) 100%);
+    border: 1px solid rgba(196, 124, 72, 0.2);
+    border-radius: 12px;
+    box-shadow:
+        0 20px 50px rgba(0, 0, 0, 0.5),
+        0 0 30px rgba(196, 124, 72, 0.1);
+    overflow: hidden;
+    animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.wizardModal {
+    position: relative;
+    width: 95%;
+    max-width: 700px;
+    height: 85vh;
+    max-height: 750px;
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient(135deg,
+            rgba(11, 11, 16, 0.98) 0%,
+            rgba(7, 7, 10, 0.99) 100%);
+    border: 1px solid rgba(196, 124, 72, 0.2);
+    border-radius: 12px;
+    box-shadow:
+        0 20px 50px rgba(0, 0, 0, 0.5),
+        0 0 30px rgba(196, 124, 72, 0.1);
+    overflow: hidden;
+    animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.wizardModal .closeButton {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    z-index: 10;
+}
+
+.glowEdge {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg,
+            rgba(196, 124, 72, 0.1) 0%,
+            rgba(196, 124, 72, 0.6) 20%,
+            rgba(213, 139, 106, 0.8) 50%,
+            rgba(196, 124, 72, 0.6) 80%,
+            rgba(196, 124, 72, 0.1) 100%);
+    box-shadow:
+        0 0 20px rgba(196, 124, 72, 0.4),
+        0 0 40px rgba(196, 124, 72, 0.2);
+}
+
+/* Header */
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px 32px;
+    border-bottom: 1px solid rgba(196, 124, 72, 0.15);
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.title {
+    font-family: var(--font-orbitron), system-ui;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    color: rgba(196, 124, 72, 0.9);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.closeButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+    border: none;
+    background: transparent;
+    color: rgba(196, 124, 72, 0.6);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.closeButton:hover {
+    color: rgba(196, 124, 72, 1);
+    background: rgba(196, 124, 72, 0.1);
+}
+
+/* Content */
+.content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+/* Intro Card */
+.introCard {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    padding: 24px;
+    background: linear-gradient(135deg, rgba(196, 124, 72, 0.05) 0%, rgba(0, 0, 0, 0.2) 100%);
+    border: 1px solid rgba(196, 124, 72, 0.1);
+    border-radius: 8px;
+}
+
+.introIcon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    background: rgba(196, 124, 72, 0.1);
+    border-radius: 6px;
+    color: #c47c48;
+}
+
+.introText h3 {
+    font-family: var(--font-orbitron);
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    color: #c47c48;
+    margin: 0 0 8px 0;
+}
+
+.introText p {
+    font-family: var(--font-jetbrains-mono);
+    font-size: 13px;
+    line-height: 1.5;
+    color: rgba(167, 167, 181, 0.8);
+    margin: 0;
+}
+
+/* Form Sections */
+.section {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-family: var(--font-orbitron);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    color: rgba(167, 167, 181, 0.6);
+}
+
+.inputWrapper {
+    position: relative;
+}
+
+.input {
+    width: 100%;
+    padding: 16px 20px;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(167, 167, 181, 0.2);
+    border-radius: 6px;
+    font-family: var(--font-jetbrains-mono);
+    font-size: 16px;
+    color: #e2e2e7;
+    transition: all 0.2s ease;
+}
+
+.input:focus {
+    outline: none;
+    border-color: rgba(196, 124, 72, 0.6);
+    box-shadow: 0 0 15px rgba(196, 124, 72, 0.1);
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.errorText {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 8px;
+    font-size: 11px;
+    color: #ef4444;
+}
+
+/* Mode Grid */
+.modeGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+}
+
+.modeCard {
+    position: relative;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(167, 167, 181, 0.15);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: left;
+}
+
+.modeCard:hover {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(167, 167, 181, 0.3);
+}
+
+.modeCard.selected {
+    background: rgba(196, 124, 72, 0.08);
+    border-color: rgba(196, 124, 72, 0.6);
+    box-shadow: 0 0 20px rgba(196, 124, 72, 0.1);
+}
+
+.checkIcon {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    color: #c47c48;
+}
+
+.modeIcon {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 6px;
+    color: rgba(167, 167, 181, 0.6);
+    margin-bottom: 16px;
+    transition: all 0.2s ease;
+}
+
+.modeCard.selected .modeIcon {
+    background: rgba(196, 124, 72, 0.1);
+    color: #c47c48;
+}
+
+.modeTitle {
+    font-family: var(--font-orbitron);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    color: #e2e2e7;
+    margin: 0 0 4px 0;
+}
+
+.modeCard.selected .modeTitle {
+    color: #c47c48;
+}
+
+.modeDesc {
+    font-size: 11px;
+    line-height: 1.5;
+    color: rgba(167, 167, 181, 0.6);
+    margin: 0 0 12px 0;
+}
+
+/* Risk Badges */
+.riskBadge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.riskLow {
+    background: rgba(34, 197, 94, 0.1);
+    color: #22c55e;
+    border: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+.riskMedium {
+    background: rgba(59, 130, 246, 0.1);
+    color: #3b82f6;
+    border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.riskMediumHigh {
+    background: rgba(234, 179, 8, 0.1);
+    color: #eab308;
+    border: 1px solid rgba(234, 179, 8, 0.2);
+}
+
+.riskHigh {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+/* Footer */
+.footer {
+    padding: 24px 32px;
+    border-top: 1px solid rgba(196, 124, 72, 0.15);
+    display: flex;
+    justify-content: flex-end;
+    gap: 16px;
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    border-radius: 4px;
+    font-family: var(--font-orbitron);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.cancelButton {
+    background: transparent;
+    border: 1px solid rgba(167, 167, 181, 0.2);
+    color: rgba(167, 167, 181, 0.8);
+}
+
+.cancelButton:hover {
+    border-color: rgba(167, 167, 181, 0.4);
+    color: #e2e2e7;
+}
+
+.createButton {
+    background: rgba(196, 124, 72, 0.1);
+    border: 1px solid rgba(196, 124, 72, 0.4);
+    color: #c47c48;
+}
+
+.createButton:hover:not(:disabled) {
+    background: rgba(196, 124, 72, 0.2);
+    border-color: #c47c48;
+    box-shadow: 0 0 20px rgba(196, 124, 72, 0.2);
+}
+
+.createButton:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

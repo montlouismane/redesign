@@ -1,0 +1,116 @@
+/* Wizard Step Indicator */
+
+.stepper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 20px 24px;
+  background: rgba(0, 0, 0, 0.3);
+  border-bottom: 1px solid rgba(196, 124, 72, 0.1);
+}
+
+.step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 60px;
+}
+
+.stepNumber {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-family: var(--font-orbitron), system-ui;
+  font-size: 11px;
+  font-weight: 700;
+  transition: all 0.3s ease;
+}
+
+.stepLabel {
+  font-family: var(--font-orbitron), system-ui;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+/* Pending state */
+.pending .stepNumber {
+  background: rgba(50, 50, 60, 0.6);
+  border: 1px solid rgba(167, 167, 181, 0.2);
+  color: rgba(167, 167, 181, 0.4);
+}
+
+.pending .stepLabel {
+  color: rgba(167, 167, 181, 0.3);
+}
+
+/* Current state */
+.current .stepNumber {
+  background: rgba(196, 124, 72, 0.2);
+  border: 2px solid rgba(196, 124, 72, 0.8);
+  color: #c47c48;
+  box-shadow: 0 0 12px rgba(196, 124, 72, 0.3);
+}
+
+.current .stepLabel {
+  color: #c47c48;
+}
+
+/* Completed state */
+.completed .stepNumber {
+  background: rgba(34, 197, 94, 0.15);
+  border: 1px solid rgba(34, 197, 94, 0.5);
+  color: #22c55e;
+}
+
+.completed .stepLabel {
+  color: rgba(34, 197, 94, 0.7);
+}
+
+/* Connector line */
+.connector {
+  flex: 1;
+  max-width: 40px;
+  height: 2px;
+  background: rgba(167, 167, 181, 0.15);
+  border-radius: 1px;
+  margin-bottom: 18px;
+  transition: background 0.3s ease;
+}
+
+.connectorCompleted {
+  background: rgba(34, 197, 94, 0.4);
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .stepper {
+    gap: 4px;
+    padding: 16px 12px;
+  }
+
+  .step {
+    min-width: 45px;
+  }
+
+  .stepNumber {
+    width: 24px;
+    height: 24px;
+    font-size: 10px;
+  }
+
+  .stepLabel {
+    font-size: 7px;
+  }
+
+  .connector {
+    max-width: 20px;
+  }
+}
