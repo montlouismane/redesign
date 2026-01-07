@@ -51,7 +51,7 @@ export const HudHeader = ({
                 }}
                 aria-label="Go to Dashboard"
             >
-                <img src="/brand/adam-hud-logo.svg" alt="ADAM" className={styles.brandLogo} draggable={false} />
+                <img src="/brand/adam-classic-logo.svg" alt="ADAM" className={styles.brandLogo} draggable={false} />
             </button>
 
             <nav className={styles.nav} aria-label="Primary">

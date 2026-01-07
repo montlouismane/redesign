@@ -46,11 +46,7 @@ export const AgentsPanel = ({
             shapeVariant="a"
             disableBodyClick={true}
         >
-            <div className={styles.agentsTop}>
-                <div className={styles.muted} style={{ letterSpacing: '.12em', fontSize: 11, marginLeft: 12, marginRight: 12 }}>
-                    Active agents
-                </div>
-            </div>
+
 
             <ScrollHintArea className="flex-1">
                 <div className={styles.agentList}>
