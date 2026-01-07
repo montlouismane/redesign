@@ -38,7 +38,8 @@
                 ],
     "exclude":  [
                     "node_modules",
-                    "adam-hud",
-                    "adam-reference"
+                    "adam-reference",
+                    "production-build",
+                    "_prod_build"
                 ]
 }

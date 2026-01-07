@@ -369,7 +369,10 @@ export function HudView() {
                     onClick={closeModal}
                 >
                     <div
-                        className="w-full h-full max-w-[1400px] max-h-[900px] relative"
+                        className={modalPanel === 'system'
+                            ? "w-full h-auto relative max-w-[800px]"
+                            : "w-full h-full relative max-w-[1400px] max-h-[900px]"
+                        }
                         onClick={e => e.stopPropagation()}
                     >
                         {modalPanel === 'agents' && (
@@ -588,7 +591,6 @@ export function HudView() {
                                 variant="glass"
                                 isCloseVariant
                                 onExpandClick={closeModal}
-                                style={{ height: '100%' }}
                             >
                                 <div className="p-6 grid grid-cols-2 gap-4">
                                     {systemStatus.map(s => (

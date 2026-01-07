@@ -10,6 +10,8 @@
   --accentHot: #d58b6a; /* brighter copper highlight */
   --danger: #ff3b3b;
   --ok: #35ff9b;
+  --warning: #f59e0b; /* Amber for system warnings (non-trading) */
+  --info: #c47c48; /* Copper for informational/neutral system states */
 
   --text: #e8e8ee;
   --muted: #a7a7b5;
@@ -20,8 +22,10 @@
 
   --r: 22px;
   --pad: 18px;
-  --font: var(--font-orbitron), ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji",
+  --font-display: var(--font-orbitron), ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji",
     "Segoe UI Emoji";
+  --font-body: var(--font-ibm-plex-sans), ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  --font: var(--font-body); /* Default to body font */
   --mono: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 
   /* runtime-tuned (state-driven) */
@@ -58,6 +62,41 @@
 .root,
 .root * {
   box-sizing: border-box;
+}
+
+/* Compact Mode - Reduced spacing and tighter typography */
+.root.compactMode {
+  --pad: 12px;
+}
+.root.compactMode .hud {
+  gap: 10px;
+}
+.root.compactMode .dashboard {
+  gap: 10px;
+}
+.root.compactMode .panel {
+  padding: var(--pad);
+}
+.root.compactMode .panelTitle {
+  font-size: 11px;
+}
+.root.compactMode .subTitle {
+  font-size: 11px;
+}
+.root.compactMode .subNote {
+  font-size: 10px;
+}
+.root.compactMode .agentName {
+  font-size: 12px;
+}
+.root.compactMode .agentSub {
+  font-size: 10px;
+}
+.root.compactMode .kpiVal {
+  font-size: 18px;
+}
+.root.compactMode .kpiKey {
+  font-size: 9px;
 }
 
 /* Three.js canvas */
@@ -245,6 +284,7 @@
   margin-left: 176px;
 }
 .navLink {
+  font-family: var(--font-display);
   border: 0;
   background: transparent;
   color: rgba(232, 232, 238, 0.75);
@@ -585,7 +625,11 @@
   cursor: pointer;
   z-index: 20;
   transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease, filter 0.2s ease;
-  padding: 8px;
+  padding: 10px;
+  min-width: 44px;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
   border-radius: 4px;
   border: none;
   background: transparent;
@@ -641,6 +685,7 @@
   flex-shrink: 0;
 }
 .panelTitle {
+  font-family: var(--font-display);
   font-weight: 800;
   letter-spacing: 0.14em;
   font-size: 14px;
@@ -761,6 +806,7 @@
   font-weight: 800;
 }
 .agentName {
+  font-family: var(--font-display);
   font-weight: 700;
   letter-spacing: 0.1em;
 }
@@ -858,11 +904,15 @@
   border: 0;
   background: transparent;
   color: rgba(232, 232, 238, 0.7);
-  padding: 9px 12px;
+  padding: 12px 14px;
+  min-height: 44px;
   font-family: var(--font);
   letter-spacing: 0.12em;
   cursor: pointer;
   font-size: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .segBtn.isOn {
   color: var(--text);
@@ -875,6 +925,9 @@
   gap: 10px;
   flex-wrap: wrap;
   margin-top: 10px;
+  justify-content: center;
+  padding-left: 16px;
+  padding-right: 16px;
 }
 .kpi {
   border: 1px solid rgba(var(--tintR), var(--tintG), var(--tintB), 0.12);
@@ -884,11 +937,13 @@
   min-width: 160px;
 }
 .kpiKey {
+  font-family: var(--font-display);
   color: var(--muted);
   font-size: 10px;
   letter-spacing: 0.14em;
 }
 .kpiVal {
+  font-family: var(--font-display);
   margin-top: 7px;
   font-weight: 800;
   letter-spacing: 0.1em;
@@ -976,6 +1031,7 @@
   min-width: 0;
 }
 .mTicker {
+  font-family: var(--font-display);
   font-weight: 800;
   letter-spacing: 0.14em;
 }
@@ -989,6 +1045,7 @@
   min-width: 0;
 }
 .mPrice {
+  font-family: var(--font-display);
   font-weight: 800;
   letter-spacing: 0.1em;
 }
@@ -1193,8 +1250,8 @@
   box-shadow: 0 0 16px rgba(53, 255, 155, 0.18);
 }
 .sysDot.warn {
-  background: rgba(var(--tintR), var(--tintG), var(--tintB), 0.92);
-  box-shadow: 0 0 16px rgba(var(--tintR), var(--tintG), var(--tintB), 0.16);
+  background: var(--warning);
+  box-shadow: 0 0 16px rgba(245, 158, 11, 0.3);
 }
 .sysDot.bad {
   background: rgba(255, 59, 59, 0.92);
@@ -1214,6 +1271,11 @@
 }
 .pulse {
   animation: hudPulseDot 1.35s ease-in-out infinite;
+}
+
+/* Chart morphing animation */
+.morphOverlay {
+  z-index: 1;
 }
 
 /* Modal expansion (click-to-expand, big sections) */
@@ -1259,6 +1321,7 @@
   padding: 14px;
 }
 .subTitle {
+  font-family: var(--font-display);
   font-weight: 800;
   letter-spacing: 0.14em;
   font-size: 12px;
@@ -1395,15 +1458,28 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .btnPrimary,
-  .btnGhost,
-  .btnDanger,
-  .iconBtn,
-  .navLink,
-  .expandBtn,
-  .agentItem {
-    transition: none;
+  :global(*) {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
+  :global(*)::before,
+  :global(*)::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Apply reduced motion when user setting is enabled */
+.root.reduceMotion :global(*) {
+  animation-duration: 0.01ms !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+.root.reduceMotion :global(*)::before,
+.root.reduceMotion :global(*)::after {
+  animation-duration: 0.01ms !important;
+  transition-duration: 0.01ms !important;
 }
 
 /* ---- CSS-module helpers for stateful class pairs (exported) ---- */
@@ -1430,4 +1506,51 @@
 .pos {
 }
 .neg {
+}
+
+/* Keyboard Shortcuts Modal */
+.shortcutsList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.shortcutRow {
+  display: grid;
+  grid-template-columns: 120px 1fr auto;
+  gap: 16px;
+  align-items: center;
+  padding: 10px 12px;
+  border: 1px solid rgba(var(--tintR), var(--tintG), var(--tintB), 0.08);
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 2px;
+}
+.shortcutKey {
+  display: flex;
+  align-items: center;
+}
+.kbd {
+  display: inline-block;
+  padding: 4px 8px;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text);
+  background: rgba(var(--tintR), var(--tintG), var(--tintB), 0.15);
+  border: 1px solid rgba(var(--tintR), var(--tintG), var(--tintB), 0.25);
+  border-radius: 3px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  min-width: 32px;
+  text-align: center;
+  letter-spacing: 0.05em;
+}
+.shortcutAction {
+  font-size: 12px;
+  color: var(--text);
+  letter-spacing: 0.04em;
+}
+.shortcutContext {
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }

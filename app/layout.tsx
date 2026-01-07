@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
-import { JetBrains_Mono, Orbitron, Barlow } from "next/font/google";
+import { JetBrains_Mono, Orbitron, Barlow, IBM_Plex_Sans } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
 import { UiStyleProvider } from "./UiStyleProvider";
 import { ScrollXReset } from "./ScrollXReset";
+import { WalletProvider } from "./contexts/WalletContext";
 
 const barlow = Barlow({
   variable: "--font-barlow",
@@ -29,6 +30,13 @@ const orbitron = Orbitron({
   subsets: ["latin"],
   display: "swap",
   weight: ["400", "600", "700"],
+});
+
+const ibmPlexSans = IBM_Plex_Sans({
+  variable: "--font-ibm-plex-sans",
+  subsets: ["latin"],
+  display: "swap",
+  weight: ["400", "500", "600", "700"],
 });
 
 
@@ -61,12 +69,15 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: uiStyleInitScript }} />
       </head>
       <body
-        className={`${barlow.variable} ${jetbrainsMono.variable} ${orbitron.variable} ${adamHeader.variable} antialiased`}
+        suppressHydrationWarning
+        className={`${barlow.variable} ${jetbrainsMono.variable} ${orbitron.variable} ${adamHeader.variable} ${ibmPlexSans.variable} antialiased`}
       >
-        <UiStyleProvider>
-          <ScrollXReset />
-          {children}
-        </UiStyleProvider>
+        <WalletProvider>
+          <UiStyleProvider>
+            <ScrollXReset />
+            {children}
+          </UiStyleProvider>
+        </WalletProvider>
       </body>
     </html>
   );

@@ -2,7 +2,7 @@
 
 import { useId, ReactNode } from 'react';
 import { useUiStyle } from './UiStyleProvider';
-import { HudDashboard } from './HudDashboard';
+import { HudView as HudDashboard } from './hud/HudView';
 import { ClassicFinanceDashboard } from './classic/ClassicFinanceDashboard';
 
 // --- MAIN LAYOUT ---

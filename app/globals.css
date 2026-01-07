@@ -106,6 +106,7 @@ body {
 }
 
 @supports not (overflow: clip) {
+
   html,
   body {
     overflow-x: hidden;
@@ -123,6 +124,7 @@ body {
   font-family: var(--ui-font-body, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace);
   font-variant-numeric: tabular-nums;
 }
+
 /* --- ADAM DASHBOARD UTILITIES --- */
 .clip-path-folder {
   clip-path: polygon(0 0, 60% 0, 70% 28%, 100% 28%, 100% 100%, 0 100%);
@@ -142,18 +144,22 @@ body {
   scrollbar-width: thin;
   scrollbar-color: rgba(var(--ui-accentHot-rgb), 0.35) transparent;
 }
+
 .custom-scrollbar::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
+
 .custom-scrollbar::-webkit-scrollbar-track {
   background: transparent;
 }
+
 .custom-scrollbar::-webkit-scrollbar-thumb {
   background: rgba(var(--ui-accentHot-rgb), 0.25);
   border-radius: 2px;
   border: 1px solid rgba(var(--ui-accentHot-rgb), 0.25);
 }
+
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(var(--ui-accentHot-rgb), 0.4);
 }
@@ -162,25 +168,33 @@ body {
   scrollbar-width: thin;
   scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
 }
+
 .classic-scrollbar::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
+
 .classic-scrollbar::-webkit-scrollbar-track {
   background: transparent;
 }
+
 .classic-scrollbar::-webkit-scrollbar-thumb {
   background: rgba(0, 0, 0, 0.1);
   border-radius: 10px;
 }
+
 .classic-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(0, 0, 0, 0.2);
 }
+
 /* Hide native scrollbars (we use a subtle "more below" hint instead on some panels) */
 .scrollbar-hide {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
 }
+
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
   width: 0;
@@ -188,11 +202,13 @@ body {
 }
 
 @keyframes adam-scroll-hint {
+
   0%,
   100% {
     transform: translateY(0);
     opacity: 0.55;
   }
+
   50% {
     transform: translateY(3px);
     opacity: 0.9;
@@ -212,24 +228,20 @@ body {
 
 /* Glass panel base (optional helper) */
 .panelGlass {
-  background: radial-gradient(
-    ellipse at top,
-    rgba(31, 34, 41, 0.95) 0%,
-    rgba(19, 21, 26, 0.95) 55%,
-    rgba(15, 17, 21, 0.95) 100%
-  );
+  background: radial-gradient(ellipse at top,
+      rgba(31, 34, 41, 0.95) 0%,
+      rgba(19, 21, 26, 0.95) 55%,
+      rgba(15, 17, 21, 0.95) 100%);
 }
 
 /* Copper rim ring (use with Tailwind: p-px + rounded-2xl) */
 
 .copperRim {
   background-image:
-    linear-gradient(
-      180deg,
+    linear-gradient(180deg,
       rgba(232, 198, 170, 0.32) 0%,
       rgba(164, 114, 82, 0.14) 46%,
-      rgba(40, 16, 10, 0.42) 100%
-    ),
+      rgba(40, 16, 10, 0.42) 100%),
     var(--adam-tex-copper-tile);
   background-blend-mode: overlay;
   background-size: cover;
@@ -268,14 +280,12 @@ body {
 /* Copper plate used for header tab backgrounds (hero specular + bevel) */
 .copperPlate {
   background-image:
-    linear-gradient(
-      95deg,
+    linear-gradient(95deg,
       rgba(45, 25, 12, 0.92) 0%,
       rgba(130, 75, 45, 0.55) 30%,
       rgba(160, 100, 65, 0.5) 50%,
       rgba(130, 75, 45, 0.55) 70%,
-      rgba(55, 30, 15, 0.88) 100%
-    ),
+      rgba(55, 30, 15, 0.88) 100%),
     var(--adam-tex-copper-hero);
   background-blend-mode: overlay;
   background-size: 180% 100%;
@@ -312,9 +322,11 @@ body {
   -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
 }
+
 .ui-control:hover {
   background: var(--ui-control-bg-hover);
 }
+
 .ui-control-muted {
   color: var(--ui-control-muted);
 }
@@ -322,12 +334,15 @@ body {
 .ui-bento-surface {
   background: var(--ui-bento-surface);
 }
+
 .ui-bento-front {
   background: var(--ui-bento-front);
 }
+
 .ui-panel-inset-stroke {
   border: 1px solid var(--ui-panel-inset);
 }
+
 .ui-divider {
   background: var(--ui-divider);
 }
@@ -341,6 +356,7 @@ body {
   background-blend-mode: screen;
   filter: brightness(1.05) contrast(1.05) saturate(1.05);
 }
+
 :root[data-ui='hud'] .copperPlate {
   background-image: linear-gradient(180deg, rgba(var(--ui-accent-rgb), 0.16) 0%, rgba(0, 0, 0, 0.55) 100%);
   background-blend-mode: normal;
@@ -348,12 +364,14 @@ body {
   background-position: center;
   filter: none;
 }
+
 :root[data-ui='hud'] .copperButtonRaised {
   background-image: linear-gradient(180deg, rgba(var(--ui-accentHot-rgb), 0.22) 0%, rgba(var(--ui-accent-rgb), 0.10) 100%);
   background-size: cover;
   background-position: center;
   filter: none;
 }
+
 :root[data-ui='hud'] .copperButtonPressed {
   background-image: linear-gradient(180deg, rgba(var(--ui-accentHot-rgb), 0.14) 0%, rgba(var(--ui-accent-rgb), 0.08) 100%);
   background-size: cover;

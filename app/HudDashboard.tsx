@@ -2,7 +2,8 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
-import DynamicAllocationChart from './components/DynamicAllocationChart';
+import DynamicAllocationChart, { ChartItem } from './components/DynamicAllocationChart';
+import PortfolioChart from './components/PortfolioChart';
 import { useRouter } from 'next/navigation';
 import { Bell, Wallet, Mic, Rocket, ChevronDown, ArrowUp, Paperclip, Lightbulb, Minimize2, X } from 'lucide-react';
 import { UiStyleToggle } from './UiStyleToggle';
@@ -10,6 +11,7 @@ import { ScrollHintArea } from './ScrollHintArea';
 import { LiquidMetal } from '@paper-design/shaders-react';
 import { useEquitySeries, type PortfolioRange as EquityRange } from './hooks/useEquitySeries';
 import { useUiStyle } from './UiStyleProvider';
+import { useKeyboardShortcuts, type ShortcutAction, SHORTCUT_DESCRIPTIONS } from './hooks/useKeyboardShortcuts';
 import styles from './HudDashboard.module.css';
 
 type PanelKey = 'agents' | 'performance' | 'market' | 'trades' | 'allocation' | 'system';
@@ -31,7 +33,8 @@ const HudPanel = ({
   shapeVariant = 'a',
   isCloseVariant = false,
   variant = 'default',
-  disableBodyClick = false
+  disableBodyClick = false,
+  style
 }: { 
   children: React.ReactNode, 
   className?: string, 
@@ -43,14 +46,16 @@ const HudPanel = ({
   shapeVariant?: 'a' | 'b',
   isCloseVariant?: boolean,
   variant?: 'default' | 'glass',
-  disableBodyClick?: boolean
+  disableBodyClick?: boolean,
+  style?: React.CSSProperties
 }) => {
   const shapeClass = shapeVariant === 'b' ? styles.shapeB : styles.shapeA;
   const variantClass = variant === 'glass' ? styles.panelGlass : '';
 
   return (
     <section 
-      className={`${styles.panel} ${shapeClass} ${variantClass} ${className}`} 
+      className={`${styles.panel} ${shapeClass} ${variantClass} ${className}`}
+      style={style}
       onClick={() => {
         if (!isCloseVariant && !disableBodyClick) {
           onExpandClick?.();
@@ -181,288 +186,12 @@ function clamp(n: number, min: number, max: number) {
   return Math.min(max, Math.max(min, n));
 }
 
-function getCssColor(host: HTMLElement, varName: string, fallback: string) {
-  const v = getComputedStyle(host).getPropertyValue(varName).trim();
-  return v || fallback;
-}
-
-function sizeCanvasTo(canvas: HTMLCanvasElement, wrap: HTMLElement) {
-  const rect = wrap.getBoundingClientRect();
-  const dpr = Math.min(window.devicePixelRatio || 1, 2);
-  canvas.width = Math.max(1, Math.floor(rect.width * dpr));
-  canvas.height = Math.max(1, Math.floor(rect.height * dpr));
-  canvas.style.width = `${rect.width}px`;
-  canvas.style.height = `${rect.height}px`;
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return null;
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  return { ctx, w: rect.width, h: rect.height };
-}
-
-function formatAxisTime(range: PortfolioRange, timeSec: number) {
-  const d = new Date(timeSec * 1000);
-  if (range === '1H' || range === '24H') {
-    return new Intl.DateTimeFormat(undefined, { hour: '2-digit', minute: '2-digit' }).format(d);
-  }
-  if (range === '7D' || range === '30D') {
-    return new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric' }).format(d);
-  }
-  return new Intl.DateTimeFormat(undefined, { month: 'short', year: '2-digit' }).format(d);
-}
-
-function formatTooltipTime(range: PortfolioRange, timeSec: number) {
-  const d = new Date(timeSec * 1000);
-  if (range === '1H' || range === '24H') {
-    return new Intl.DateTimeFormat(undefined, { hour: '2-digit', minute: '2-digit' }).format(d);
-  }
-  if (range === '7D' || range === '30D') {
-    return new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric' }).format(d);
-  }
-  return new Intl.DateTimeFormat(undefined, { month: 'short', year: 'numeric' }).format(d);
-}
-
-function drawLineChart(args: {
-  canvas: HTMLCanvasElement;
-  wrap: HTMLElement;
-  host: HTMLElement;
-  series: PortfolioSeriesPoint[];
-  range: PortfolioRange;
-  formatMoney: (x: number) => string;
-}) {
-  const sized = sizeCanvasTo(args.canvas, args.wrap);
-  if (!sized) return;
-  const { ctx, w, h } = sized;
-
-  ctx.clearRect(0, 0, w, h);
-
-  const padL = 44;
-  const padR = 18;
-  const padT = 18;
-  const padB = 34;
-
-  const plotW = w - padL - padR;
-  const plotH = h - padT - padB;
-
-  // grid
-  ctx.strokeStyle = getCssColor(args.host, '--gridLine', 'rgba(255,255,255,.06)');
-  ctx.lineWidth = 1;
-  for (let i = 0; i <= 5; i++) {
-    const y = padT + (plotH * i) / 5;
-    ctx.beginPath();
-    ctx.moveTo(padL, y);
-    ctx.lineTo(padL + plotW, y);
-    ctx.stroke();
-  }
-
-  const series = (args.series ?? []).slice().sort((a, b) => a.time - b.time);
-
-  // axes labels (light)
-  if (series.length > 1) {
-    ctx.fillStyle = 'rgba(232,232,238,.55)';
-    ctx.font = '11px Orbitron, system-ui';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'top';
-
-    const tickCount = 5;
-    for (let i = 0; i < tickCount; i++) {
-      const idx = Math.round((i / (tickCount - 1)) * (series.length - 1));
-      const x = padL + (plotW * idx) / (series.length - 1);
-      ctx.fillText(formatAxisTime(args.range, series[idx]!.time), x, padT + plotH + 10);
-    }
-  }
-
-  if (series.length === 0) {
-    ctx.fillStyle = 'rgba(232,232,238,.35)';
-    ctx.font = '12px Orbitron, system-ui';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('NO DATA', padL + plotW / 2, padT + plotH / 2);
-    return;
-  }
-
-  const values = series.map((p) => p.value);
-  const minVal = Math.min(...values);
-  const maxVal = Math.max(...values);
-  const span = maxVal - minVal;
-  const pad = span === 0 ? Math.max(1, maxVal * 0.01) : span * 0.06;
-  const minV = minVal - pad;
-  const maxV = maxVal + pad;
-
-  const toXY = (idx: number, v: number) => {
-    const n = series.length;
-    const x = n <= 1 ? padL + plotW / 2 : padL + (plotW * idx) / (n - 1);
-    const t = maxV === minV ? 0.5 : (v - minV) / (maxV - minV);
-    const y = padT + plotH - clamp(t, 0, 1) * plotH;
-    return { x, y };
-  };
-
-  const stroke = getCssColor(args.host, '--chartA', 'rgba(255,178,74,.95)');
-  const glow = 'rgba(255,178,74,.30)';
-  const fill = 'rgba(255,178,74,.12)';
-
-  // path
-  ctx.save();
-  ctx.lineWidth = 2;
-  ctx.strokeStyle = stroke;
-  ctx.shadowColor = glow;
-  ctx.shadowBlur = 18;
-  ctx.beginPath();
-  for (let i = 0; i < series.length; i++) {
-    const p = toXY(i, series[i]!.value);
-    if (i === 0) ctx.moveTo(p.x, p.y);
-    else ctx.lineTo(p.x, p.y);
-  }
-  ctx.stroke();
-  ctx.restore();
-
-  // fill
-  ctx.save();
-  ctx.beginPath();
-  for (let i = 0; i < series.length; i++) {
-    const p = toXY(i, series[i]!.value);
-    if (i === 0) ctx.moveTo(p.x, p.y);
-    else ctx.lineTo(p.x, p.y);
-  }
-  ctx.lineTo(padL + plotW, padT + plotH);
-  ctx.lineTo(padL, padT + plotH);
-  ctx.closePath();
-  const grad = ctx.createLinearGradient(0, padT, 0, padT + plotH);
-  grad.addColorStop(0, fill);
-  grad.addColorStop(1, 'rgba(0,0,0,0)');
-  ctx.fillStyle = grad;
-  ctx.fill();
-  ctx.restore();
-
-  // points
-  ctx.save();
-  ctx.fillStyle = stroke;
-  ctx.strokeStyle = 'rgba(0,0,0,.55)';
-  ctx.lineWidth = 2;
-  for (let i = 0; i < series.length; i++) {
-    const p = toXY(i, series[i]!.value);
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.stroke();
-  }
-  ctx.restore();
-}
 
 function formatPct(x: number) {
   const s = (x >= 0 ? '+' : '') + x.toFixed(2) + '%';
   return s;
 }
 
-function HudPerfChart({
-  hostRef,
-  series,
-  range,
-  height,
-  redrawKey,
-  formatMoney,
-}: {
-  hostRef: React.RefObject<HTMLElement | null>;
-  series: PortfolioSeriesPoint[];
-  range: PortfolioRange;
-  height?: number;
-  redrawKey?: string | number;
-  formatMoney: (x: number) => string;
-}) {
-  const wrapRef = useRef<HTMLDivElement | null>(null);
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const tipRef = useRef<HTMLDivElement | null>(null);
-  const tipKeyRef = useRef<HTMLDivElement | null>(null);
-  const tipValRef = useRef<HTMLDivElement | null>(null);
-
-  const redraw = useCallback(() => {
-    const host = hostRef.current;
-    const wrap = wrapRef.current;
-    const canvas = canvasRef.current;
-    if (!host || !wrap || !canvas) return;
-    drawLineChart({ canvas, wrap, host, series, range, formatMoney });
-  }, [hostRef, range, series, formatMoney]);
-
-  useEffect(() => {
-    redraw();
-  }, [redraw, height, redrawKey]);
-
-  useEffect(() => {
-    const wrap = wrapRef.current;
-    if (!wrap) return;
-
-    let ro: ResizeObserver | null = null;
-    const onResize = () => redraw();
-
-    if (typeof ResizeObserver !== 'undefined') {
-      ro = new ResizeObserver(onResize);
-      ro.observe(wrap);
-    } else {
-      window.addEventListener('resize', onResize);
-    }
-
-    return () => {
-      if (ro) ro.disconnect();
-      else window.removeEventListener('resize', onResize);
-    };
-  }, [redraw]);
-
-  const hideTip = () => {
-    if (!tipRef.current) return;
-    tipRef.current.style.display = 'none';
-  };
-
-  const showTip = (x: number, y: number, label: string, value: string) => {
-    if (!tipRef.current || !wrapRef.current) return;
-    if (tipKeyRef.current) tipKeyRef.current.textContent = label.toUpperCase();
-    if (tipValRef.current) tipValRef.current.textContent = value;
-    tipRef.current.style.display = 'block';
-
-    const rect = wrapRef.current.getBoundingClientRect();
-    const tx = Math.max(12, Math.min(rect.width - 220, x + 16));
-    const ty = Math.max(12, Math.min(rect.height - 80, y - 10));
-    tipRef.current.style.left = `${tx}px`;
-    tipRef.current.style.top = `${ty}px`;
-  };
-
-  const onMouseMove = (e: React.MouseEvent) => {
-    if (!wrapRef.current) return;
-    if (!series || series.length === 0) {
-      hideTip();
-      return;
-    }
-    const rect = wrapRef.current.getBoundingClientRect();
-    const mx = e.clientX - rect.left;
-    const my = e.clientY - rect.top;
-    const padL = 44;
-    const padR = 18;
-    const plotW = rect.width - padL - padR;
-    const t = (mx - padL) / Math.max(1, plotW);
-    const idx = clamp(Math.round(t * (series.length - 1)), 0, series.length - 1);
-    const p = series[idx];
-    if (!p) return;
-    showTip(mx, my, formatTooltipTime(range, p.time), formatMoney(p.value));
-  };
-
-  return (
-    <div
-      ref={wrapRef}
-      className={styles.chartWrap}
-      style={typeof height === 'number' ? { height } : undefined}
-      onMouseMove={onMouseMove}
-      onMouseLeave={hideTip}
-    >
-      <canvas ref={canvasRef} className={styles.chartCanvas} />
-      <div ref={tipRef} className={styles.chartTooltip}>
-        <div ref={tipKeyRef} className={styles.tKey}>
-          TIME
-        </div>
-        <div ref={tipValRef} className={styles.tVal}>
-          $0
-        </div>
-      </div>
-    </div>
-  );
-}
 
 export function HudDashboard() {
   const rootRef = useRef<HTMLDivElement | null>(null);
@@ -488,6 +217,12 @@ export function HudDashboard() {
   const equityIsLive = equitySeries.isLive;
 
   const [modalPanel, setModalPanel] = useState<PanelKey | null>(null);
+  const [showShortcutsModal, setShowShortcutsModal] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [chatDockPosition, setChatDockPosition] = useState({ x: 0, y: 0 });
+  const [isDraggingChat, setIsDraggingChat] = useState(false);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const chatDockRef = useRef<HTMLDivElement | null>(null);
 
   // Settings State
   const [settings, setSettings] = useState({
@@ -496,6 +231,11 @@ export function HudDashboard() {
     animationsEnabled: true,
     theme: 'dark', // 'dark' | 'light'
     notificationsEnabled: true,
+    keyboardShortcutsEnabled: true,
+    soundEffectsEnabled: false,
+    dataDensity: 'comfortable' as 'comfortable' | 'compact',
+    realtimePulseEnabled: true,
+    reduceMotion: false, // Auto-detect from system preference
   });
 
   // Persistence: Load settings from localStorage on mount
@@ -684,6 +424,13 @@ export function HudDashboard() {
     return { totalValue: total, solPct: sPct, adaPct: aPct, otherPct: oPct };
   }, [holdings]);
 
+  // Convert percentages to ChartItem array format for DynamicAllocationChart
+  const chartData = useMemo<ChartItem[]>(() => [
+    { id: 'sol', label: 'SOL', value: solPct, color: 'rgba(203, 161, 53, .95)' },
+    { id: 'ada', label: 'ADA', value: adaPct, color: 'rgba(45, 212, 191, .92)' },
+    { id: 'other', label: 'Other', value: otherPct, color: 'rgba(42, 48, 60, .92)' },
+  ], [solPct, adaPct, otherPct]);
+
   const recentTrades = useMemo<TradeRow[]>(
     () => [
       { type: 'BUY', pair: 'SNEK/ADA', time: '2m' },
@@ -713,23 +460,75 @@ export function HudDashboard() {
     setAgents((prev) => prev.map((a) => (a.id === agentId ? { ...a, runtimeState: 'stopped' } : a)));
   }, []);
 
-  // Key bindings: Escape closes modal/chat.
-  useEffect(() => {
-    const onKeyDown = (e: KeyboardEvent) => {
-      const tag = (e.target as HTMLElement | null)?.tagName?.toLowerCase();
-      const isTypingTarget =
-        tag === 'input' || tag === 'textarea' || (e.target as HTMLElement | null)?.isContentEditable;
-      if (isTypingTarget) return;
+  // Keyboard shortcuts handler
+  const handleShortcutAction = useCallback((action: ShortcutAction) => {
+    switch (action) {
+      case 'openShortcuts':
+        setShowShortcutsModal(true);
+        break;
+      case 'openSettings':
+        setView('settings');
+        break;
+      case 'closeModal':
+        if (showShortcutsModal) {
+          setShowShortcutsModal(false);
+        } else if (modalPanel) {
+          closeModal();
+        } else if (view === 'chatFull') {
+          setView('dashboard');
+        } else if (isChatDockOpen) {
+          setIsChatDockOpen(false);
+        }
+        break;
+      case 'switchRange1H':
+        setActiveRange('1H');
+        break;
+      case 'switchRange24H':
+        setActiveRange('24H');
+        break;
+      case 'switchRange7D':
+        setActiveRange('7D');
+        break;
+      case 'switchRange30D':
+        setActiveRange('30D');
+        break;
+      case 'switchRangeALL':
+        setActiveRange('ALL');
+        break;
+      case 'expandPortfolio':
+        openModal('agents');
+        break;
+      case 'expandTrades':
+        openModal('trades');
+        break;
+      case 'expandAllocation':
+        openModal('allocation');
+        break;
+      case 'expandMarket':
+        openModal('market');
+        break;
+      case 'refreshData':
+        // Trigger a refresh - for now just log, will be implemented with real data
+        console.log('Refresh data');
+        break;
+      case 'toggleDataDensity':
+        setSettings(prev => ({
+          ...prev,
+          dataDensity: prev.dataDensity === 'comfortable' ? 'compact' : 'comfortable'
+        }));
+        break;
+      case 'toggleChartType':
+        // This will be handled by the DynamicAllocationChart component
+        // We'll need to pass a ref or callback to trigger it
+        break;
+    }
+  }, [modalPanel, closeModal, view, isChatDockOpen, showShortcutsModal, openModal]);
 
-      if (e.key === 'Escape') {
-        if (modalPanel) closeModal();
-        else if (view === 'chatFull') setView('dashboard');
-        else if (isChatDockOpen) setIsChatDockOpen(false);
-      }
-    };
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, [modalPanel, closeModal, view, isChatDockOpen]);
+  // Initialize keyboard shortcuts
+  useKeyboardShortcuts({
+    enabled: settings.keyboardShortcutsEnabled,
+    onAction: handleShortcutAction,
+  });
 
   // Initialize HUD background (Three.js) + procedural noise overlay.
   useEffect(() => {
@@ -994,8 +793,80 @@ export function HudDashboard() {
     };
   }, [settings.animationsEnabled]);
 
+  // Check for system reduced motion preference
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const handleChange = () => {
+      if (mediaQuery.matches && !settings.reduceMotion) {
+        // Auto-enable if system preference is set and user hasn't manually overridden
+        setSettings(prev => ({ ...prev, reduceMotion: true }));
+      }
+    };
+    handleChange();
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, [settings.reduceMotion]);
+
+  // Loading choreography - trigger staggered panel reveals
+  useEffect(() => {
+    if (!isLoaded) {
+      // Small delay to ensure DOM is ready, then trigger animation
+      const timer = setTimeout(() => {
+        setIsLoaded(true);
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [isLoaded]);
+
+  // Chat dock drag handlers
+  useEffect(() => {
+    if (!isDraggingChat) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!chatDockRef.current) return;
+      const rect = chatDockRef.current.getBoundingClientRect();
+      const newX = e.clientX - dragOffset.x;
+      const newY = e.clientY - dragOffset.y;
+      
+      // Constrain to viewport
+      const maxX = window.innerWidth - rect.width;
+      const maxY = window.innerHeight - rect.height;
+      
+      setChatDockPosition({
+        x: Math.max(0, Math.min(newX, maxX)),
+        y: Math.max(0, Math.min(newY, maxY)),
+      });
+    };
+
+    const handleMouseUp = () => {
+      setIsDraggingChat(false);
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDraggingChat, dragOffset]);
+
+  // Initialize chat dock position to bottom-right when first opened
+  useEffect(() => {
+    if (isChatDockOpen && chatDockPosition.x === 0 && chatDockPosition.y === 0) {
+      // Position will be handled by CSS, but we'll reset on close
+    }
+  }, [isChatDockOpen, chatDockPosition]);
+
+  // Reset position when chat dock closes
+  useEffect(() => {
+    if (!isChatDockOpen) {
+      setChatDockPosition({ x: 0, y: 0 });
+    }
+  }, [isChatDockOpen]);
+
   return (
-    <div ref={rootRef} className={styles.root}>
+    <div ref={rootRef} className={`${styles.root} ${settings.dataDensity === 'compact' ? styles.compactMode : ''} ${settings.reduceMotion ? styles.reduceMotion : ''}`}>
       <canvas ref={bgCanvasRef} className={styles.bg} />
       <canvas ref={noiseCanvasRef} className={styles.noise} />
 
@@ -1070,7 +941,13 @@ export function HudDashboard() {
         <main className={styles.dashboard} aria-label="Dashboard">
           {/* LEFT: AGENTS */}
           <HudPanel
-            className={styles.panelAgents}
+            className={`${styles.panelAgents} ${isLoaded ? styles.panelLoaded : ''}`}
+            style={{ 
+              animationDelay: settings.reduceMotion ? '0ms' : '0ms',
+              opacity: isLoaded ? 1 : 0,
+              transform: isLoaded ? 'translateY(0)' : 'translateY(20px)',
+              transition: settings.reduceMotion ? 'none' : 'opacity 0.4s ease-out, transform 0.4s ease-out'
+            }}
             title="AGENT ROSTER"
             aria-label="Agent Roster"
             onDoubleClick={() => openModal('agents')}
@@ -1147,7 +1024,13 @@ export function HudDashboard() {
 
           {/* CENTER: PERFORMANCE */}
           <HudPanel 
-            className={styles.panelPerformance} 
+            className={styles.panelPerformance}
+            style={{ 
+              animationDelay: settings.reduceMotion ? '0ms' : '100ms',
+              opacity: isLoaded ? 1 : 0,
+              transform: isLoaded ? 'translateY(0)' : 'translateY(20px)',
+              transition: settings.reduceMotion ? 'none' : 'opacity 0.4s ease-out, transform 0.4s ease-out'
+            }}
             title="PORTFOLIO PERFORMANCE"
             aria-label="Portfolio performance" 
             onDoubleClick={() => openModal('performance')}
@@ -1173,12 +1056,11 @@ export function HudDashboard() {
                 ))}
               </div>
               <div className={styles.muted} style={{ fontSize: 11, letterSpacing: '.12em' }}>
-                HOVER FOR VALUES · {equityIsLive ? 'LIVE' : 'DEMO'}
+                HOVER FOR VALUES · <span style={{ color: equityIsLive ? 'var(--ok)' : 'var(--warning)' }}>{equityIsLive ? 'LIVE' : 'DEMO'}</span>
               </div>
             </div>
 
-            <HudPerfChart 
-              hostRef={rootRef} 
+            <PortfolioChart 
               series={equityPoints} 
               range={activeRange} 
               formatMoney={formatUSD} 
@@ -1197,14 +1079,20 @@ export function HudDashboard() {
               </div>
               <div className={styles.kpi}>
                 <div className={styles.kpiKey}>MODE</div>
-                <div className={styles.kpiVal}>{equityIsLive ? 'LIVE' : 'DEMO'}</div>
+                <div className={styles.kpiVal} style={{ color: equityIsLive ? 'var(--ok)' : 'var(--warning)' }}>{equityIsLive ? 'LIVE' : 'DEMO'}</div>
               </div>
             </div>
           </HudPanel>
 
           {/* RIGHT: MARKET */}
           <HudPanel 
-            className={styles.panelMarket} 
+            className={styles.panelMarket}
+            style={{ 
+              animationDelay: settings.reduceMotion ? '0ms' : '200ms',
+              opacity: isLoaded ? 1 : 0,
+              transform: isLoaded ? 'translateY(0)' : 'translateY(20px)',
+              transition: settings.reduceMotion ? 'none' : 'opacity 0.4s ease-out, transform 0.4s ease-out'
+            }}
             title="HOLDINGS"
             aria-label="Holdings" 
             onDoubleClick={() => openModal('market')}
@@ -1241,6 +1129,12 @@ export function HudDashboard() {
           {/* BOTTOM CENTER: Trades + Allocation */}
           <div className={styles.bottomWrap}>
             <HudPanel 
+              style={{ 
+                animationDelay: settings.reduceMotion ? '0ms' : '300ms',
+                opacity: isLoaded ? 1 : 0,
+                transform: isLoaded ? 'translateY(0)' : 'translateY(20px)',
+                transition: settings.reduceMotion ? 'none' : 'opacity 0.4s ease-out, transform 0.4s ease-out'
+              }}
               title="RECENT TRADES"
               aria-label="Recent trades" 
               onDoubleClick={() => openModal('trades')}
@@ -1272,8 +1166,14 @@ export function HudDashboard() {
             </HudPanel>
 
             <HudPanel 
+              style={{ 
+                animationDelay: settings.reduceMotion ? '0ms' : '400ms',
+                opacity: isLoaded ? 1 : 0,
+                transform: isLoaded ? 'translateY(0)' : 'translateY(20px)',
+                transition: settings.reduceMotion ? 'none' : 'opacity 0.4s ease-out, transform 0.4s ease-out'
+              }}
               title="ASSET ALLOCATION"
-              aria-label="Asset allocation" 
+              aria-label="Asset allocation"
               onDoubleClick={() => openModal('allocation')}
               onExpandClick={() => openModal('allocation')}
               accentVariant="horizontal"
@@ -1283,7 +1183,7 @@ export function HudDashboard() {
               <div className="flex-1 flex flex-col justify-center min-h-0 overflow-hidden">
                 <div className={styles.allocWrap}>
                   <DynamicAllocationChart
-                    data={{ solPct, adaPct, otherPct, totalValue: `$${totalValue.toLocaleString()}` }}
+                    data={chartData}
                     size="medium"
                   />
                   <div className={styles.legend}>
@@ -1308,7 +1208,13 @@ export function HudDashboard() {
 
           {/* RIGHT BOTTOM: System status */}
           <HudPanel 
-            className={styles.panelSystem} 
+            className={styles.panelSystem}
+            style={{ 
+              animationDelay: settings.reduceMotion ? '0ms' : '500ms',
+              opacity: isLoaded ? 1 : 0,
+              transform: isLoaded ? 'translateY(0)' : 'translateY(20px)',
+              transition: settings.reduceMotion ? 'none' : 'opacity 0.4s ease-out, transform 0.4s ease-out'
+            }}
             title="SYSTEM STATUS"
             aria-label="System status" 
             onDoubleClick={() => openModal('system')}
@@ -1637,6 +1543,104 @@ export function HudDashboard() {
                         }`} />
                       </button>
                     </div>
+
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="text-sm font-semibold text-white">Keyboard Shortcuts</div>
+                        <div className="text-xs text-white/40">Enable keyboard shortcuts for power users. Press ? to view all shortcuts.</div>
+                      </div>
+                      <button
+                        onClick={() => updateSetting('keyboardShortcutsEnabled', !settings.keyboardShortcutsEnabled)}
+                        className={`w-12 h-6 rounded-full transition-all relative ${
+                          settings.keyboardShortcutsEnabled ? 'bg-amber-500' : 'bg-white/10'
+                        }`}
+                      >
+                        <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${
+                          settings.keyboardShortcutsEnabled ? 'right-1' : 'left-1'
+                        }`} />
+                      </button>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="text-sm font-semibold text-white">Sound Effects</div>
+                        <div className="text-xs text-white/40">Play subtle audio feedback for interactions (chart morph, transactions).</div>
+                      </div>
+                      <button
+                        onClick={() => updateSetting('soundEffectsEnabled', !settings.soundEffectsEnabled)}
+                        className={`w-12 h-6 rounded-full transition-all relative ${
+                          settings.soundEffectsEnabled ? 'bg-amber-500' : 'bg-white/10'
+                        }`}
+                      >
+                        <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${
+                          settings.soundEffectsEnabled ? 'right-1' : 'left-1'
+                        }`} />
+                      </button>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="text-sm font-semibold text-white">Real-time Pulse Indicators</div>
+                        <div className="text-xs text-white/40">Show breathing animations on live data points and connection status.</div>
+                      </div>
+                      <button
+                        onClick={() => updateSetting('realtimePulseEnabled', !settings.realtimePulseEnabled)}
+                        className={`w-12 h-6 rounded-full transition-all relative ${
+                          settings.realtimePulseEnabled ? 'bg-amber-500' : 'bg-white/10'
+                        }`}
+                      >
+                        <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${
+                          settings.realtimePulseEnabled ? 'right-1' : 'left-1'
+                        }`} />
+                      </button>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="text-sm font-semibold text-white">Reduce Motion</div>
+                        <div className="text-xs text-white/40">Override system preference to reduce animations for accessibility.</div>
+                      </div>
+                      <button
+                        onClick={() => updateSetting('reduceMotion', !settings.reduceMotion)}
+                        className={`w-12 h-6 rounded-full transition-all relative ${
+                          settings.reduceMotion ? 'bg-amber-500' : 'bg-white/10'
+                        }`}
+                      >
+                        <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${
+                          settings.reduceMotion ? 'right-1' : 'left-1'
+                        }`} />
+                      </button>
+                    </div>
+                  </div>
+                </HudPanel>
+
+                {/* Data Density */}
+                <HudPanel title="DATA DENSITY" accentVariant="vertical" shapeVariant="b" variant="glass">
+                  <div className="p-2 space-y-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="text-sm font-semibold text-white">Information Density</div>
+                        <div className="text-xs text-white/40">Control how much information is displayed. Compact shows more data, Comfortable is easier to read.</div>
+                      </div>
+                      <div className="flex bg-black/40 p-1 rounded-sm border border-white/10">
+                        <button
+                          onClick={() => updateSetting('dataDensity', 'comfortable')}
+                          className={`px-4 py-1.5 rounded-sm text-xs transition-all ${
+                            settings.dataDensity === 'comfortable' ? 'bg-amber-500/20 text-white border border-amber-500/30' : 'text-white/40 hover:text-white'
+                          }`}
+                        >
+                          COMFORTABLE
+                        </button>
+                        <button
+                          onClick={() => updateSetting('dataDensity', 'compact')}
+                          className={`px-4 py-1.5 rounded-sm text-xs transition-all ${
+                            settings.dataDensity === 'compact' ? 'bg-amber-500/20 text-white border border-amber-500/30' : 'text-white/40 hover:text-white'
+                          }`}
+                        >
+                          COMPACT
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </HudPanel>
               </div>
@@ -1792,7 +1796,7 @@ export function HudDashboard() {
                   <div className={styles.subPanel} style={{ marginBottom: 14 }}>
                     <div className={styles.subTitle}>PORTFOLIO PERFORMANCE</div>
                     <div className={styles.subNote}>
-                      Range: <span className={styles.mono}>{activeRange}</span> · {equityIsLive ? 'LIVE' : 'DEMO'}
+                      Range: <span className={styles.mono}>{activeRange}</span> · <span style={{ color: equityIsLive ? 'var(--ok)' : 'var(--warning)' }}>{equityIsLive ? 'LIVE' : 'DEMO'}</span>
                     </div>
                     <div style={{ height: 12 }} />
                     <div className={styles.seg} role="tablist" aria-label="Performance range">
@@ -1811,12 +1815,11 @@ export function HudDashboard() {
                       ))}
                     </div>
                   </div>
-                  <HudPerfChart 
-                    hostRef={rootRef} 
+                  <PortfolioChart 
                     series={equityPoints} 
                     range={activeRange} 
-                    height={520} 
                     formatMoney={formatUSD}
+                    height={520}
                   />
                   <div className={styles.kpis} style={{ marginTop: 14 }}>
                     <div className={styles.kpi}>
@@ -1831,7 +1834,7 @@ export function HudDashboard() {
                     </div>
                     <div className={styles.kpi}>
                       <div className={styles.kpiKey}>MODE</div>
-                      <div className={styles.kpiVal}>{equityIsLive ? 'LIVE' : 'DEMO'}</div>
+                      <div className={styles.kpiVal} style={{ color: equityIsLive ? 'var(--ok)' : 'var(--warning)' }}>{equityIsLive ? 'LIVE' : 'DEMO'}</div>
                     </div>
                   </div>
                 </>
@@ -1933,7 +1936,7 @@ export function HudDashboard() {
                     <div style={{ height: 12 }} />
                     <div className={styles.allocWrap} style={{ gridTemplateColumns: 'minmax(180px, 220px) 1fr', padding: '8px 4px 24px 4px' }}>
                       <DynamicAllocationChart
-                        data={{ solPct, adaPct, otherPct, totalValue: `$${totalValue.toLocaleString()}` }}
+                        data={chartData}
                         size="large"
                       />
                       <div className={styles.legend}>
@@ -2015,6 +2018,49 @@ export function HudDashboard() {
         </div>
       </div>
 
+      {/* Keyboard Shortcuts Cheat Sheet Modal */}
+      <div
+        className={`${styles.modalOverlay} ${showShortcutsModal ? styles.isOpen : ''}`}
+        aria-hidden={showShortcutsModal ? 'false' : 'true'}
+        onClick={(e) => {
+          if (e.target === e.currentTarget) setShowShortcutsModal(false);
+        }}
+      >
+        <div className={styles.modalShell}>
+          <HudPanel
+            className={styles.modalPanel}
+            title="KEYBOARD SHORTCUTS"
+            onExpandClick={() => setShowShortcutsModal(false)}
+            accentVariant="none"
+            isCloseVariant={true}
+            variant="glass"
+          >
+            <div className={styles.modalBody}>
+              <div className={styles.subPanel}>
+                <div className={styles.subTitle}>SHORTCUTS</div>
+                <div className={styles.subNote}>Press ? to open this panel anytime</div>
+                <div style={{ height: 20 }} />
+                <div className={styles.shortcutsList}>
+                  {SHORTCUT_DESCRIPTIONS.map((shortcut, idx) => (
+                    <div key={idx} className={styles.shortcutRow}>
+                      <div className={styles.shortcutKey}>
+                        <kbd className={styles.kbd}>{shortcut.key}</kbd>
+                      </div>
+                      <div className={styles.shortcutAction}>{shortcut.action}</div>
+                      <div className={styles.shortcutContext}>{shortcut.context}</div>
+                    </div>
+                  ))}
+                </div>
+                <div style={{ height: 20 }} />
+                <div className={styles.subNote} style={{ fontSize: '11px', opacity: 0.7 }}>
+                  Keyboard shortcuts can be toggled in Settings (S)
+                </div>
+              </div>
+            </div>
+          </HudPanel>
+        </div>
+      </div>
+
       {/* FULL CHAT OVERLAY (Agent T) */}
       {view === 'chatFull' && (
       <div
@@ -2035,36 +2081,14 @@ export function HudDashboard() {
 
         <div className="relative h-full overflow-y-auto custom-scrollbar px-[12%] pt-[clamp(92px,10vh,140px)] pb-[12%]">
           <div className="max-w-[980px] mx-auto space-y-4">
-            <div className="flex items-start justify-between gap-6">
-              <div>
-                <div className="text-2xl font-semibold text-white">Ask Agent T</div>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setView('dashboard');
-                    setIsChatDockOpen(true);
-                  }}
-                  className="p-2 rounded-sm border border-white/10 text-white/80 bg-white/5 hover:bg-white/10 transition-colors"
-                  aria-label="Minimize"
-                >
-                  <Minimize2 size={16} />
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setView('dashboard')}
-                  className="p-2 rounded-sm border border-white/10 text-white/80 bg-white/5 hover:bg-white/10 transition-colors"
-                  aria-label="Close"
-                >
-                  <X size={16} />
-                </button>
-              </div>
-            </div>
-
-            <HudPanel title="ASK AGENT T" variant="glass" accentVariant="horizontal" shapeVariant="a">
+            <HudPanel
+              title="ASK AGENT T"
+              variant="glass"
+              accentVariant="horizontal"
+              shapeVariant="a"
+              onExpandClick={() => setView('dashboard')}
+              isCloseVariant={true}
+            >
               {/* T-chat-logo background - barely visible */}
               <div aria-hidden className="absolute inset-[2px] rounded-sm overflow-hidden pointer-events-none flex items-center justify-center">
                 <Image
@@ -2213,26 +2237,24 @@ export function HudDashboard() {
 
       {/* CHAT POPUP (Glass) */}
       {isChatDockOpen && (
-      <div
-        className={
-          'fixed inset-0 z-[11040] transition-opacity duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ' +
-          (isChatDockOpen ? 'opacity-100' : 'opacity-0 pointer-events-none')
-        }
-        style={{ display: isChatDockOpen ? 'block' : 'none' }}
-      >
-          {/* No backdrop - background remains normal */}
-
-          {/* Window (fade/scale) */}
           <div
+            ref={chatDockRef}
             role="dialog"
             aria-label="Agent T chat"
             className={
-              'absolute right-[clamp(16px,2.2vw,28px)] bottom-[clamp(16px,2.2vw,28px)] ' +
-              'w-[min(460px,92vw)] h-[min(72vh,680px)] origin-bottom-right ' +
+              'fixed z-[11040] ' +
+              'w-[min(460px,92vw)] h-[min(72vh,680px)] ' +
               'transition-[opacity,transform,filter] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ' +
               'will-change-[opacity,transform,filter] pointer-events-auto ' +
-              'opacity-100 translate-y-0 scale-100 blur-0'
+              'opacity-100 translate-y-0 scale-100 blur-0 ' +
+              (isDraggingChat ? 'cursor-move' : 'cursor-default')
             }
+            style={{
+              right: chatDockPosition.x === 0 ? 'clamp(16px,2.2vw,28px)' : 'auto',
+              bottom: chatDockPosition.y === 0 ? 'clamp(16px,2.2vw,28px)' : 'auto',
+              left: chatDockPosition.x !== 0 ? `${chatDockPosition.x}px` : 'auto',
+              top: chatDockPosition.y !== 0 ? `${chatDockPosition.y}px` : 'auto',
+            }}
           >
           <div className="relative h-full rounded-sm overflow-hidden border border-white/12 bg-[#0E131C]/95 backdrop-blur-xl shadow-[0_40px_120px_rgba(0,0,0,0.65)]">
             {/* Frost gradients */}
@@ -2252,9 +2274,22 @@ export function HudDashboard() {
             />
 
             <div className="relative h-full flex flex-col">
-              {/* Header */}
-              <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
-                <div className="flex items-center gap-3">
+              {/* Header - draggable area */}
+              <div 
+                className="flex items-center justify-between px-5 py-4 border-b border-white/10 cursor-move select-none"
+                onMouseDown={(e) => {
+                  if (!chatDockRef.current) return;
+                  const rect = chatDockRef.current.getBoundingClientRect();
+                  // Calculate offset from mouse position to top-left corner of element
+                  setDragOffset({
+                    x: e.clientX - rect.left,
+                    y: e.clientY - rect.top,
+                  });
+                  setIsDraggingChat(true);
+                  e.preventDefault(); // Prevent text selection while dragging
+                }}
+              >
+                <div className="flex items-center gap-3 pointer-events-none">
                   <LiquidMetalRim size={36} rounded="rounded-full">
                     <Image
                       src="/agents/agent-t-portrait-512.jpg"
@@ -2266,11 +2301,11 @@ export function HudDashboard() {
                   </LiquidMetalRim>
                   <div>
                     <div className="text-sm font-semibold text-white">Agent T</div>
-                    <div className="text-[10px] text-white/50">Quick chat</div>
+                    <div className="text-[10px] text-white/50">Quick chat · Drag to move</div>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 pointer-events-auto">
                   <button
                     type="button"
                     onClick={() => {
@@ -2413,8 +2448,7 @@ export function HudDashboard() {
               </div>
             </div>
           </div>
-        </div>
-      </div>
+          </div>
       )}
 
       {/* FLOATING CHAT FAB */}

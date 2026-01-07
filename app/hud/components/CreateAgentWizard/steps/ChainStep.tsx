@@ -56,7 +56,7 @@ export function ChainStep({ selectedChain, onChainSelect, onNext, allowedChains 
           return (
             <button
               key={chain}
-              className={`${styles.chainCard} ${isSelected ? styles.selected : ''} ${isDisabled ? styles.disabled : ''}`}
+              className={`${styles.chainCard} ${isSelected ? styles.chainSelected : ''} ${isDisabled ? styles.disabled : ''}`}
               onClick={() => !isDisabled && onChainSelect(chain)}
               disabled={isDisabled}
             >

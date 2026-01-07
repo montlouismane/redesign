@@ -44,22 +44,46 @@ export const ScrollHintArea = ({ children, className = '' }: ScrollHintAreaProps
     };
   }, []);
 
+  const hasFlex1 = className.includes('flex-1');
+  const hasAbsolute = className.includes('absolute') && className.includes('inset-0');
+  
+  // Extract positioning classes for wrapper, keep rest for inner div
+  const positioningClasses = hasAbsolute 
+    ? 'absolute inset-0' 
+    : (hasFlex1 ? 'flex-1 flex flex-col relative' : 'relative h-full');
+  const wrapperClasses = `min-h-0 ${positioningClasses}`;
+  const scrollClasses = className
+    .replace('flex-1', '')
+    .replace('absolute', '')
+    .replace('inset-0', '')
+    .trim();
+  
   return (
-    <div className="relative h-full min-h-0">
-      <div ref={ref} className={`h-full min-h-0 overflow-y-auto scrollbar-hide ${className}`}>{children}</div>
+    <div className={`relative min-h-0 flex-1 flex flex-col`} style={{ minHeight: 0, flex: '1 1 auto' }}>
+      <div 
+        ref={ref} 
+        className={`flex-1 min-h-0 overflow-y-auto overflow-x-hidden scrollbar-hide w-full transition-all duration-300 ${className}`}
+        style={{ 
+          minHeight: 0,
+          maskImage: showHint 
+            ? 'linear-gradient(to bottom, black 0%, black 75%, transparent 100%)'
+            : 'linear-gradient(to bottom, black 100%, transparent 100%)',
+          WebkitMaskImage: showHint 
+            ? 'linear-gradient(to bottom, black 0%, black 75%, transparent 100%)'
+            : 'linear-gradient(to bottom, black 100%, transparent 100%)',
+          maskComposite: 'intersect',
+          WebkitMaskComposite: 'source-in'
+        }}
+      >
+        {children}
+      </div>
 
       {showHint ? (
-        <>
-          <div
-            aria-hidden
-            className="pointer-events-none absolute bottom-0 left-0 right-0 h-14 bg-gradient-to-t from-black/45 via-black/20 to-transparent"
-          />
-          <div aria-hidden className="pointer-events-none absolute bottom-3 left-0 right-0 flex justify-center">
-            <div className="h-7 w-9 rounded-full bg-black/25 border border-white/10 flex items-center justify-center">
-              <ChevronDown size={16} className="text-white/65 adam-scroll-hint" />
-            </div>
+        <div aria-hidden className="pointer-events-none absolute bottom-3 left-0 right-0 flex justify-center z-20">
+          <div className="h-7 w-9 rounded-sm bg-black/40 border border-white/20 flex items-center justify-center shadow-lg">
+            <ChevronDown size={16} className="text-white adam-scroll-hint" />
           </div>
-        </>
+        </div>
       ) : null}
     </div>
   );
