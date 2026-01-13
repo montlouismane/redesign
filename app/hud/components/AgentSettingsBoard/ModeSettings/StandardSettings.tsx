@@ -147,21 +147,22 @@ export function StandardSettings({ settings, onChange, onFaqClick, onBacktestCli
                     <HorizontalSlider
                       value={defaults.minTradeSize}
                       onChange={(val) => onChange({ minTradeSize: val })}
-                      min={1} max={100} step={1} unit="ADA"
+                      min={40} max={100} step={1} unit="ADA"
                     />
                   </ControlRow>
                   <ControlRow label="Max Trade Size" helper="Caps single trade">
                     <HorizontalSlider
                       value={defaults.maxTradeSize}
                       onChange={(val) => onChange({ maxTradeSize: val })}
-                      min={50} max={1000} step={10} unit="ADA"
+                      min={80} max={1000} step={10} unit="ADA"
                     />
                   </ControlRow>
                   <ControlRow label="Native Reserve" helper="Min balance to keep in wallet">
                     <HorizontalSlider
                       value={defaults.nativeReserve}
                       onChange={(val) => onChange({ nativeReserve: val })}
-                      min={50} max={1000} step={50} unit="ADA"
+                      min={50} max={500} step={10} unit="ADA"
+                      inputStep={1} inputMin={0}
                     />
                   </ControlRow>
                 </div>

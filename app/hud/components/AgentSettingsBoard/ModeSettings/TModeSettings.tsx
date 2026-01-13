@@ -93,28 +93,28 @@ export function TModeSettings({ settings, onChange, onFaqClick, onAdvancedClick 
                 <MetallicDial
                   value={defaults.minBuyConfidence}
                   onChange={(value) => updateSetting('minBuyConfidence', value)}
-                  min={10} max={100} safeMin={60} safeMax={80} unit="%"
+                  min={40} max={90} safeMin={65} safeMax={75} unit="%"
                 />
               </ControlRow>
-              <ControlRow label="Low (ADA)" helper="Low tier">
+              <ControlRow label="Low (ADA)" helper="Low confidence buy">
                 <HorizontalSlider
                   value={defaults.lowTierSize}
                   onChange={(value) => updateSetting('lowTierSize', value)}
-                  min={50} max={1000} step={50} unit="ADA"
+                  min={50} max={250} step={10} inputMin={0} unit="ADA"
                 />
               </ControlRow>
-              <ControlRow label="Mid (ADA)" helper="Mid tier">
+              <ControlRow label="Mid (ADA)" helper="Mid confidence buy">
                 <HorizontalSlider
                   value={defaults.midTierSize}
                   onChange={(value) => updateSetting('midTierSize', value)}
-                  min={100} max={2000} step={50} unit="ADA"
+                  min={75} max={500} step={25} inputMin={0} unit="ADA"
                 />
               </ControlRow>
-              <ControlRow label="High (ADA)" helper="High tier">
+              <ControlRow label="High (ADA)" helper="High confidence buy">
                 <HorizontalSlider
                   value={defaults.highTierSize}
                   onChange={(value) => updateSetting('highTierSize', value)}
-                  min={200} max={5000} step={100} unit="ADA"
+                  min={100} max={750} step={25} inputMin={0} unit="ADA"
                 />
               </ControlRow>
             </div>

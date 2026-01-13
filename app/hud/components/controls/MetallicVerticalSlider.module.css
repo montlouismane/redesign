@@ -10,17 +10,19 @@
   --copper-light: #e2a76f;
   --copper-dark: #8b4513;
   --copper-glow: rgba(184, 115, 51, 0.5);
-  --track-width: 8px;
-  --thumb-size: 24px;
-  --tick-width: 12px;
-  --tick-width-major: 18px;
+  --track-width: 6px;
+  /* Fader Dimensions: Vertical Rectangle (User refined) */
+  --thumb-width: 18px;
+  --thumb-height: 30px;
+  --tick-width: 8px;
+  --tick-width-major: 14px;
 
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
-  width: 100px;
-  padding: 8px;
+  gap: 8px;
+  width: 80px;
+  padding: 0;
 }
 
 .metallicVerticalSlider[data-disabled="true"] {
@@ -46,36 +48,44 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  height: 180px;
+  height: 160px;
   width: 100%;
-  padding: 14px 8px;
   cursor: pointer;
+}
+
+/* Track Area - defines the travel boundaries */
+.trackArea {
+  position: absolute;
+  top: 16px;
+  bottom: 16px;
+  width: 100%;
+  /* This ensures the travel range is inset, so the thumb doesn't overshoot the container */
 }
 
 /* Track background with brushed metal effect */
 .trackBackground {
   position: absolute;
   left: 50%;
-  top: 14px;
-  bottom: 14px;
+  top: -6px;
+  /* Extend track slightly beyond travel range */
+  bottom: -6px;
+  /* Extend track slightly beyond travel range */
   width: var(--track-width);
   transform: translateX(-50%);
   border-radius: calc(var(--track-width) / 2);
-  overflow: hidden;
+  overflow: visible;
+  /* Allow glow to spill */
 
   /* 3D brushed copper track */
   background:
-    linear-gradient(
-      90deg,
-      rgba(0, 0, 0, 0.4) 0%,
-      rgba(30, 20, 10, 0.6) 20%,
-      rgba(50, 35, 20, 0.4) 50%,
-      rgba(30, 20, 10, 0.6) 80%,
-      rgba(0, 0, 0, 0.5) 100%
-    );
+    linear-gradient(90deg,
+      rgba(0, 0, 0, 0.6) 0%,
+      rgba(30, 20, 10, 0.8) 20%,
+      rgba(50, 35, 20, 0.6) 50%,
+      rgba(30, 20, 10, 0.8) 80%,
+      rgba(0, 0, 0, 0.6) 100%);
   box-shadow:
-    inset 2px 0 4px rgba(0, 0, 0, 0.5),
-    inset -1px 0 2px rgba(139, 69, 19, 0.2),
+    inset 1px 0 2px rgba(0, 0, 0, 0.8),
     1px 0 0 rgba(226, 167, 111, 0.1);
   border: 1px solid rgba(139, 69, 19, 0.3);
 }
@@ -91,14 +101,12 @@
 
   /* Brushed copper fill with highlight */
   background:
-    linear-gradient(
-      90deg,
+    linear-gradient(90deg,
       var(--copper-dark) 0%,
       var(--copper) 30%,
       var(--copper-light) 50%,
       var(--copper) 70%,
-      var(--copper-dark) 100%
-    );
+      var(--copper-dark) 100%);
   box-shadow:
     inset 1px 0 0 rgba(255, 255, 255, 0.3),
     inset -1px 0 0 rgba(0, 0, 0, 0.3),
@@ -111,8 +119,6 @@
   left: 0;
   width: 100%;
   background: rgba(53, 255, 155, 0.15);
-  border-top: 1px solid rgba(53, 255, 155, 0.4);
-  border-bottom: 1px solid rgba(53, 255, 155, 0.4);
   pointer-events: none;
 }
 
@@ -120,8 +126,8 @@
 .tickContainer {
   position: absolute;
   left: calc(50% + var(--track-width) / 2 + 6px);
-  top: 14px;
-  bottom: 14px;
+  top: 0;
+  bottom: 0;
   width: var(--tick-width-major);
   pointer-events: none;
 }
@@ -130,97 +136,42 @@
 .tick {
   position: absolute;
   left: 0;
-  height: 2px;
+  height: 1px;
   width: var(--tick-width);
   transform: translateY(50%);
-  border-radius: 1px;
   transition: all 0.15s ease;
 
-  /* Inactive tick - subtle copper tint */
-  background:
-    linear-gradient(
-      90deg,
-      rgba(139, 69, 19, 0.4) 0%,
-      rgba(139, 69, 19, 0.2) 100%
-    );
+  /* Inactive tick */
+  background: rgba(139, 69, 19, 0.5);
 }
 
 /* Active tick (value passed) */
 .tick[data-active="true"] {
-  background:
-    linear-gradient(
-      90deg,
-      var(--copper-light) 0%,
-      var(--copper) 50%,
-      var(--copper-dark) 100%
-    );
+  background: var(--copper-light);
   box-shadow: 0 0 4px var(--copper-glow);
 }
 
 /* Major ticks (start, middle, end) */
 .tick[data-major="true"] {
   width: var(--tick-width-major);
-  height: 3px;
+  height: 2px;
+  background: var(--copper);
 }
 
-/* Safe zone tick color */
-.tick[data-safe="true"] {
-  background:
-    linear-gradient(
-      90deg,
-      rgba(53, 255, 155, 0.4) 0%,
-      rgba(53, 255, 155, 0.2) 100%
-    );
-}
-
-.tick[data-safe="true"][data-active="true"] {
-  background:
-    linear-gradient(
-      90deg,
-      rgba(53, 255, 155, 0.9) 0%,
-      rgba(53, 255, 155, 0.6) 50%,
-      rgba(40, 200, 120, 0.8) 100%
-    );
-  box-shadow: 0 0 4px rgba(53, 255, 155, 0.5);
-}
-
-/* Floating value label (on the left side) */
+/* Floating value label (on the left side) - HIDDEN per user request */
 .valueLabel {
-  position: absolute;
-  right: calc(50% + var(--track-width) / 2 + 8px);
-  transform: translateY(50%);
-  padding: 3px 8px;
-  border-radius: 4px;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.2s ease, transform 0.2s ease;
-  white-space: nowrap;
-
-  /* Brushed copper tooltip */
-  background:
-    linear-gradient(
-      135deg,
-      var(--copper-light) 0%,
-      var(--copper) 50%,
-      var(--copper-dark) 100%
-    );
-  box-shadow:
-    0 4px 12px rgba(0, 0, 0, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(139, 69, 19, 0.5);
+  display: none;
 }
 
 .valueLabel[data-visible="true"] {
-  opacity: 1;
+  display: none;
 }
 
 .valueLabelText {
   font-family: var(--font-display, 'Orbitron', sans-serif);
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
-  color: #1a0f08;
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.3);
+  color: var(--copper-light);
 }
 
 .valueLabelUnit {
@@ -230,113 +181,82 @@
   opacity: 0.7;
 }
 
-/* Arrow pointing right from label */
 .valueLabelArrow {
   position: absolute;
-  right: -6px;
+  right: -5px;
   top: 50%;
   transform: translateY(-50%);
   width: 0;
   height: 0;
-  border-top: 5px solid transparent;
-  border-bottom: 5px solid transparent;
-  border-left: 6px solid var(--copper-dark);
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+  border-left: 5px solid var(--copper);
 }
 
 /* Custom thumb visual overlay */
 .thumbVisual {
   position: absolute;
   left: 50%;
-  width: var(--thumb-size);
-  height: var(--thumb-size);
+  width: var(--thumb-width);
+  height: var(--thumb-height);
   transform: translate(-50%, 50%);
   pointer-events: none;
-  z-index: 10;
-  transition: transform 0.1s ease;
+  z-index: 50;
+  /* Ensure it's above everything */
+  transition: transform 0.05s ease;
 }
 
 .thumbVisual[data-dragging="true"] {
-  transform: translate(-50%, 50%) scale(1.15);
+  transform: translate(-50%, 50%) scale(1.05);
 }
 
 .thumbInner {
   width: 100%;
   height: 100%;
-  border-radius: 50%;
+  border-radius: 2px;
+  /* Rectangular fader */
   position: relative;
   overflow: hidden;
 
-  /* 3D brushed copper sphere */
+  /* Fader style: Brushed copper block */
   background:
-    radial-gradient(
-      ellipse 80% 50% at 50% 20%,
-      var(--copper-light) 0%,
-      var(--copper) 40%,
-      var(--copper-dark) 100%
-    );
+    linear-gradient(180deg,
+      #cf8f53 0%,
+      #b87333 45%,
+      #8b4513 55%,
+      #5c3210 100%);
   box-shadow:
-    /* Outer glow */
-    0 0 12px var(--copper-glow),
-    /* Bottom shadow */
-    0 4px 8px rgba(0, 0, 0, 0.4),
-    /* Inner highlight */
-    inset 0 2px 4px rgba(255, 255, 255, 0.3),
-    /* Inner shadow */
-    inset 0 -2px 4px rgba(0, 0, 0, 0.3);
-  border: 2px solid var(--copper);
+    0 4px 8px rgba(0, 0, 0, 0.7),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.6);
+  border: 1px solid #703a15;
 }
 
-/* Top highlight on thumb */
+/* Center groove line on fader */
 .thumbHighlight {
   position: absolute;
-  top: 3px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 55%;
-  height: 5px;
-  border-radius: 2px;
-  background:
-    linear-gradient(
-      180deg,
-      rgba(255, 255, 255, 0.5) 0%,
-      rgba(255, 255, 255, 0.1) 100%
-    );
-}
-
-/* Grooves on thumb for grip texture */
-.thumbGroove {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 45%;
+  top: 50%;
+  left: 5%;
+  right: 5%;
   height: 2px;
-  border-radius: 1px;
-  background:
-    linear-gradient(
-      90deg,
-      transparent 0%,
-      rgba(0, 0, 0, 0.2) 20%,
-      rgba(0, 0, 0, 0.3) 50%,
-      rgba(0, 0, 0, 0.2) 80%,
-      transparent 100%
-    );
+  background: rgba(0, 0, 0, 0.8);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  transform: translateY(-50%);
 }
 
-.thumbGroove:nth-child(2) {
-  top: 42%;
+/* Grip texture lines */
+.thumbGroove {
+  display: none;
+  /* Simplified fader look */
 }
 
-.thumbGroove:nth-child(3) {
-  top: 54%;
-}
-
-/* Native range input - invisible but functional (vertical orientation) */
+/* Native range input */
 .rangeInput {
   position: absolute;
   left: 50%;
-  top: 14px;
-  bottom: 14px;
-  width: var(--thumb-size);
+  top: 0;
+  bottom: 0;
+  width: var(--thumb-width);
   transform: translateX(-50%);
   margin: 0;
   padding: 0;
@@ -344,159 +264,92 @@
   cursor: pointer;
   z-index: 20;
 
-  /* Vertical orientation */
+  /* Vertical orientation standard props */
   writing-mode: vertical-lr;
   direction: rtl;
-
-  /* Reset appearance */
   -webkit-appearance: slider-vertical;
-  -moz-appearance: none;
-  appearance: none;
+  appearance: slider-vertical;
+  opacity: 0;
+  /* Fully invisible overlay */
 }
 
-/* WebKit thumb (invisible) */
-.rangeInput::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: var(--thumb-size);
-  height: var(--thumb-size);
-  border-radius: 50%;
-  background: transparent;
-  cursor: grab;
-  border: none;
-}
-
-.rangeInput::-webkit-slider-thumb:active {
-  cursor: grabbing;
-}
-
-/* Firefox thumb (invisible) */
-.rangeInput::-moz-range-thumb {
-  width: var(--thumb-size);
-  height: var(--thumb-size);
-  border-radius: 50%;
-  background: transparent;
-  cursor: grab;
-  border: none;
-}
-
-.rangeInput::-moz-range-thumb:active {
-  cursor: grabbing;
-}
-
-/* Firefox track */
-.rangeInput::-moz-range-track {
-  background: transparent;
-  border: none;
-  width: var(--track-width);
-}
-
-/* WebKit track */
-.rangeInput::-webkit-slider-runnable-track {
-  background: transparent;
-  border: none;
-  width: var(--track-width);
-}
-
-/* Focus state */
-.rangeInput:focus {
-  outline: none;
-}
-
-.rangeInput:focus-visible ~ .thumbVisual .thumbInner {
-  box-shadow:
-    0 0 0 3px rgba(184, 115, 51, 0.3),
-    0 0 12px var(--copper-glow),
-    0 4px 8px rgba(0, 0, 0, 0.4),
-    inset 0 2px 4px rgba(255, 255, 255, 0.3),
-    inset 0 -2px 4px rgba(0, 0, 0, 0.3);
-}
-
-/* Static value display below slider */
+/* Value display button */
 .valueDisplay {
   display: flex;
   align-items: baseline;
   justify-content: center;
   gap: 3px;
-  padding: 6px 12px;
+  padding: 4px 10px;
   border-radius: 4px;
   background: rgba(0, 0, 0, 0.3);
   border: 1px solid rgba(184, 115, 51, 0.2);
   cursor: pointer;
   transition: all 0.2s ease;
-  min-width: 70px;
+  min-width: 60px;
 }
 
 .valueDisplay:hover:not(:disabled) {
-  background: rgba(184, 115, 51, 0.1);
-  border-color: rgba(184, 115, 51, 0.4);
-}
-
-.valueDisplay:disabled {
-  cursor: not-allowed;
-  opacity: 0.5;
+  border-color: var(--copper);
+  box-shadow: 0 0 8px rgba(184, 115, 51, 0.2);
 }
 
 .valueNumber {
   font-family: var(--font-display, 'Orbitron', sans-serif);
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 700;
   color: var(--copper-light);
-  letter-spacing: 0.05em;
 }
 
 .valueUnit {
   font-family: var(--font-display, 'Orbitron', sans-serif);
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 600;
   color: rgba(184, 115, 51, 0.7);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
 }
 
-/* ============================================
-   Safe Zone Styles
-   ============================================ */
-
-/* Track fill and thumb stay copper even in safe zone
-   Green is only used for safe zone tick marks
-
-   REMOVED: trackFill[data-safe], thumbInner[data-safe], valueLabel[data-safe]
-   The slider parts stay metallic copper throughout. */
-
-/* ============================================
-   Inline Edit Mode
-   ============================================ */
-
+/* Inline Edit */
 .valueEditContainer {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 3px;
-  padding: 4px 8px;
+  gap: 2px;
+  padding: 2px 6px;
   border-radius: 4px;
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(0, 0, 0, 0.5);
   border: 1px solid var(--copper);
-  min-width: 70px;
+  min-width: 60px;
 }
 
 .valueInput {
-  width: 50px;
-  padding: 4px 6px;
+  width: 40px;
   background: transparent;
   border: none;
   font-family: var(--font-display, 'Orbitron', sans-serif);
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 700;
-  color: var(--copper-light);
+  color: #fff;
   text-align: center;
   outline: none;
-  letter-spacing: 0.05em;
 }
 
-.valueInput:focus {
-  color: #fff;
+.metallicVerticalSlider[data-disabled="true"] {
+  opacity: 0.5;
+  pointer-events: none;
 }
+
+/* Label */
+.sliderLabel {
+  font-family: var(--font-display, 'Orbitron', sans-serif);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(167, 167, 181, 0.9);
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* End of MetallicVerticalSlider styles */
 
 /* ============================================
    Hover & Dragging Effects

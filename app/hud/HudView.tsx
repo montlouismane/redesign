@@ -53,16 +53,21 @@ export function HudView() {
     const [settings, setSettings] = useState({
         uiStyle: currentStyle,
         displayCurrency: 'USD',
-        animationsEnabled: true,
+        visualMode: 'performance' as 'quality' | 'performance',
         theme: 'dark',
         notificationsEnabled: true,
         keyboardShortcutsEnabled: true,
-        soundEffectsEnabled: false,
+        soundEffectsEnabled: true,
         dataDensity: 'comfortable' as 'comfortable' | 'compact',
         realtimePulseEnabled: true,
-        reduceMotion: false,
-        backgroundType: 'threejs' as 'threejs' | 'video',
     });
+
+    // Derive visual settings from visualMode
+    const visualConfig = useMemo(() => {
+        return settings.visualMode === 'quality'
+            ? { background: 'threejs', animations: true, reduceMotion: false }
+            : { background: 'video', animations: true, reduceMotion: false };
+    }, [settings.visualMode]);
 
     // Settings Persistence
     useEffect(() => {
@@ -77,6 +82,12 @@ export function HudView() {
 
     useEffect(() => {
         localStorage.setItem('adam_settings', JSON.stringify(settings));
+
+        // Sync sound provider
+        window.dispatchEvent(new CustomEvent('soundSettingChanged', {
+            detail: { soundEffectsEnabled: settings.soundEffectsEnabled }
+        }));
+
         if (settings.theme === 'light') {
             document.documentElement.classList.add('light-mode');
         } else {
@@ -92,12 +103,6 @@ export function HudView() {
     const updateSetting = (key: keyof typeof settings, value: unknown) => {
         setSettings(prev => ({ ...prev, [key]: value }));
         if (key === 'uiStyle') setGlobalStyle(value as 'classic' | 'hud');
-        // Dispatch event for SoundProvider when sound setting changes
-        if (key === 'soundEffectsEnabled') {
-            window.dispatchEvent(new CustomEvent('soundSettingChanged', {
-                detail: { soundEffectsEnabled: value }
-            }));
-        }
     };
 
     const formatMoney = useCallback((x: number) => {
@@ -239,27 +244,28 @@ export function HudView() {
         <HudLayout
             className=""
             isCompact={isCompact}
-            reduceMotion={settings.reduceMotion}
+            reduceMotion={visualConfig.reduceMotion}
             header={
                 <HudHeader
                     view={view}
                     setView={setView}
                     closeModal={closeModal}
                     setIsChatDockOpen={setIsChatDockOpen}
-                    onNotificationsClick={() => { }}
+                    onNotificationsClick={() => updateSetting('notificationsEnabled', !settings.notificationsEnabled)}
                     onWalletClick={() => { }}
+                    notificationsEnabled={settings.notificationsEnabled}
                 />
             }
             background={
-                settings.backgroundType === 'video' ? (
-                    <VideoBackground animationsEnabled={settings.animationsEnabled} />
-                ) : (
+                visualConfig.background === 'video' ? (
+                    <VideoBackground animationsEnabled={visualConfig.animations} />
+                ) : visualConfig.background === 'threejs' ? (
                     <ThreeBackground
-                        animationsEnabled={settings.animationsEnabled}
+                        animationsEnabled={visualConfig.animations}
                         noiseIntensity={0.9}
                         bloomStrength={0.85}
                     />
-                )
+                ) : null /* gradient mode uses CSS background only */
             }
         >
             {/* Main View Router */}
@@ -272,7 +278,7 @@ export function HudView() {
                                 selectedAgentId: managedSelectedId || '',
                                 setSelectedAgentId: selectAgent,
                                 isLoaded,
-                                reduceMotion: settings.reduceMotion,
+                                reduceMotion: visualConfig.reduceMotion,
                                 onAgentClick: openAgentDetail,
                                 onDeployClick: openCreateModal,
                             }}
@@ -284,7 +290,7 @@ export function HudView() {
                                 equityIsLive,
                                 openModal,
                                 isLoaded,
-                                reduceMotion: settings.reduceMotion,
+                                reduceMotion: visualConfig.reduceMotion,
                                 formatMoney
                             }}
                             holdingsProps={{
@@ -292,13 +298,13 @@ export function HudView() {
                                 displayCurrency: settings.displayCurrency,
                                 openModal,
                                 isLoaded,
-                                reduceMotion: settings.reduceMotion
+                                reduceMotion: visualConfig.reduceMotion
                             }}
                             tradesProps={{
                                 recentTrades,
                                 openModal,
                                 isLoaded,
-                                reduceMotion: settings.reduceMotion
+                                reduceMotion: visualConfig.reduceMotion
                             }}
                             allocationProps={{
                                 solPct,
@@ -307,13 +313,13 @@ export function HudView() {
                                 totalValue,
                                 openModal,
                                 isLoaded,
-                                reduceMotion: settings.reduceMotion
+                                reduceMotion: visualConfig.reduceMotion
                             }}
                             systemProps={{
                                 systemStatus,
                                 openModal,
                                 isLoaded,
-                                reduceMotion: settings.reduceMotion,
+                                reduceMotion: visualConfig.reduceMotion,
                                 isTradingActive,
                                 onTradingToggle: handleTradingToggle,
                                 onUpdate: handleUpdate
@@ -325,7 +331,7 @@ export function HudView() {
                                 onWithdraw: handleWithdraw,
                                 openModal,
                                 isLoaded,
-                                reduceMotion: settings.reduceMotion,
+                                reduceMotion: visualConfig.reduceMotion,
                                 chain: 'cardano' // Default to Cardano for now, can be dynamic later
                             }}
                         />

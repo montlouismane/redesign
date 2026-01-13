@@ -25,7 +25,14 @@ interface HorizontalSliderProps {
   /** Minimum allowed value (for validation display, doesn't block input) */
   minAllowed?: number;
   /** Maximum allowed value (for validation display, doesn't block input) */
+  /** Maximum allowed value (for validation display, doesn't block input) */
   maxAllowed?: number;
+  /** Step size for manual input (defaults to step) */
+  inputStep?: number;
+  /** Minimum value for manual input (defaults to min) */
+  inputMin?: number;
+  /** Color theme for the slider */
+  colorVariant?: 'copper' | 'red' | 'green' | 'orange';
 }
 
 /**
@@ -59,7 +66,39 @@ export function HorizontalSlider({
   error,
   minAllowed,
   maxAllowed,
+  inputStep,
+  inputMin,
+  colorVariant = 'copper',
 }: HorizontalSliderProps) {
+  // Define color variables for variants
+  const colorStyles: React.CSSProperties = useMemo(() => {
+    switch (colorVariant) {
+      case 'red':
+        return {
+          '--copper': '#cc4444',
+          '--copper-light': '#ff8888',
+          '--copper-dark': '#882222',
+          '--copper-glow': 'rgba(255, 68, 68, 0.5)',
+        } as React.CSSProperties;
+      case 'green':
+        return {
+          '--copper': '#22cc88',
+          '--copper-light': '#66ffaa',
+          '--copper-dark': '#118855',
+          '--copper-glow': 'rgba(34, 204, 136, 0.5)',
+        } as React.CSSProperties;
+      case 'orange':
+        return {
+          '--copper': '#ff8800',
+          '--copper-light': '#ffaa44',
+          '--copper-dark': '#cc6600',
+          '--copper-glow': 'rgba(255, 136, 0, 0.5)',
+        } as React.CSSProperties;
+      default: // copper
+        return {};
+    }
+  }, [colorVariant]);
+
   const inputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
@@ -89,6 +128,7 @@ export function HorizontalSlider({
 
   // Calculate percentage for positioning (uses exponential conversion if enabled)
   // Caps at 100% so slider thumb stays at max even if value exceeds max
+  // Also caps at 0% for bounds check
   const percentage = useMemo(() => {
     let pct: number;
     if (exponentialScale) {
@@ -210,13 +250,20 @@ export function HorizontalSlider({
   const commitEdit = useCallback(() => {
     const num = parseFloat(inputValue.replace(/,/g, ''));
     if (!isNaN(num)) {
-      // Only enforce minimum - allow values above max for manual entry
-      const clamped = Math.max(min, num);
-      const stepped = Math.round(clamped / step) * step;
+      // Normalize using inputMin (defaults to min) and inputStep (defaults to step)
+      const effectiveMin = inputMin !== undefined ? inputMin : min;
+      // For manual input, default to 1 for integer steps to allow fine control (e.g. entering 75 on a step=50 slider)
+      // For decimal steps (< 1), preserve the precision.
+      const effectiveStep = inputStep !== undefined
+        ? inputStep
+        : (step >= 1 ? 1 : step);
+
+      const clamped = Math.max(effectiveMin, num);
+      const stepped = Math.round(clamped / effectiveStep) * effectiveStep;
       onChange(stepped);
     }
     setIsEditing(false);
-  }, [inputValue, min, step, onChange]);
+  }, [inputValue, min, step, onChange, inputMin, inputStep]);
 
   const cancelEdit = useCallback(() => {
     setInputValue(String(value));
@@ -246,6 +293,7 @@ export function HorizontalSlider({
   return (
     <div
       className={styles.metallicSlider}
+      style={colorStyles}
       data-disabled={disabled}
       data-dragging={isDragging}
       data-safe={isInSafeZone}
@@ -304,30 +352,33 @@ export function HorizontalSlider({
           </div>
         )}
 
-        {/* Floating value label */}
-        <div
-          className={styles.valueLabel}
-          style={{ left: `${percentage}%` }}
-          data-visible={isDragging || isHovered}
-          data-safe={isInSafeZone}
-        >
-          <span className={styles.valueLabelText}>
-            {displayValue}{unit && <span className={styles.valueLabelUnit}>{unit}</span>}
-          </span>
-          <div className={styles.valueLabelArrow} />
-        </div>
+        {/* Thumb Track Container - constrains visual thumb to track bounds */}
+        <div className={styles.thumbTrack}>
+          {/* Floating value label */}
+          <div
+            className={styles.valueLabel}
+            style={{ left: `${percentage}%` }}
+            data-visible={isDragging || isHovered}
+            data-safe={isInSafeZone}
+          >
+            <span className={styles.valueLabelText}>
+              {displayValue}{unit && <span className={styles.valueLabelUnit}>{unit}</span>}
+            </span>
+            <div className={styles.valueLabelArrow} />
+          </div>
 
-        {/* Custom thumb visual */}
-        <div
-          className={styles.thumbVisual}
-          style={{ left: `${percentage}%` }}
-          data-dragging={isDragging}
-          data-safe={isInSafeZone}
-        >
-          <div className={styles.thumbInner} data-safe={isInSafeZone}>
-            <div className={styles.thumbHighlight} />
-            <div className={styles.thumbGroove} />
-            <div className={styles.thumbGroove} />
+          {/* Custom thumb visual */}
+          <div
+            className={styles.thumbVisual}
+            style={{ left: `${percentage}%` }}
+            data-dragging={isDragging}
+            data-safe={isInSafeZone}
+          >
+            <div className={styles.thumbInner} data-safe={isInSafeZone}>
+              <div className={styles.thumbHighlight} />
+              <div className={styles.thumbGroove} />
+              <div className={styles.thumbGroove} />
+            </div>
           </div>
         </div>
 

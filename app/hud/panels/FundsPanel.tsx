@@ -146,7 +146,7 @@ export const FundsPanel = ({
                                 e.stopPropagation();
                                 setIsWalletDropdownOpen(!isWalletDropdownOpen);
                             }}
-                            className="w-full flex items-center justify-between gap-2 px-2 py-1.5 rounded
+                            className="w-full flex items-center justify-between gap-2 px-2 py-1.5 rounded-[1px]
                                        bg-white/5 border border-white/10 hover:border-[#c47c48]/30
                                        text-[10px] text-white/80 font-mono transition-colors"
                         >
@@ -158,7 +158,7 @@ export const FundsPanel = ({
 
                         {/* Wallet Dropdown */}
                         {isWalletDropdownOpen && (
-                            <div className="absolute top-full left-0 right-0 mt-1 bg-[#0b0b10] border border-white/10 rounded shadow-xl z-50 max-h-32 overflow-y-auto">
+                            <div className="absolute top-full left-0 right-0 mt-1 bg-[#0b0b10] border border-white/10 rounded-[1px] shadow-xl z-50 max-h-32 overflow-y-auto">
                                 {agentWallets.map(wallet => (
                                     <div
                                         key={wallet.id}
@@ -191,7 +191,7 @@ export const FundsPanel = ({
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-2 p-1 rounded bg-white/5 border border-white/10 group cursor-pointer hover:bg-white/10 transition-colors"
+                    <div className="flex items-center gap-2 p-1 rounded-[1px] bg-white/5 border border-white/10 group cursor-pointer hover:bg-white/10 transition-colors"
                         onClick={handleCopy}>
                         <Wallet size={10} className="text-amber-500/60" />
                         <span className="font-mono text-[9px] text-white/50 truncate max-w-[60px]">
@@ -212,14 +212,14 @@ export const FundsPanel = ({
                         value={recipient}
                         onChange={(e) => setRecipient(e.target.value)}
                         onClick={(e) => e.stopPropagation()}
-                        className="w-full bg-white/5 border border-white/10 rounded px-2 py-1
+                        className="w-full bg-white/5 border border-white/10 rounded-[1px] px-2 py-1
                                  text-[10px] text-white focus:outline-none focus:border-[#c47c48]/50 transition-colors
                                  placeholder:text-white/20 font-mono h-6"
                     />
 
                     {/* Amount Row */}
                     <div className="flex gap-1.5 items-center z-10">
-                        <div className="flex items-center justify-between bg-white/5 border border-white/10 rounded px-2 py-1
+                        <div className="flex items-center justify-between bg-white/5 border border-white/10 rounded-[1px] px-2 py-1
                                       text-[10px] text-white cursor-pointer hover:border-white/20 transition-colors min-w-[50px]
                                       text-white/80 h-6 relative"
                             onClick={(e) => {
@@ -231,7 +231,7 @@ export const FundsPanel = ({
 
                             {/* Asset Dropdown */}
                             {isAssetDropdownOpen && (
-                                <div className="absolute top-full left-0 mt-1 w-32 max-h-32 overflow-y-auto bg-[#0b0b10] border border-white/10 rounded shadow-xl z-50 flex flex-col">
+                                <div className="absolute top-full left-0 mt-1 w-32 max-h-32 overflow-y-auto bg-[#0b0b10] border border-white/10 rounded-[1px] shadow-xl z-50 flex flex-col">
                                     <div
                                         className="px-2 py-1.5 hover:bg-white/5 text-[10px] text-white cursor-pointer"
                                         onClick={(e) => {
@@ -266,7 +266,7 @@ export const FundsPanel = ({
                                 value={amount}
                                 onChange={(e) => setAmount(e.target.value)}
                                 onClick={(e) => e.stopPropagation()}
-                                className="w-full bg-white/5 border border-white/10 rounded px-2 py-1 pl-2 pr-8
+                                className="w-full bg-white/5 border border-white/10 rounded-[1px] px-2 py-1 pl-2 pr-8
                                          text-[10px] text-white focus:outline-none focus:border-[#c47c48]/50 transition-colors
                                          placeholder:text-white/20 font-mono text-right h-6"
                             />
@@ -284,7 +284,7 @@ export const FundsPanel = ({
                             onClick={executeSend}
                             disabled={isLoading}
                             className="flex items-center justify-center gap-1.5 py-1 px-3
-                                       bg-transparent border border-[#c47c48]/30 rounded
+                                       bg-transparent border border-[#c47c48]/30 rounded-[1px]
                                        hover:bg-[#c47c48]/10 hover:border-[#c47c48]/60
                                        text-[#c47c48] transition-all group disabled:opacity-50"
                         >

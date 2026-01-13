@@ -10,15 +10,13 @@ interface SettingsViewProps {
     settings: {
         uiStyle: string;
         displayCurrency: string;
-        animationsEnabled: boolean;
+        visualMode: 'quality' | 'performance';
         theme: string;
         notificationsEnabled: boolean;
         keyboardShortcutsEnabled: boolean;
         soundEffectsEnabled: boolean;
         dataDensity: 'comfortable' | 'compact';
         realtimePulseEnabled: boolean;
-        reduceMotion: boolean;
-        backgroundType: 'threejs' | 'video';
     };
     updateSetting: (key: keyof SettingsViewProps['settings'], val: unknown) => void;
     onClose: () => void;
@@ -46,37 +44,19 @@ export const SettingsView = ({ settings, updateSetting, onClose }: SettingsViewP
                             </div>
 
                             <div className={styles.subPanel}>
-                                <div className={styles.subTitle}>VISUAL PREFERENCES</div>
-                                <div style={{ height: 16 }} />
-
-                                <SettingRow
-                                    label="Animations & Effects"
-                                    desc="Enable WebGL background, particles, and heavy transitions."
-                                    value={settings.animationsEnabled}
-                                    onChange={(v) => updateSetting('animationsEnabled', v)}
-                                />
-                                <div style={{ marginBottom: 16 }}>
-                                    <div style={{ fontSize: 13, color: 'var(--text)', fontWeight: 500, marginBottom: 4 }}>
-                                        Background Type
-                                    </div>
-                                    <div style={{ fontSize: 11, color: 'var(--muted)', marginBottom: 12 }}>
-                                        Choose between animated 3D stars or video background.
-                                    </div>
-                                    <SegmentSelector
-                                        value={settings.backgroundType}
-                                        onChange={(v) => updateSetting('backgroundType', v)}
-                                        options={[
-                                            { value: 'threejs', label: '3D STARS' },
-                                            { value: 'video', label: 'VIDEO' },
-                                        ]}
-                                    />
+                                <div className={styles.subTitle}>VISUAL MODE</div>
+                                <div style={{ fontSize: 11, color: 'var(--muted)', marginBottom: 16 }}>
+                                    Quality uses 3D WebGL effects. Performance uses optimized video background.
                                 </div>
-                                <SettingRow
-                                    label="Reduced Motion"
-                                    desc="Simplify transitions and disable parallax."
-                                    value={settings.reduceMotion}
-                                    onChange={(v) => updateSetting('reduceMotion', v)}
+                                <SegmentSelector
+                                    value={settings.visualMode}
+                                    onChange={(v) => updateSetting('visualMode', v)}
+                                    options={[
+                                        { value: 'performance', label: 'PERFORMANCE' },
+                                        { value: 'quality', label: 'QUALITY' },
+                                    ]}
                                 />
+                                <div style={{ height: 16 }} />
                                 <SettingRow
                                     label="Data Density"
                                     desc="Compact mode for higher information density."

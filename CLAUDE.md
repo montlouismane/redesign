@@ -34,6 +34,8 @@
 - **Do not use `usafe-eval` in production CSP.**
 - **`HudDashboard.tsx` is too large (2.5k lines).** Do not add to it; refactor from it.
 - **Always check for existing KIs (Knowledge Items) before starting fresh research.**
+- **On Windows, use PowerShell for multiline JSX file edits.** Bash heredocs fail when JSX contains single quotes (e.g., `'quality' | 'performance'`). Use PowerShell's `-replace` operator or `sed` for simple single-line replacements.
+- **Complete state migrations atomically.** When refactoring state (e.g., consolidating settings), update ALL references in the same pass. Half-migrated state (interface updated but JSX still using old props) causes subtle type errors.
 
 ## HUD Architecture (Critical - Updated Jan 2026)
 

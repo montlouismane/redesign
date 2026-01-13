@@ -2,6 +2,7 @@
 
 import React, { useRef, useState, useCallback, useEffect, useMemo } from 'react';
 import styles from './MetallicVerticalSlider.module.css';
+import { useControlSound } from './useControlSound';
 
 interface VerticalSliderProps {
   value: number;
@@ -48,14 +49,16 @@ export function VerticalSlider({
   showTicks = true,
   snapToTicks = false,
 }: VerticalSliderProps) {
-  const inputRef = useRef<HTMLInputElement>(null);
+  const trackRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [inputValue, setInputValue] = useState(String(value));
+  const { playTick } = useControlSound('slider');
+  const lastValueRef = useRef(value);
 
   // Calculate percentage for positioning (inverted for vertical - bottom = 0%, top = 100%)
-  const percentage = ((value - min) / (max - min)) * 100;
+  const percentage = Math.min(100, Math.max(0, ((value - min) / (max - min)) * 100));
 
   // Safe zone percentages
   const safeMinPercent = safeMin !== undefined ? ((safeMin - min) / (max - min)) * 100 : 0;
@@ -87,32 +90,64 @@ export function VerticalSlider({
     return Math.max(min, Math.min(max, nearestTick));
   }, [min, max, tickCount, snapToTicks]);
 
-  // Handle native input change
-  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = parseFloat(e.target.value);
-    const snapped = snapToTicks ? snapValue(newValue) : newValue;
-    onChange(snapped);
-  }, [onChange, snapToTicks, snapValue]);
+  // Handle pointer down (drag start)
+  const handlePointerDown = useCallback((e: React.PointerEvent) => {
+    if (disabled || isEditing || !trackRef.current) return;
 
-  // Track mouse/touch interaction for visual feedback
-  const handleMouseDown = useCallback(() => {
+    e.preventDefault();
     setIsDragging(true);
-  }, []);
 
-  const handleMouseUp = useCallback(() => {
-    setIsDragging(false);
-  }, []);
+    const track = trackRef.current;
+    track.setPointerCapture(e.pointerId);
 
+    const updateValue = (clientY: number) => {
+      const rect = track.getBoundingClientRect();
+      const trackHeight = rect.height;
+      // Calculate height from bottom
+      const heightFromBottom = rect.bottom - clientY;
+      const rawPercent = Math.min(100, Math.max(0, (heightFromBottom / trackHeight) * 100));
+
+      const newValue = min + (rawPercent / 100) * (max - min);
+
+      // Snap to step
+      let steppedValue = Math.round(newValue / step) * step;
+      steppedValue = Math.max(min, Math.min(max, steppedValue));
+
+      if (snapToTicks) {
+        steppedValue = snapValue(steppedValue);
+      }
+
+      onChange(steppedValue);
+    };
+
+    updateValue(e.clientY);
+
+    const handlePointerMove = (moveEvent: PointerEvent) => {
+      updateValue(moveEvent.clientY);
+    };
+
+    const handlePointerUp = (upEvent: PointerEvent) => {
+      setIsDragging(false);
+      track.removeEventListener('pointermove', handlePointerMove);
+      track.removeEventListener('pointerup', handlePointerUp);
+    };
+
+    track.addEventListener('pointermove', handlePointerMove);
+    track.addEventListener('pointerup', handlePointerUp);
+  }, [disabled, isEditing, min, max, step, onChange, snapToTicks, snapValue]);
+
+  // Listen for pointer move/up on track (handled via setPointerCapture implicitly or explicitly)
+  // Actually, standard addEventListener on element works best with setPointerCapture
+
+  // Play sound on value change
   useEffect(() => {
-    if (isDragging) {
-      window.addEventListener('mouseup', handleMouseUp);
-      window.addEventListener('touchend', handleMouseUp);
-      return () => {
-        window.removeEventListener('mouseup', handleMouseUp);
-        window.removeEventListener('touchend', handleMouseUp);
-      };
+    if (value !== lastValueRef.current) {
+      if (Math.abs(value - lastValueRef.current) >= step) {
+        playTick();
+        lastValueRef.current = value;
+      }
     }
-  }, [isDragging, handleMouseUp]);
+  }, [value, step, playTick]);
 
   // Inline editing handlers
   const startEditing = useCallback(() => {
@@ -173,94 +208,70 @@ export function VerticalSlider({
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        {/* Track background with brushed metal effect */}
-        <div className={styles.trackBackground}>
-          {/* Safe zone highlight */}
-          {hasSafeZone && (
+        {/* Track Area - defines the travel range */}
+        <div
+          className={styles.trackArea}
+          ref={trackRef}
+          onPointerDown={handlePointerDown}
+        >
+          {/* Track background with brushed metal effect */}
+          <div className={styles.trackBackground}>
+            {/* Safe zone highlight */}
+            {hasSafeZone && (
+              <div
+                className={styles.safeZone}
+                style={{
+                  bottom: `${safeMinPercent}%`,
+                  height: `${safeMaxPercent - safeMinPercent}%`,
+                }}
+              />
+            )}
+
+            {/* Fill bar showing current value (from bottom) */}
             <div
-              className={styles.safeZone}
-              style={{
-                bottom: `${safeMinPercent}%`,
-                height: `${safeMaxPercent - safeMinPercent}%`,
-              }}
+              className={styles.trackFill}
+              style={{ height: `${percentage}%` }}
+              data-safe={isInSafeZone}
             />
+          </div>
+
+          {/* Tick marks */}
+          {showTicks && (
+            <div className={styles.tickContainer}>
+              {ticks.map((tick, index) => {
+                const isInSafe = hasSafeZone
+                  ? tick.value >= safeMin! && tick.value <= safeMax!
+                  : false;
+                return (
+                  <div
+                    key={index}
+                    className={styles.tick}
+                    style={{ bottom: `${tick.position}%` }}
+                    data-active={tick.value <= value}
+                    data-safe={isInSafe}
+                    data-major={index === 0 || index === tickCount - 1 || index === Math.floor(tickCount / 2)}
+                  />
+                );
+              })}
+            </div>
           )}
 
-          {/* Fill bar showing current value (from bottom) */}
+          {/* Floating value label removed per user request */}
+
+          {/* Custom thumb visual */}
           <div
-            className={styles.trackFill}
-            style={{ height: `${percentage}%` }}
+            className={styles.thumbVisual}
+            style={{ bottom: `${percentage}%` }}
+            data-dragging={isDragging}
             data-safe={isInSafeZone}
-          />
-        </div>
-
-        {/* Tick marks */}
-        {showTicks && (
-          <div className={styles.tickContainer}>
-            {ticks.map((tick, index) => {
-              const isInSafe = hasSafeZone
-                ? tick.value >= safeMin! && tick.value <= safeMax!
-                : false;
-              return (
-                <div
-                  key={index}
-                  className={styles.tick}
-                  style={{ bottom: `${tick.position}%` }}
-                  data-active={tick.value <= value}
-                  data-safe={isInSafe}
-                  data-major={index === 0 || index === tickCount - 1 || index === Math.floor(tickCount / 2)}
-                />
-              );
-            })}
-          </div>
-        )}
-
-        {/* Floating value label (on left side) */}
-        <div
-          className={styles.valueLabel}
-          style={{ bottom: `${percentage}%` }}
-          data-visible={isDragging || isHovered}
-          data-safe={isInSafeZone}
-        >
-          <span className={styles.valueLabelText}>
-            {displayValue}{unit && <span className={styles.valueLabelUnit}>{unit}</span>}
-          </span>
-          <div className={styles.valueLabelArrow} />
-        </div>
-
-        {/* Custom thumb visual */}
-        <div
-          className={styles.thumbVisual}
-          style={{ bottom: `${percentage}%` }}
-          data-dragging={isDragging}
-          data-safe={isInSafeZone}
-        >
-          <div className={styles.thumbInner} data-safe={isInSafeZone}>
-            <div className={styles.thumbHighlight} />
-            <div className={styles.thumbGroove} />
-            <div className={styles.thumbGroove} />
+          >
+            <div className={styles.thumbInner} data-safe={isInSafeZone}>
+              <div className={styles.thumbHighlight} />
+              <div className={styles.thumbGroove} />
+              <div className={styles.thumbGroove} />
+            </div>
           </div>
         </div>
-
-        {/* Native range input (invisible but functional, vertical orientation) */}
-        <input
-          ref={inputRef}
-          type="range"
-          className={styles.rangeInput}
-          value={value}
-          onChange={handleInputChange}
-          onMouseDown={handleMouseDown}
-          onTouchStart={handleMouseDown}
-          min={min}
-          max={max}
-          step={step}
-          disabled={disabled}
-          aria-label={label}
-          aria-valuemin={min}
-          aria-valuemax={max}
-          aria-valuenow={value}
-          aria-orientation="vertical"
-        />
       </div>
 
       {/* Value display - inline editable */}

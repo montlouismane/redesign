@@ -145,13 +145,13 @@ export const FundsExpanded = ({
                         Receive (copy address)
                     </label>
                     <div className="flex gap-2">
-                        <div className="flex-1 bg-[#0b0b10] border border-white/10 rounded-lg px-3 py-2.5 
+                        <div className="flex-1 bg-[#0b0b10] border border-white/10 rounded-[1px] px-3 py-2.5 
                                       flex items-center text-sm font-mono text-white/80 overflow-hidden">
                             <span className="truncate">{walletAddress}</span>
                         </div>
                         <button
                             onClick={handleCopy}
-                            className={`px-6 py-2 rounded-lg font-medium transition-all ${copied
+                            className={`px-6 py-2 rounded-[1px] font-medium transition-all ${copied
                                 ? 'bg-[#35ff9b]/20 text-[#35ff9b] border border-[#35ff9b]/50'
                                 : 'bg-[#1a1a20] text-white hover:bg-[#252530] border border-white/10'
                                 }`}
@@ -171,7 +171,7 @@ export const FundsExpanded = ({
                                 placeholder="Recipient addr1..."
                                 value={recipient}
                                 onChange={(e) => setRecipient(e.target.value)}
-                                className="w-full bg-[#0b0b10] border border-white/10 rounded-lg px-4 py-3
+                                className="w-full bg-[#0b0b10] border border-white/10 rounded-[1px] px-4 py-3
                                          text-sm text-white focus:outline-none focus:border-[#f59e0b]/50 transition-colors
                                          placeholder:text-white/20"
                             />
@@ -180,7 +180,7 @@ export const FundsExpanded = ({
                         {/* Token Selector */}
                         <div className="flex-1 relative z-50">
                             <div
-                                className="w-full bg-[#0b0b10] border border-white/10 rounded-lg px-4 py-3
+                                className="w-full bg-[#0b0b10] border border-white/10 rounded-[1px] px-4 py-3
                                           text-sm text-white flex items-center justify-between cursor-pointer
                                           hover:border-white/20 transition-colors"
                                 onClick={(e) => {
@@ -194,7 +194,7 @@ export const FundsExpanded = ({
 
                             {/* Dropdown */}
                             {isAssetDropdownOpen && (
-                                <div className="absolute top-full left-0 mt-2 w-full max-h-48 overflow-y-auto bg-[#0b0b10] border border-white/10 rounded-lg shadow-xl z-50 flex flex-col">
+                                <div className="absolute top-full left-0 mt-2 w-full max-h-48 overflow-y-auto bg-[#0b0b10] border border-white/10 rounded-[1px] shadow-xl z-50 flex flex-col">
                                     <div
                                         className="px-4 py-3 hover:bg-white/5 text-sm text-white cursor-pointer border-b border-white/5"
                                         onClick={(e) => { e.stopPropagation(); setSelectedAsset('native'); setIsAssetDropdownOpen(false); }}
@@ -221,7 +221,7 @@ export const FundsExpanded = ({
                                 placeholder="Amount"
                                 value={amount}
                                 onChange={(e) => setAmount(e.target.value)}
-                                className="w-full bg-[#0b0b10] border border-white/10 rounded-lg px-4 py-3
+                                className="w-full bg-[#0b0b10] border border-white/10 rounded-[1px] px-4 py-3
                                          text-sm text-white focus:outline-none focus:border-[#f59e0b]/50 transition-colors
                                          placeholder:text-white/20"
                             />
@@ -240,7 +240,7 @@ export const FundsExpanded = ({
                         <button
                             onClick={executeSend}
                             disabled={isLoading}
-                            className="bg-[#f59e0b] hover:bg-[#fab005] text-black font-bold py-2.5 px-8 rounded-lg
+                            className="bg-[#f59e0b] hover:bg-[#fab005] text-black font-bold py-2.5 px-8 rounded-[1px]
                                      transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-[#f59e0b]/20
                                      disabled:opacity-50 disabled:grayscale"
                         >

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Bell, Wallet, Settings } from 'lucide-react';
+import { Bell, BellOff, Wallet, Settings } from 'lucide-react';
 import { UiStyleToggle } from '../../UiStyleToggle';
 import { useUiStyle } from '../../UiStyleProvider';
 import styles from '../../styles/header.module.css';
@@ -11,6 +11,7 @@ interface HudHeaderProps {
     setIsChatDockOpen: (isOpen: boolean) => void;
     onWalletClick?: () => void;
     onNotificationsClick?: () => void;
+    notificationsEnabled?: boolean;
 }
 
 export const HudHeader = ({
@@ -19,7 +20,8 @@ export const HudHeader = ({
     closeModal,
     setIsChatDockOpen,
     onWalletClick,
-    onNotificationsClick
+    onNotificationsClick,
+    notificationsEnabled = true
 }: HudHeaderProps) => {
     return (
         <header className={styles.topbar}>
@@ -51,11 +53,11 @@ export const HudHeader = ({
 
                 <button
                     type="button"
-                    className={styles.iconBtn}
-                    aria-label="Notifications"
+                    className={`${styles.iconBtn} ${!notificationsEnabled ? styles.isMuted : ''}`}
+                    aria-label={notificationsEnabled ? "Disable Notifications" : "Enable Notifications"}
                     onClick={onNotificationsClick}
                 >
-                    <Bell size={18} />
+                    {notificationsEnabled ? <Bell size={18} /> : <BellOff size={18} />}
                 </button>
 
                 <button

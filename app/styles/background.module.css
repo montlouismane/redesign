@@ -17,6 +17,8 @@
     object-fit: cover;
     z-index: 0;
     pointer-events: none;
+    /* Enhance fidelity: subtle blur hides compression, contrast/saturation add punch */
+    filter: blur(0.4px) contrast(1.08) saturate(1.15) brightness(0.95);
 }
 
 .noise {

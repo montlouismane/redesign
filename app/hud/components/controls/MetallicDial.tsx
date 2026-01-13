@@ -18,6 +18,7 @@ interface MetallicDialProps {
   unit?: string;
   disabled?: boolean;
   size?: number;
+  tickHeightRatio?: number;
 }
 
 /**
@@ -49,6 +50,7 @@ export function MetallicDial({
   unit = '%',
   disabled = false,
   size = 120,
+  tickHeightRatio = 0.55,
 }: MetallicDialProps) {
   const knobRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -233,7 +235,7 @@ export function MetallicDial({
   // Calculate margin for ticks (based on default size 120)
   const margin = size * 0.15;
   const tickRadius = margin + size / 2;
-  const baseTickHeight = 66; // Fixed tick height that works at size=120
+  const baseTickHeight = size * tickHeightRatio; // Proportional tick height
 
   return (
     <div
