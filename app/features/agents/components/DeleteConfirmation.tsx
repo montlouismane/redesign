@@ -1,7 +1,7 @@
 'use client';
 
-import React from 'react';
-import { AlertTriangle, Trash2 } from 'lucide-react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
+import { Trash2 } from 'lucide-react';
 
 interface DeleteConfirmationProps {
   isOpen: boolean;
@@ -12,6 +12,8 @@ interface DeleteConfirmationProps {
   error?: string | null;
 }
 
+const HOLD_DURATION = 1500; // 1.5 seconds to confirm delete
+
 export function DeleteConfirmation({
   isOpen,
   agentName,
@@ -20,12 +22,67 @@ export function DeleteConfirmation({
   isDeleting = false,
   error = null,
 }: DeleteConfirmationProps) {
+  const [holdProgress, setHoldProgress] = useState(0);
+  const [isHolding, setIsHolding] = useState(false);
+  const holdStartRef = useRef<number | null>(null);
+  const animationRef = useRef<number | null>(null);
+  const hasTriggeredRef = useRef(false);
+
+  // Reset state when modal opens/closes
+  useEffect(() => {
+    if (!isOpen) {
+      setHoldProgress(0);
+      setIsHolding(false);
+      holdStartRef.current = null;
+      hasTriggeredRef.current = false;
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    }
+  }, [isOpen]);
+
+  // Animation loop for hold progress
+  const updateProgress = useCallback(() => {
+    if (holdStartRef.current === null || hasTriggeredRef.current) return;
+
+    const elapsed = Date.now() - holdStartRef.current;
+    const progress = Math.min((elapsed / HOLD_DURATION) * 100, 100);
+    setHoldProgress(progress);
+
+    if (progress >= 100 && !hasTriggeredRef.current) {
+      hasTriggeredRef.current = true;
+      setIsHolding(false);
+      onConfirm();
+    } else if (progress < 100) {
+      animationRef.current = requestAnimationFrame(updateProgress);
+    }
+  }, [onConfirm]);
+
+  // Start holding
+  const handleHoldStart = useCallback(() => {
+    if (isDeleting || hasTriggeredRef.current) return;
+    setIsHolding(true);
+    holdStartRef.current = Date.now();
+    animationRef.current = requestAnimationFrame(updateProgress);
+  }, [isDeleting, updateProgress]);
+
+  // Stop holding
+  const handleHoldEnd = useCallback(() => {
+    setIsHolding(false);
+    holdStartRef.current = null;
+    if (animationRef.current) {
+      cancelAnimationFrame(animationRef.current);
+    }
+    // Reset progress with animation
+    setHoldProgress(0);
+  }, []);
+
   if (!isOpen || !agentName) return null;
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ backgroundColor: 'rgba(0, 0, 0, 0.6)' }}
+      className="fixed inset-0 flex items-center justify-center p-4"
+      style={{ backgroundColor: 'rgba(0, 0, 0, 0.7)', zIndex: 1000 }}
       onClick={onCancel}
     >
       <div
@@ -85,7 +142,7 @@ export function DeleteConfirmation({
         <div className="flex gap-3">
           <button
             onClick={onCancel}
-            disabled={isDeleting}
+            disabled={isDeleting || isHolding}
             className="flex-1 px-4 py-3 rounded-lg font-medium transition-colors"
             style={{
               background: 'var(--ui-control-bg)',
@@ -95,22 +152,58 @@ export function DeleteConfirmation({
           >
             Cancel
           </button>
+
+          {/* Hold-to-delete button */}
           <button
-            onClick={onConfirm}
+            onMouseDown={handleHoldStart}
+            onMouseUp={handleHoldEnd}
+            onMouseLeave={handleHoldEnd}
+            onTouchStart={handleHoldStart}
+            onTouchEnd={handleHoldEnd}
             disabled={isDeleting}
-            className="flex-1 px-4 py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+            className="flex-1 px-4 py-3 rounded-lg font-medium transition-colors flex flex-col items-center justify-center gap-1 disabled:opacity-50 relative overflow-hidden select-none"
             style={{
-              background: 'rgb(239, 68, 68)',
+              background: isDeleting ? 'rgb(200, 60, 60)' : 'rgb(239, 68, 68)',
               color: 'white',
+              cursor: isDeleting ? 'wait' : 'pointer',
             }}
           >
-            {isDeleting ? (
-              'Deleting...'
-            ) : (
-              <>
-                <Trash2 size={18} />
-                Delete
-              </>
+            {/* Progress fill overlay */}
+            <div
+              style={{
+                position: 'absolute',
+                left: 0,
+                top: 0,
+                bottom: 0,
+                width: `${holdProgress}%`,
+                background: 'rgba(0, 0, 0, 0.3)',
+                transition: holdProgress === 0 ? 'width 0.2s ease-out' : 'none',
+                pointerEvents: 'none',
+              }}
+            />
+
+            {/* Button content */}
+            <div className="relative z-10 flex items-center gap-2">
+              {isDeleting ? (
+                'Deleting...'
+              ) : (
+                <>
+                  <Trash2 size={18} />
+                  {isHolding ? 'Hold...' : 'Hold to Delete'}
+                </>
+              )}
+            </div>
+
+            {/* Progress indicator text */}
+            {!isDeleting && (
+              <span
+                className="relative z-10 text-xs opacity-70"
+                style={{ fontSize: '10px' }}
+              >
+                {isHolding
+                  ? `${Math.round(holdProgress)}%`
+                  : 'Press & hold 1.5s'}
+              </span>
             )}
           </button>
         </div>

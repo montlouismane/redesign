@@ -17,6 +17,8 @@
     width: 90%;
     max-width: 900px;
     max-height: 90vh;
+        height: 90dvh;
+        max-height: 90dvh;
     display: flex;
     flex-direction: column;
     background: linear-gradient(135deg,
@@ -36,6 +38,7 @@
     width: 95%;
     max-width: 700px;
     height: 85vh;
+    height: 85dvh;
     max-height: 750px;
     display: flex;
     flex-direction: column;
@@ -396,5 +399,105 @@
     to {
         opacity: 1;
         transform: translateY(0);
+    }
+}
+
+/* ========================================
+   MOBILE MODAL ADJUSTMENTS
+   ======================================== */
+@media (max-width: 767px) {
+    .modal {
+        width: 95%;
+        max-height: 90vh;
+        height: 90dvh;
+        max-height: 90dvh;
+        border-radius: 8px;
+    }
+
+    .wizardModal {
+        width: 98%;
+        height: 90vh;
+        height: 90dvh;
+        max-height: none;
+        border-radius: 8px;
+    }
+
+    .header {
+        padding: 16px 20px;
+    }
+
+    .title {
+        font-size: 14px;
+        gap: 8px;
+    }
+
+    .content {
+        padding: 20px 16px;
+        gap: 20px;
+    }
+
+    .introCard {
+        padding: 16px;
+        gap: 14px;
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .introIcon {
+        width: 40px;
+        height: 40px;
+    }
+
+    .introText h3 {
+        font-size: 13px;
+    }
+
+    .introText p {
+        font-size: 12px;
+    }
+
+    .section {
+        gap: 12px;
+    }
+
+    .input {
+        padding: 14px 16px;
+        font-size: 16px; /* Prevents iOS zoom */
+    }
+
+    .modeGrid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .modeCard {
+        padding: 16px;
+    }
+
+    .modeIcon {
+        width: 32px;
+        height: 32px;
+        margin-bottom: 12px;
+    }
+
+    .modeTitle {
+        font-size: 12px;
+    }
+
+    .modeDesc {
+        font-size: 10px;
+        margin-bottom: 10px;
+    }
+
+    .footer {
+        padding: 16px 20px;
+        flex-direction: column-reverse;
+        gap: 10px;
+    }
+
+    .button {
+        width: 100%;
+        justify-content: center;
+        padding: 14px 20px;
     }
 }

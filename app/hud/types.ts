@@ -1,6 +1,7 @@
 export type PanelKey = 'agents' | 'performance' | 'market' | 'trades' | 'allocation' | 'system' | 'funds';
 export type PortfolioRange = '1H' | '24H' | '7D' | '30D' | 'ALL';
 export type AgentRuntimeState = 'running' | 'idle' | 'alert' | 'stopped';
+export type AgentMode = 't-mode' | 'perpetuals' | 'prediction' | 'standard';
 
 export type PortfolioSeriesPoint = { time: number; value: number };
 
@@ -9,7 +10,7 @@ export type AgentRow = {
   chip: string;
   name: string;
   role: string;
-  chain: string;
+  mode: AgentMode;
   runtimeState: AgentRuntimeState;
   pnlPct: number;
 };
@@ -35,6 +36,15 @@ export type SystemStatusItem = {
   pulse: boolean;
 };
 
+/** Agent wallet info for the Funds panel wallet selector */
+export interface AgentWallet {
+  id: string;
+  name: string;
+  address: string;
+  chain: 'cardano' | 'solana' | 'base';
+  balance: number;
+}
+
 export interface FundsPanelProps {
   walletAddress?: string;
   balance: number;
@@ -44,6 +54,12 @@ export interface FundsPanelProps {
   isLoaded: boolean;
   reduceMotion?: boolean;
   chain?: 'cardano' | 'solana' | 'base';
+  /** List of agent wallets for the wallet selector */
+  agentWallets?: AgentWallet[];
+  /** Currently selected agent wallet ID */
+  selectedWalletId?: string;
+  /** Callback when agent wallet is changed */
+  onWalletChange?: (walletId: string) => void;
 }
 
 export interface SystemPanelProps {

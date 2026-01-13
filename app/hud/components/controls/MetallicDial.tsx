@@ -2,6 +2,7 @@
 
 import React, { useRef, useState, useCallback, useEffect, useMemo } from 'react';
 import styles from './MetallicDial.module.css';
+import { useControlSound } from './useControlSound';
 
 interface MetallicDialProps {
   value: number;
@@ -54,6 +55,8 @@ export function MetallicDial({
   const [isDragging, setIsDragging] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [inputValue, setInputValue] = useState(String(value));
+  const lastValueRef = useRef<number>(value);
+  const { playTick } = useControlSound('dial');
 
   // Calculate angle range
   const startAngle = (360 - degrees) / 2;
@@ -115,14 +118,28 @@ export function MetallicDial({
       // Update value immediately
       const deg = getDeg(clientX, clientY, centerX, centerY);
       const newValue = Math.round(convertRange(startAngle, endAngle, min, max, deg) / step) * step;
-      onChange(Math.max(min, Math.min(max, newValue)));
+      const clampedValue = Math.max(min, Math.min(max, newValue));
+
+      // Play tick on initial click if value changes
+      if (clampedValue !== lastValueRef.current) {
+        playTick(clampedValue > lastValueRef.current ? 'up' : 'down');
+        lastValueRef.current = clampedValue;
+      }
+      onChange(clampedValue);
 
       // Create move handler with captured center
       const moveHandler = (e: MouseEvent | TouchEvent) => {
         const point = 'touches' in e ? e.touches[0] : e;
         const moveDeg = getDeg(point.clientX, point.clientY, centerX, centerY);
         const moveValue = Math.round(convertRange(startAngle, endAngle, min, max, moveDeg) / step) * step;
-        onChange(Math.max(min, Math.min(max, moveValue)));
+        const clampedMoveValue = Math.max(min, Math.min(max, moveValue));
+
+        // Play tick when value changes (stepped)
+        if (clampedMoveValue !== lastValueRef.current) {
+          playTick(clampedMoveValue > lastValueRef.current ? 'up' : 'down');
+          lastValueRef.current = clampedMoveValue;
+        }
+        onChange(clampedMoveValue);
       };
 
       const upHandler = () => {
@@ -138,7 +155,7 @@ export function MetallicDial({
       document.addEventListener('touchmove', moveHandler, { passive: false });
       document.addEventListener('touchend', upHandler);
     },
-    [disabled, isEditing, getDeg, convertRange, startAngle, endAngle, min, max, step, onChange]
+    [disabled, isEditing, getDeg, convertRange, startAngle, endAngle, min, max, step, onChange, playTick]
   );
 
   const handleMouseDown = useCallback(
@@ -213,10 +230,10 @@ export function MetallicDial({
   // Format display value
   const displayValue = step < 1 ? value.toFixed(1) : String(Math.round(value));
 
-  // Calculate margin for ticks
+  // Calculate margin for ticks (based on default size 120)
   const margin = size * 0.15;
   const tickRadius = margin + size / 2;
-  const baseTickHeight = 66; // Fixed tick height
+  const baseTickHeight = 66; // Fixed tick height that works at size=120
 
   return (
     <div
@@ -254,7 +271,6 @@ export function MetallicDial({
           ref={knobRef}
           className={styles.knobOuter}
           style={{ margin }}
-          data-safe={isInSafeZone}
           onMouseDown={handleMouseDown}
           onTouchStart={handleTouchStart}
         >
@@ -262,10 +278,9 @@ export function MetallicDial({
           <div
             className={styles.knobInner}
             style={{ transform: `rotate(${currentDeg}deg)` }}
-            data-safe={isInSafeZone}
           >
             {/* Grip indicator */}
-            <div className={styles.grip} data-safe={isInSafeZone} />
+            <div className={styles.grip} />
           </div>
         </div>
 
@@ -287,10 +302,10 @@ export function MetallicDial({
               className={styles.valueButton}
               onClick={startEditing}
               disabled={disabled}
-              data-safe={isInSafeZone}
+              data-decimal={step < 1}
             >
-              <span className={styles.valueNumber}>{displayValue}</span>
-              <span className={styles.valueUnit}>{unit}</span>
+              <span className={styles.valueNumber} data-decimal={step < 1}>{displayValue}</span>
+              <span className={styles.valueUnit} data-decimal={step < 1}>{unit}</span>
             </button>
           )}
         </div>

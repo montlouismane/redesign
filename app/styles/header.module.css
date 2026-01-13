@@ -50,6 +50,7 @@
 
 .brandLogo {
     height: 80px;
+    min-height: 48px;
     width: 156px;
     flex-shrink: 0;
     aspect-ratio: 21 / 9;
@@ -149,7 +150,7 @@
     gap: 10px;
     position: relative;
     z-index: 1;
-    min-width: 420px;
+    margin-left: auto; /* Push to right since nav is removed */
     justify-content: flex-end;
 }
 
@@ -206,4 +207,30 @@
     transform: translateY(-1px);
     border-color: rgba(var(--tintR), var(--tintG), var(--tintB), 0.34);
     box-shadow: 0 0 calc(22px * var(--hudGlowBoost)) rgba(var(--tintR), var(--tintG), var(--tintB), 0.1);
+}
+
+/* ========================================
+   MOBILE HEADER ADJUSTMENTS
+   ======================================== */
+@media (max-width: 767px) {
+    .topbar {
+        padding: 8px 12px;
+    }
+    .brandLogo {
+        height: 48px;
+        width: auto;
+    }
+    .topRight {
+        gap: 6px;
+    }
+    .walletAddr {
+        display: none;
+    }
+    .iconBtn {
+        padding: 8px;
+        width: 38px;
+    }
+    .walletBtn {
+        padding: 8px 10px;
+    }
 }

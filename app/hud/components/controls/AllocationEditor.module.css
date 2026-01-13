@@ -123,36 +123,89 @@
   cursor: not-allowed;
 }
 
-/* Allocation list */
+/* Allocation list wrapper - contains list and scroll hint */
+.allocationListWrapper {
+  position: relative;
+}
+
+/* Allocation list - scrollable container */
 .allocationList {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
   padding: 16px;
   background: var(--bgDark);
   border: 1px solid var(--borderLight);
   border-radius: 6px;
-  max-height: 400px;
+  /* Height for ~6 tokens (2 rows of 3-column grid) */
+  max-height: 260px;
   overflow-y: auto;
+  /* Hide scrollbar but keep scrollable */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  transition: mask-image 0.3s ease;
 }
 
-/* Scrollbar styling */
+/* Hide scrollbar for Chrome/Safari */
 .allocationList::-webkit-scrollbar {
-  width: 6px;
+  display: none;
 }
 
-.allocationList::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 3px;
+/* Fade effect at bottom when more content */
+.allocationList[data-show-hint="true"] {
+  mask-image: linear-gradient(to bottom, black 0%, black 75%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black 0%, black 75%, transparent 100%);
 }
 
-.allocationList::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: 3px;
+/* 3-column grid for token allocations */
+.allocationGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
 }
 
-.allocationList::-webkit-scrollbar-thumb:hover {
-  background: var(--copper);
+/* 2 columns on medium screens */
+@media (max-width: 640px) {
+  .allocationGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Single column on very narrow screens */
+@media (max-width: 400px) {
+  .allocationGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Scroll hint arrow */
+.scrollHint {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  pointer-events: none;
+}
+
+.scrollHintIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 28px;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--copper-light);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  animation: scrollHintBounce 2s ease-in-out infinite;
+}
+
+@keyframes scrollHintBounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(4px);
+  }
 }
 
 /* Empty state */
@@ -167,21 +220,22 @@
   letter-spacing: 0.04em;
 }
 
-/* Individual allocation row */
+/* Individual allocation row - compact for 2-column grid */
 .allocationRow {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 12px;
-  background: rgba(0, 0, 0, 0.2);
+  gap: 6px;
+  padding: 10px 12px;
+  background: rgba(0, 0, 0, 0.25);
   border: 1px solid var(--borderLight);
   border-radius: 4px;
   transition: all 0.2s ease;
+  min-width: 0; /* Allow flex shrinking */
 }
 
 .allocationRow:hover {
   border-color: var(--border);
-  background: rgba(184, 115, 51, 0.05);
+  background: rgba(184, 115, 51, 0.08);
 }
 
 /* Token info row */
@@ -193,10 +247,14 @@
 
 .tokenSymbol {
   font-family: var(--font-display, 'Orbitron', sans-serif);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
   color: var(--copper-light);
+  /* Truncate long token names */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* Remove button */
@@ -226,9 +284,11 @@
   cursor: not-allowed;
 }
 
-/* Slider wrapper */
+/* Slider wrapper - constrained within grid cell */
 .sliderWrapper {
   width: 100%;
+  min-width: 0; /* Allow slider to shrink within grid */
+  overflow: hidden;
 }
 
 /* Add token section */
@@ -411,7 +471,22 @@
     justify-content: space-between;
   }
 
+  .allocationList {
+    padding: 12px;
+    /* Slightly shorter on mobile */
+    max-height: 260px;
+  }
+
+  .allocationGrid {
+    gap: 10px;
+  }
+
   .allocationRow {
-    padding: 10px;
+    padding: 8px 10px;
+    gap: 5px;
+  }
+
+  .tokenSymbol {
+    font-size: 11px;
   }
 }

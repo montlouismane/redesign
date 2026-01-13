@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useSpring, animated } from '@react-spring/web';
-import { useClickSound } from './useClickSound';
+import { useControlSound } from './useControlSound';
 import styles from './controls.module.css';
 
 interface SegmentOption {
@@ -43,7 +43,7 @@ export function SegmentSelector({
   options,
   disabled = false,
 }: SegmentSelectorProps) {
-  const { playClick } = useClickSound();
+  const { playTick } = useControlSound('toggle');
 
   const activeIndex = options.findIndex((opt) => opt.value === value);
   const segmentWidth = 100 / options.length;
@@ -55,7 +55,7 @@ export function SegmentSelector({
 
   const handleSelect = (optionValue: string) => {
     if (disabled || optionValue === value) return;
-    playClick();
+    playTick();
     onChange(optionValue);
   };
 

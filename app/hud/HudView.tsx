@@ -13,6 +13,8 @@ import { ShortcutsModal } from './components/ShortcutsModal';
 import { HudAgentManager } from './components/HudAgentManager';
 import { PerformanceExpanded } from './components/PerformanceExpanded';
 import { FundsExpanded } from './components/FundsExpanded';
+import { RefreshCw } from 'lucide-react';
+import { HudToggle } from './components/controls';
 
 // Views
 import { DashboardView } from './views/DashboardView';
@@ -35,7 +37,7 @@ export function HudView() {
 
     // View State
     const [view, setView] = useState<'dashboard' | 'portfolio' | 'chatFull' | 'settings'>('dashboard');
-    const [activeRange, setActiveRange] = useState<PortfolioRange>('1H');
+    const [activeRange, setActiveRange] = useState<PortfolioRange>('24H');
     const [modalPanel, setModalPanel] = useState<PanelKey | null>(null);
     const [showShortcutsModal, setShowShortcutsModal] = useState(false);
     const [isLoaded, setIsLoaded] = useState(false);
@@ -85,9 +87,15 @@ export function HudView() {
         setTimeout(() => setIsLoaded(true), 100);
     }, []);
 
-    const updateSetting = (key: keyof typeof settings, value: any) => {
+    const updateSetting = (key: keyof typeof settings, value: unknown) => {
         setSettings(prev => ({ ...prev, [key]: value }));
-        if (key === 'uiStyle') setGlobalStyle(value);
+        if (key === 'uiStyle') setGlobalStyle(value as 'classic' | 'hud');
+        // Dispatch event for SoundProvider when sound setting changes
+        if (key === 'soundEffectsEnabled') {
+            window.dispatchEvent(new CustomEvent('soundSettingChanged', {
+                detail: { soundEffectsEnabled: value }
+            }));
+        }
     };
 
     const formatMoney = useCallback((x: number) => {
@@ -257,7 +265,6 @@ export function HudView() {
                                 agents: managedAgents.map(toLegacyAgentRow),
                                 selectedAgentId: managedSelectedId || '',
                                 setSelectedAgentId: selectAgent,
-                                openModal,
                                 isLoaded,
                                 reduceMotion: settings.reduceMotion,
                                 onAgentClick: openAgentDetail,
@@ -592,16 +599,57 @@ export function HudView() {
                                 isCloseVariant
                                 onExpandClick={closeModal}
                             >
-                                <div className="p-6 grid grid-cols-2 gap-4">
-                                    {systemStatus.map(s => (
-                                        <div key={s.label} className="p-4 bg-white/5 border border-white/10 flex justify-between items-center">
-                                            <div className="text-white">{s.label}</div>
-                                            <div className={`font-mono ${s.tone === 'ok' ? 'text-green-400' :
-                                                s.tone === 'warn' ? 'text-amber-400' : 'text-rose-400'
-                                                }`}>{s.status}</div>
+                                <div className="p-4 md:p-6 flex flex-col gap-4">
+                                    {/* Master Controls Section */}
+                                    <div className="p-4 bg-[#c47c48]/10 border border-[#c47c48]/30 rounded">
+                                        <div className="text-[10px] md:text-xs text-[#c47c48] uppercase tracking-widest mb-3 font-mono">
+                                            MASTER CONTROLS
                                         </div>
-                                    ))}
-                                    <div className="p-4 bg-white/5 border border-white/10 col-span-2">
+                                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                            <div>
+                                                <div className="text-sm text-white font-medium mb-1">Trading Status</div>
+                                                <div className="text-xs text-white/50">
+                                                    {isTradingActive
+                                                        ? 'All agents are actively trading'
+                                                        : 'All trading is currently paused'}
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-3">
+                                                <span className="text-xs text-white/40">PAUSE</span>
+                                                <HudToggle
+                                                    value={isTradingActive}
+                                                    onChange={handleTradingToggle}
+                                                    size="medium"
+                                                    activeColor="green"
+                                                />
+                                                <span className="text-xs text-white/40">ACTIVE</span>
+                                            </div>
+                                        </div>
+                                        <button
+                                            onClick={handleUpdate}
+                                            className="mt-4 w-full py-2 px-4 flex items-center justify-center gap-2
+                                                       bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20
+                                                       rounded text-white/70 hover:text-white text-xs font-mono transition-all"
+                                        >
+                                            <RefreshCw size={14} />
+                                            SYNC ALL AGENTS
+                                        </button>
+                                    </div>
+
+                                    {/* System Status Grid */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+                                        {systemStatus.map(s => (
+                                            <div key={s.label} className="p-3 md:p-4 bg-white/5 border border-white/10 flex justify-between items-center rounded">
+                                                <div className="text-white text-sm">{s.label}</div>
+                                                <div className={`font-mono text-sm ${s.tone === 'ok' ? 'text-green-400' :
+                                                    s.tone === 'warn' ? 'text-amber-400' : 'text-rose-400'
+                                                    }`}>{s.status}</div>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    {/* System Logs */}
+                                    <div className="p-3 md:p-4 bg-white/5 border border-white/10 rounded">
                                         <div className="text-xs text-white/40 mb-2">SYSTEM LOGS</div>
                                         <div className="font-mono text-xs text-green-400/80">
                                             {">"} Init sequence complete<br />

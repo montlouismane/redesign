@@ -1,108 +1,137 @@
 'use client';
 
 import React from 'react';
-import { CollapsibleSection, ControlRow } from '../CollapsibleSection';
+import { ControlRow } from '../CollapsibleSection';
 import { AgentSettings } from '../AgentSettingsBoard';
-import { MetallicDial, HorizontalSlider, TagInput } from '../../controls';
+import { MetallicDial, HorizontalSlider, SegmentSelector, HudToggle } from '../../controls';
+import { HelpCircle } from 'lucide-react';
 import styles from '../AgentSettingsBoard.module.css';
 
 export interface PredictionSettingsProps {
   settings: AgentSettings;
   onChange: (settings: Partial<AgentSettings>) => void;
+  onFaqClick?: () => void;
 }
 
 /**
  * Prediction Mode Settings Component
  *
  * Configuration for prediction market trading strategy
+ * Matches production version with HUD visual style
  *
  * Sections:
- * - Prediction Parameters: Market selection, confidence thresholds
- * - Position Sizing: Stake sizing based on confidence
- * - Market Filters: Event types, time horizons
+ * - Prediction Parameters: Confidence thresholds, position sizing
+ * - Trade Rules: Min ADA values, intervals, limit orders
+ * - Mode Controls: Risk tolerance, paper trading
  */
-export function PredictionSettings({ settings, onChange }: PredictionSettingsProps) {
+export function PredictionSettings({ settings, onChange, onFaqClick }: PredictionSettingsProps) {
   const defaults = {
-    minPredictionConfidence: settings.minPredictionConfidence ?? 70,
-    maxStakeSize: settings.maxStakeSize ?? 500,
-    minStakeSize: settings.minStakeSize ?? 50,
-    eventTypes: settings.eventTypes ?? [],
-    maxTimeHorizon: settings.maxTimeHorizon ?? 72,
-    minLiquidity: settings.minLiquidity ?? 1000,
+    minPredictionConfidence: settings.minPredictionConfidence ?? 60,
+    maxPositionPct: settings.maxPositionPct ?? 25,
+    minAdaFloor: settings.minAdaFloor ?? 50,
+    minTradeAda: settings.minTradeAda ?? 5,
+    reviewInterval: settings.reviewInterval ?? 120,
+    riskTolerance: settings.riskTolerance ?? 'moderate',
+    allowLimitOrders: settings.allowLimitOrders ?? false,
   };
 
   return (
-    <div className={styles.gridContainer}>
-      {/* Prediction Parameters (Wide) */}
-      <div className={styles.card} style={{ gridColumn: '1 / -1' }}>
-        <div className={styles.cardHeader}>
+    <div className={styles.unifiedBoard}>
+      {/* Prediction Strategy */}
+      <div className={styles.section}>
+        <div className={styles.sectionHeader}>
           <div className={styles.cardTitle}>Prediction Strategy</div>
+          {onFaqClick && (
+            <button
+              className={styles.faqButton}
+              onClick={onFaqClick}
+              title="View Prediction Mode FAQ"
+            >
+              <HelpCircle size={14} />
+              FAQ
+            </button>
+          )}
         </div>
-        <div className={styles.cardContent}>
+        <div className={styles.sectionContent}>
           <div className={styles.denseGrid}>
-            <ControlRow label="Min Confidence">
+            <ControlRow label="Min Confidence" helper="Minimum prediction confidence">
               <MetallicDial
                 value={defaults.minPredictionConfidence}
                 onChange={(value) => onChange({ minPredictionConfidence: value })}
-                min={50} max={95} safeMin={65} safeMax={80} unit="%"
+                min={50} max={95} safeMin={55} safeMax={85} unit="%"
               />
             </ControlRow>
-            <ControlRow label="Time Horizon" helper="Max hours">
-              <HorizontalSlider
-                value={defaults.maxTimeHorizon}
-                onChange={(value) => onChange({ maxTimeHorizon: value })}
-                min={1} max={720} step={1} unit="hrs"
+            <ControlRow label="Max Position %" helper="AI check frequency">
+              <MetallicDial
+                value={defaults.maxPositionPct}
+                onChange={(value) => onChange({ maxPositionPct: value })}
+                min={1} max={100} safeMin={10} safeMax={50} unit="%"
               />
             </ControlRow>
-            <ControlRow label="Min Liquidity">
-              <HorizontalSlider
-                value={defaults.minLiquidity}
-                onChange={(value) => onChange({ minLiquidity: value })}
-                min={100} max={10000} step={100} unit="ADA"
-              />
-            </ControlRow>
-          </div>
-        </div>
-      </div>
-
-      {/* Position Sizing */}
-      <div className={styles.card}>
-        <div className={styles.cardHeader}>
-          <div className={styles.cardTitle}>Staking Rules</div>
-        </div>
-        <div className={styles.cardContent}>
-          <div className={styles.denseGrid}>
-            <ControlRow label="Min Stake">
-              <HorizontalSlider
-                value={defaults.minStakeSize}
-                onChange={(value) => onChange({ minStakeSize: value })}
-                min={40} max={1000} unit="ADA"
-              />
-            </ControlRow>
-            <ControlRow label="Max Stake">
-              <HorizontalSlider
-                value={defaults.maxStakeSize}
-                onChange={(value) => onChange({ maxStakeSize: value })}
-                min={100} max={5000} unit="ADA"
+            <ControlRow label="Risk Tolerance">
+              <SegmentSelector
+                value={defaults.riskTolerance}
+                onChange={(value) => onChange({ riskTolerance: value })}
+                options={[
+                  { value: 'conservative', label: 'Conservative' },
+                  { value: 'moderate', label: 'Moderate' },
+                  { value: 'aggressive', label: 'Aggressive' },
+                ]}
               />
             </ControlRow>
           </div>
         </div>
       </div>
 
-      {/* Market Filters */}
-      <div className={styles.card}>
-        <div className={styles.cardHeader}>
-          <div className={styles.cardTitle}>Markets</div>
+      {/* Row: Trade Rules & Controls */}
+      <div className={styles.sectionRow}>
+        {/* Trade Rules */}
+        <div className={styles.section}>
+          <div className={styles.sectionHeader}>
+            <div className={styles.cardTitle}>Trade Rules</div>
+          </div>
+          <div className={styles.sectionContent}>
+            <div className={styles.denseGrid}>
+              <ControlRow label="Min ADA Floor" helper="Minimum wallet balance">
+                <HorizontalSlider
+                  value={defaults.minAdaFloor}
+                  onChange={(value) => onChange({ minAdaFloor: value })}
+                  min={10} max={500} step={10} unit="ADA"
+                />
+              </ControlRow>
+              <ControlRow label="Min Trade ADA" helper="Minimum per trade">
+                <HorizontalSlider
+                  value={defaults.minTradeAda}
+                  onChange={(value) => onChange({ minTradeAda: value })}
+                  min={1} max={100} step={1} unit="ADA"
+                />
+              </ControlRow>
+              <ControlRow label="Review Interval" helper="Check frequency">
+                <HorizontalSlider
+                  value={defaults.reviewInterval}
+                  onChange={(value) => onChange({ reviewInterval: value })}
+                  min={5} max={720} step={5} unit="min"
+                />
+              </ControlRow>
+            </div>
+          </div>
         </div>
-        <div className={styles.cardContent}>
-          <ControlRow label="Event Types">
-            <TagInput
-              tags={defaults.eventTypes}
-              onChange={(tags) => onChange({ eventTypes: tags })}
-              placeholder="Sports, Crypto..."
-            />
-          </ControlRow>
+
+        {/* Mode Controls */}
+        <div className={styles.section}>
+          <div className={styles.sectionHeader}>
+            <div className={styles.cardTitle}>Mode Controls</div>
+          </div>
+          <div className={styles.sectionContent}>
+            <div className={styles.denseGrid}>
+              <ControlRow label="Allow Limit Orders" helper="Enable limit order placement">
+                <HudToggle
+                  value={defaults.allowLimitOrders}
+                  onChange={(value) => onChange({ allowLimitOrders: value })}
+                />
+              </ControlRow>
+            </div>
+          </div>
         </div>
       </div>
     </div>

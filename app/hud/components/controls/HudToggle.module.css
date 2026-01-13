@@ -1,0 +1,320 @@
+/* HudToggle - Angular on/off switch with cut corners
+   =====================================================
+   Matches the HUD dashboard's angular, technical aesthetic.
+   Uses cut corners and copper accents.
+*/
+
+.hudToggle {
+  --copper: #c47c48;
+  --copper-light: #e2a76f;
+  --copper-dark: #8b4513;
+  --copper-glow: rgba(184, 115, 51, 0.5);
+  --green: #35ff9b;
+  --green-glow: rgba(53, 255, 155, 0.5);
+  --blue: #5b9dff;
+  --blue-glow: rgba(91, 157, 255, 0.5);
+  --bg-dark: rgba(0, 0, 0, 0.4);
+  --border: rgba(255, 255, 255, 0.15);
+
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.hudToggle[data-disabled="true"] {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* Label */
+.label {
+  font-family: var(--font-display, 'Orbitron', sans-serif);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* Track - the main toggle container */
+.track {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: var(--bg-dark);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  overflow: hidden;
+
+  /* Cut corner shape using clip-path */
+  clip-path: polygon(
+    6px 0,           /* top-left corner cut */
+    100% 0,
+    100% calc(100% - 6px),  /* bottom-right corner cut */
+    calc(100% - 6px) 100%,
+    0 100%,
+    0 6px
+  );
+}
+
+/* Size variants */
+.hudToggle[data-size="small"] .track {
+  width: 40px;
+  height: 20px;
+}
+
+.hudToggle[data-size="medium"] .track {
+  width: 52px;
+  height: 26px;
+}
+
+.hudToggle[data-size="large"] .track {
+  width: 64px;
+  height: 32px;
+}
+
+.track:hover:not(:disabled) {
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.track:focus-visible {
+  outline: none;
+  border-color: var(--copper);
+}
+
+/* Background fill */
+.fill {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.fill[data-active="true"] {
+  opacity: 1;
+}
+
+.fill[data-color="green"] {
+  background: linear-gradient(135deg, rgba(53, 255, 155, 0.2) 0%, rgba(53, 255, 155, 0.08) 100%);
+}
+
+.fill[data-color="copper"] {
+  background: linear-gradient(135deg, rgba(196, 124, 72, 0.25) 0%, rgba(196, 124, 72, 0.1) 100%);
+}
+
+.fill[data-color="blue"] {
+  background: linear-gradient(135deg, rgba(91, 157, 255, 0.2) 0%, rgba(91, 157, 255, 0.08) 100%);
+}
+
+/* Cut corner accents - decorative lines */
+.cornerTL,
+.cornerBR {
+  position: absolute;
+  width: 8px;
+  height: 1px;
+  background: var(--border);
+  pointer-events: none;
+  transition: background 0.2s ease;
+}
+
+.cornerTL {
+  top: 0;
+  left: 0;
+  transform: rotate(45deg);
+  transform-origin: top left;
+}
+
+.cornerBR {
+  bottom: 0;
+  right: 0;
+  transform: rotate(45deg);
+  transform-origin: bottom right;
+}
+
+.track[data-active="true"][data-color="green"] .cornerTL,
+.track[data-active="true"][data-color="green"] .cornerBR {
+  background: var(--green);
+}
+
+.track[data-active="true"][data-color="copper"] .cornerTL,
+.track[data-active="true"][data-color="copper"] .cornerBR {
+  background: var(--copper);
+}
+
+.track[data-active="true"][data-color="blue"] .cornerTL,
+.track[data-active="true"][data-color="blue"] .cornerBR {
+  background: var(--blue);
+}
+
+/* Thumb slider */
+.thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  background: linear-gradient(180deg, rgba(60, 60, 70, 0.95) 0%, rgba(40, 40, 50, 0.95) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: left 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  /* Cut corner on thumb */
+  clip-path: polygon(
+    4px 0,
+    100% 0,
+    100% calc(100% - 4px),
+    calc(100% - 4px) 100%,
+    0 100%,
+    0 4px
+  );
+}
+
+/* Thumb sizes */
+.hudToggle[data-size="small"] .thumb {
+  width: 16px;
+  height: 16px;
+}
+
+.hudToggle[data-size="medium"] .thumb {
+  width: 20px;
+  height: 20px;
+}
+
+.hudToggle[data-size="large"] .thumb {
+  width: 26px;
+  height: 26px;
+}
+
+/* Thumb active position */
+.hudToggle[data-size="small"] .thumb[data-active="true"] {
+  left: 22px;
+}
+
+.hudToggle[data-size="medium"] .thumb[data-active="true"] {
+  left: 30px;
+}
+
+.hudToggle[data-size="large"] .thumb[data-active="true"] {
+  left: 36px;
+}
+
+.thumb[data-active="true"] {
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+/* Thumb corner accent line */
+.thumbCorner {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 6px;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.3);
+  transform: rotate(45deg);
+  transform-origin: top left;
+}
+
+/* LED indicator on thumb */
+.led {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transition: all 0.2s ease;
+}
+
+.led[data-active="true"][data-color="green"] {
+  background: var(--green);
+  box-shadow: 0 0 8px var(--green-glow), 0 0 16px var(--green-glow);
+}
+
+.led[data-active="true"][data-color="copper"] {
+  background: var(--copper-light);
+  box-shadow: 0 0 8px var(--copper-glow), 0 0 16px var(--copper-glow);
+}
+
+.led[data-active="true"][data-color="blue"] {
+  background: var(--blue);
+  box-shadow: 0 0 8px var(--blue-glow), 0 0 16px var(--blue-glow);
+}
+
+/* Status labels */
+.labelOff,
+.labelOn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: var(--font-display, 'Orbitron', sans-serif);
+  font-size: 7px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  pointer-events: none;
+  transition: opacity 0.2s ease, color 0.2s ease;
+}
+
+/* Small size hides labels */
+.hudToggle[data-size="small"] .labelOff,
+.hudToggle[data-size="small"] .labelOn {
+  display: none;
+}
+
+.labelOff {
+  right: 6px;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.labelOff[data-active="true"] {
+  opacity: 0;
+}
+
+.labelOn {
+  left: 6px;
+  color: rgba(255, 255, 255, 0.3);
+  opacity: 0;
+}
+
+.labelOn[data-active="true"] {
+  opacity: 1;
+}
+
+.track[data-active="true"][data-color="green"] .labelOn {
+  color: var(--green);
+}
+
+.track[data-active="true"][data-color="copper"] .labelOn {
+  color: var(--copper);
+}
+
+.track[data-active="true"][data-color="blue"] .labelOn {
+  color: var(--blue);
+}
+
+/* Large size adjustments */
+.hudToggle[data-size="large"] .labelOff,
+.hudToggle[data-size="large"] .labelOn {
+  font-size: 8px;
+}
+
+.hudToggle[data-size="large"] .labelOff {
+  right: 8px;
+}
+
+.hudToggle[data-size="large"] .labelOn {
+  left: 8px;
+}
+
+.hudToggle[data-size="large"] .led {
+  width: 6px;
+  height: 6px;
+}
+
+/* Hover effect */
+.track:hover .thumb {
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+/* Active press effect */
+.track:active .thumb {
+  transform: scale(0.95);
+}

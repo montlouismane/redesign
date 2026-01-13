@@ -1,8 +1,9 @@
 import React from 'react';
+import { Plus } from 'lucide-react';
 import styles from '../../styles/agents.module.css';
 import { HudPanel } from '../components/HudPanel';
 import { ScrollHintArea } from '../../ScrollHintArea';
-import { AgentRow, PanelKey } from '../types';
+import { AgentRow } from '../types';
 import { formatPct } from '../utils';
 import { PANEL_TITLES } from '../constants';
 
@@ -10,7 +11,6 @@ export interface AgentsPanelProps {
     agents: AgentRow[];
     selectedAgentId: string;
     setSelectedAgentId: (id: string) => void;
-    openModal: (key: PanelKey) => void;
     isLoaded: boolean;
     reduceMotion?: boolean;
     /** Called when clicking an agent to open settings detail */
@@ -23,7 +23,6 @@ export const AgentsPanel = ({
     agents,
     selectedAgentId,
     setSelectedAgentId,
-    openModal,
     isLoaded,
     reduceMotion = false,
     onAgentClick,
@@ -40,8 +39,6 @@ export const AgentsPanel = ({
             }}
             title={PANEL_TITLES.agents}
             aria-label="Agent Roster"
-            onDoubleClick={() => openModal('agents')}
-            onExpandClick={() => openModal('agents')}
             accentVariant="vertical"
             shapeVariant="a"
             disableBodyClick={true}
@@ -87,7 +84,9 @@ export const AgentsPanel = ({
                                             {a.name}
                                         </div>
                                         <div className={styles.agentSub}>
-                                            {a.role} · {a.chain}
+                                            {a.mode === 't-mode' ? 'T-Mode' :
+                                             a.mode === 'perpetuals' ? 'Perpetuals' :
+                                             a.mode === 'prediction' ? 'Prediction' : 'Standard'}
                                         </div>
                                     </div>
                                     <div className={styles.agentRight}>
@@ -106,6 +105,7 @@ export const AgentsPanel = ({
                             if (onDeployClick) onDeployClick();
                         }}
                     >
+                        <Plus size={20} strokeWidth={2.5} />
                         Deploy New Agent
                     </button>
                 </div>

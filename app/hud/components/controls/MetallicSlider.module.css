@@ -469,63 +469,11 @@
   box-shadow: 0 0 4px rgba(53, 255, 155, 0.5);
 }
 
-/* Green tint when in safe zone */
-.trackFill[data-safe="true"] {
-  background:
-    linear-gradient(
-      180deg,
-      rgba(100, 220, 160, 0.9) 0%,
-      rgba(53, 200, 130, 0.8) 30%,
-      rgba(40, 160, 100, 0.9) 70%,
-      rgba(53, 180, 120, 0.8) 100%
-    );
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.3),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.3),
-    0 0 8px rgba(53, 255, 155, 0.4);
-}
+/* Track fill stays copper even in safe zone
+   Green is only used for safe zone tick marks
 
-/* Safe zone thumb styling */
-.thumbInner[data-safe="true"] {
-  background:
-    radial-gradient(
-      ellipse 80% 50% at 50% 20%,
-      rgba(100, 220, 160, 0.9) 0%,
-      rgba(53, 200, 130, 0.8) 40%,
-      rgba(40, 160, 100, 0.9) 100%
-    );
-  border-color: rgba(53, 200, 130, 0.8);
-  box-shadow:
-    0 0 12px rgba(53, 255, 155, 0.4),
-    0 4px 8px rgba(0, 0, 0, 0.4),
-    inset 0 2px 4px rgba(255, 255, 255, 0.3),
-    inset 0 -2px 4px rgba(0, 0, 0, 0.3);
-}
-
-/* Safe zone value label */
-.valueLabel[data-safe="true"] {
-  background:
-    linear-gradient(
-      135deg,
-      rgba(100, 220, 160, 0.9) 0%,
-      rgba(53, 200, 130, 0.8) 50%,
-      rgba(40, 160, 100, 0.9) 100%
-    );
-  border-color: rgba(53, 200, 130, 0.6);
-}
-
-.valueLabel[data-safe="true"] .valueLabelArrow {
-  border-top-color: rgba(40, 160, 100, 0.9);
-}
-
-/* Safe zone value display */
-.valueDisplay[data-safe="true"] {
-  border-color: rgba(53, 255, 155, 0.3);
-}
-
-.valueDisplay[data-safe="true"] .valueNumber {
-  color: rgba(100, 220, 160, 0.9);
-}
+   REMOVED: trackFill[data-safe], thumbInner[data-safe], valueLabel[data-safe]
+   The slider parts stay metallic copper throughout. */
 
 /* ============================================
    Inline Edit Mode
@@ -582,4 +530,66 @@
 .valueDisplay:disabled {
   cursor: not-allowed;
   opacity: 0.5;
+}
+
+/* ============================================
+   Error State Styles
+   ============================================ */
+
+.metallicSlider[data-error="true"] .trackFill {
+  background:
+    linear-gradient(
+      180deg,
+      #ff6b6b 0%,
+      #ee5a5a 30%,
+      #cc4444 50%,
+      #ee5a5a 70%,
+      #ff6b6b 100%
+    );
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.3),
+    0 0 8px rgba(255, 100, 100, 0.5);
+}
+
+.metallicSlider[data-error="true"] .thumbInner {
+  background:
+    radial-gradient(
+      ellipse 80% 50% at 50% 20%,
+      #ff8888 0%,
+      #ee5a5a 40%,
+      #cc3333 100%
+    );
+  border-color: #cc4444;
+  box-shadow:
+    0 0 12px rgba(255, 100, 100, 0.5),
+    0 4px 8px rgba(0, 0, 0, 0.4),
+    inset 0 2px 4px rgba(255, 255, 255, 0.3),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.valueDisplay[data-error="true"] {
+  border-color: rgba(255, 100, 100, 0.5);
+  background: rgba(255, 50, 50, 0.1);
+}
+
+.valueNumber[data-error="true"] {
+  color: #ff6b6b;
+}
+
+/* Error message text */
+.errorMessage {
+  font-family: var(--font-display, 'Orbitron', sans-serif);
+  font-size: 10px;
+  font-weight: 600;
+  color: #ff6b6b;
+  text-align: center;
+  margin-top: 4px;
+  letter-spacing: 0.05em;
+  animation: errorPulse 2s ease-in-out infinite;
+}
+
+@keyframes errorPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
 }

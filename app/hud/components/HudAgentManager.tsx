@@ -9,6 +9,7 @@ import {
   agentService,
 } from '../../features/agents';
 import type { Agent, AgentStatus, AgentListItem } from '../../features/agents/types';
+import type { AgentMode } from '../types';
 import { DeleteConfirmation } from '../../features/agents/components';
 import { AgentDetailSlide } from '../views/AgentDetailSlide';
 import { HudCreateAgentModal } from './HudCreateAgentModal';
@@ -38,7 +39,7 @@ export interface HudAgentManagerRenderProps {
     chip: string;
     name: string;
     role: string;
-    chain: string;
+    mode: AgentMode;
     runtimeState: 'running' | 'idle' | 'alert' | 'stopped';
     pnlPct: number;
   };
@@ -143,7 +144,7 @@ export function HudAgentManager({ children }: HudAgentManagerProps) {
       chip: agent.name.slice(0, 2).toUpperCase(),
       name: agent.name,
       role: modeRoles[agent.mode] || 'Agent',
-      chain: 'MULTI', // Could be derived from settings
+      mode: (agent.mode as AgentMode) || 'standard',
       runtimeState: statusMap[agent.status] || 'stopped',
       pnlPct: agent.pnl24h,
     };

@@ -5,7 +5,7 @@ import { CollapsibleSection, ControlRow } from '../CollapsibleSection';
 import { AgentSettings } from '../AgentSettingsBoard';
 import { MetallicDial } from '../../controls/MetallicDial';
 import { HorizontalSlider } from '../../controls/HorizontalSlider';
-import { ToggleSwitch } from '../../controls/ToggleSwitch';
+import { HudToggle } from '../../controls/HudToggle';
 import styles from '../AgentSettingsBoard.module.css';
 
 export interface PerpetualsSettingsProps {
@@ -101,9 +101,11 @@ export function PerpetualsSettings({ settings, onChange }: PerpetualsSettingsPro
       <div className={styles.section}>
         <div className={styles.sectionHeader}>
           <div className={styles.cardTitle}>Risk Controls</div>
-          <ToggleSwitch
+          <HudToggle
             value={defaults.trailingStopEnabled}
             onChange={(v) => onChange({ trailingStopEnabled: v })}
+            size="small"
+            activeColor="copper"
           />
         </div>
         <div className={styles.sectionContent}>

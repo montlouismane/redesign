@@ -1,12 +1,12 @@
 'use client';
 
 import React from 'react';
-import { CollapsibleSection, ControlRow } from './CollapsibleSection';
+import { ControlRow } from './CollapsibleSection';
 import { RiskConfig } from './AgentSettingsBoard';
 import { MetallicDial } from '../controls/MetallicDial';
 import { HorizontalSlider } from '../controls/HorizontalSlider';
 import { VerticalSlider } from '../controls/VerticalSlider';
-import { ToggleSwitch } from '../controls/ToggleSwitch';
+import { HudToggle } from '../controls/HudToggle';
 import styles from './AgentSettingsBoard.module.css';
 
 export interface RiskSettingsProps {
@@ -17,7 +17,8 @@ export interface RiskSettingsProps {
 /**
  * Risk Settings Component
  *
- * Shared risk management configuration across all trading modes
+ * Shared risk management configuration across all trading modes.
+ * Uses unified board layout for seamless panel feel.
  *
  * Sections:
  * - Edge Gate: Net edge validation before trades
@@ -28,80 +29,83 @@ export interface RiskSettingsProps {
  */
 export function RiskSettings({ settings, onChange }: RiskSettingsProps) {
   return (
-    <div className={styles.gridContainer}>
-      {/* Edge Gate */}
-      <div className={styles.card}>
-        <div className={styles.cardHeader}>
-          <div className={styles.cardTitle}>Edge Gate</div>
-          <ToggleSwitch
-            value={settings.edgeGateEnabled ?? false}
-            onChange={(value) => onChange({ edgeGateEnabled: value })}
-          />
+    <div className={styles.unifiedBoard}>
+      {/* Row: Edge Gate & Liquidity Guard */}
+      <div className={styles.sectionRow}>
+        {/* Edge Gate */}
+        <div className={styles.section}>
+          <div className={styles.sectionHeader}>
+            <div className={styles.cardTitle}>Edge Gate</div>
+            <HudToggle
+              value={settings.edgeGateEnabled ?? false}
+              onChange={(value) => onChange({ edgeGateEnabled: value })}
+            />
+          </div>
+          <div className={styles.sectionContent}>
+            <div className={styles.denseGrid} style={{ gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px 24px' }}>
+              <ControlRow
+                label="Min Net Edge"
+                helper="Minimum profit margin required"
+              >
+                <MetallicDial
+                  value={settings.minNetEdge ?? 0.5}
+                  onChange={(value) => onChange({ minNetEdge: value })}
+                  min={0}
+                  max={10}
+                  step={0.1}
+                  unit="%"
+                />
+              </ControlRow>
+              <ControlRow label="Log Skips" helper="Record skipped trades">
+                <HudToggle
+                  value={settings.logSkippedEdge ?? true}
+                  onChange={(value) => onChange({ logSkippedEdge: value })}
+                />
+              </ControlRow>
+            </div>
+          </div>
         </div>
-        <div className={styles.cardContent}>
-          <div className={styles.denseGrid}>
-            <ControlRow
-              label="Min Net Edge"
-              helper="Minimum profit margin required"
-            >
-              <MetallicDial
-                value={settings.minNetEdge ?? 0.5}
-                onChange={(value) => onChange({ minNetEdge: value })}
-                min={0}
-                max={10}
-                step={0.1}
-                unit="%"
-              />
-            </ControlRow>
-            <ControlRow label="Log Skips" helper="Record skipped trades">
-              <ToggleSwitch
-                value={settings.logSkippedEdge ?? true}
-                onChange={(value) => onChange({ logSkippedEdge: value })}
-              />
-            </ControlRow>
+
+        {/* Liquidity Guard */}
+        <div className={styles.section}>
+          <div className={styles.sectionHeader}>
+            <div className={styles.cardTitle}>Liquidity Guard</div>
+            <HudToggle
+              value={settings.liquidityGuardEnabled ?? true}
+              onChange={(value) => onChange({ liquidityGuardEnabled: value })}
+            />
+          </div>
+          <div className={styles.sectionContent}>
+            <div className={styles.denseGrid} style={{ gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px 24px' }}>
+              <ControlRow label="Max Impact" helper="Max slippage impact">
+                <MetallicDial
+                  value={settings.maxImpact ?? 3.0}
+                  onChange={(value) => onChange({ maxImpact: value })}
+                  min={0.5} max={20} step={0.5} unit="%"
+                />
+              </ControlRow>
+              <ControlRow label="Auto Downsize" helper="Reduce size if impact high">
+                <HudToggle
+                  value={settings.autoDownsize ?? true}
+                  onChange={(value) => onChange({ autoDownsize: value })}
+                />
+              </ControlRow>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Liquidity Guard */}
-      <div className={styles.card}>
-        <div className={styles.cardHeader}>
-          <div className={styles.cardTitle}>Liquidity Guard</div>
-          <ToggleSwitch
-            value={settings.liquidityGuardEnabled ?? true}
-            onChange={(value) => onChange({ liquidityGuardEnabled: value })}
-          />
-        </div>
-        <div className={styles.cardContent}>
-          <div className={styles.denseGrid}>
-            <ControlRow label="Max Impact" helper="Max slippage impact">
-              <MetallicDial
-                value={settings.maxImpact ?? 3.0}
-                onChange={(value) => onChange({ maxImpact: value })}
-                min={0.5} max={20} step={0.5} unit="%"
-              />
-            </ControlRow>
-            <ControlRow label="Auto Downsize" helper="Reduce size if impact high">
-              <ToggleSwitch
-                value={settings.autoDownsize ?? true}
-                onChange={(value) => onChange({ autoDownsize: value })}
-              />
-            </ControlRow>
-          </div>
-        </div>
-      </div>
-
-      {/* Cooldowns (Full Width) */}
-      <div className={styles.card} style={{ gridColumn: '1 / -1' }}>
-        <div className={styles.cardHeader}>
+      {/* Cooldown Rules (Full Width) */}
+      <div className={styles.section}>
+        <div className={styles.sectionHeader}>
           <div className={styles.cardTitle}>Cooldown Rules</div>
-          <ToggleSwitch
+          <HudToggle
             value={settings.perAssetCooldownEnabled ?? true}
             onChange={(value) => onChange({ perAssetCooldownEnabled: value })}
           />
         </div>
-        <div className={styles.cardContent}>
-          <div className="grid grid-cols-3 gap-4">
+        <div className={styles.sectionContent}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
             <ControlRow label="Win Cooldown">
               <VerticalSlider
                 value={settings.winCooldown ?? 15}
@@ -127,61 +131,66 @@ export function RiskSettings({ settings, onChange }: RiskSettingsProps) {
         </div>
       </div>
 
-      {/* Portfolio Risk */}
-      <div className={styles.card}>
-        <div className={styles.cardHeader}>
-          <div className={styles.cardTitle}>Portfolio Risk</div>
-        </div>
-        <div className={styles.cardContent}>
-          <ControlRow label="Max Open Positions">
-            <HorizontalSlider
-              value={settings.maxOpenPositions ?? 10}
-              onChange={(value) => onChange({ maxOpenPositions: value })}
-              min={1} max={50}
-            />
-          </ControlRow>
-          <div className={styles.denseGrid}>
-            <ControlRow label="Max Position %">
-              <MetallicDial
-                value={settings.maxSinglePosition ?? 20}
-                onChange={(value) => onChange({ maxSinglePosition: value })}
-                min={1} max={100} unit="%"
+      {/* Row: Portfolio Risk & Simulation Mode */}
+      <div className={styles.sectionRow}>
+        {/* Portfolio Risk */}
+        <div className={styles.section}>
+          <div className={styles.sectionHeader}>
+            <div className={styles.cardTitle}>Portfolio Risk</div>
+          </div>
+          <div className={styles.sectionContent}>
+            <ControlRow label="Max Open Positions">
+              <HorizontalSlider
+                value={settings.maxOpenPositions ?? 10}
+                onChange={(value) => onChange({ maxOpenPositions: value })}
+                min={1} max={50} step={1} unit=""
               />
             </ControlRow>
-            <ControlRow label="Max Daily Loss">
-              <MetallicDial
-                value={settings.maxDailyLoss ?? 10}
-                onChange={(value) => onChange({ maxDailyLoss: value })}
-                min={1} max={50} unit="%"
-              />
-            </ControlRow>
+            <div className={styles.denseGrid} style={{ gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px 24px', marginTop: '16px' }}>
+              <ControlRow label="Max Position %">
+                <MetallicDial
+                  value={settings.maxSinglePosition ?? 20}
+                  onChange={(value) => onChange({ maxSinglePosition: value })}
+                  min={1} max={100} unit="%"
+                />
+              </ControlRow>
+              <ControlRow label="Max Daily Loss">
+                <MetallicDial
+                  value={settings.maxDailyLoss ?? 10}
+                  onChange={(value) => onChange({ maxDailyLoss: value })}
+                  min={1} max={50} unit="%"
+                />
+              </ControlRow>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Dry Run */}
-      <div className={styles.card}>
-        <div className={styles.cardHeader}>
-          <div className={styles.cardTitle}>Simulation Mode</div>
-          <ToggleSwitch
-            value={settings.dryRunEnabled ?? false}
-            onChange={(value) => onChange({ dryRunEnabled: value })}
-          />
-        </div>
-        <div className={styles.cardContent}>
-          <ControlRow label="Starting Capital">
-            <HorizontalSlider
-              value={settings.virtualAda ?? 10000}
-              onChange={(value) => onChange({ virtualAda: value })}
-              min={1000} max={100000} step={1000} unit="ADA"
+        {/* Simulation Mode */}
+        <div className={styles.section}>
+          <div className={styles.sectionHeader}>
+            <div className={styles.cardTitle}>Simulation Mode</div>
+            <HudToggle
+              value={settings.dryRunEnabled ?? false}
+              onChange={(value) => onChange({ dryRunEnabled: value })}
             />
-          </ControlRow>
-          <ControlRow label="Log to DB">
-            <ToggleSwitch
-              value={settings.logToDatabase ?? true}
-              onChange={(value) => onChange({ logToDatabase: value })}
-            />
-          </ControlRow>
+          </div>
+          <div className={styles.sectionContent}>
+            <ControlRow label="Starting Capital">
+              <HorizontalSlider
+                value={settings.virtualAda ?? 10000}
+                onChange={(value) => onChange({ virtualAda: value })}
+                min={100} max={50000} step={100} unit="ADA"
+              />
+            </ControlRow>
+            <div style={{ marginTop: '16px' }}>
+              <ControlRow label="Log to DB">
+                <HudToggle
+                  value={settings.logToDatabase ?? true}
+                  onChange={(value) => onChange({ logToDatabase: value })}
+                />
+              </ControlRow>
+            </div>
+          </div>
         </div>
       </div>
     </div>

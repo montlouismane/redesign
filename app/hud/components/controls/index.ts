@@ -26,7 +26,9 @@ export { MetallicDial } from './MetallicDial';
 export { HorizontalSlider } from './HorizontalSlider';
 export { VerticalSlider } from './VerticalSlider';
 export { MetallicSlider } from './MetallicSlider';
+export { TimeAdjuster } from './TimeAdjuster';
 export { ToggleSwitch } from './ToggleSwitch';
+export { HudToggle } from './HudToggle';
 export { SegmentSelector } from './SegmentSelector';
 
 // Input Components
@@ -34,8 +36,12 @@ export { ValueInput } from './ValueInput';
 export { TagInput } from './TagInput';
 export { AllocationEditor } from './AllocationEditor';
 
+// UI Components
+export { InfoTooltip } from './InfoTooltip';
+
 // Layout Components
 export { CollapsibleSection } from './CollapsibleSection';
 
 // Hooks
 export { useClickSound } from './useClickSound';
+export { useControlSound } from './useControlSound';

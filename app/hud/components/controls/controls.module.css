@@ -528,12 +528,12 @@
   flex: 1;
   position: relative;
   z-index: 1;
-  padding: 12px 16px;
+  padding: 12px 6px;
   background: transparent;
   border: none;
   color: var(--textMuted);
   font-family: var(--font-display, 'Orbitron', sans-serif);
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;

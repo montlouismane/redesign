@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { HudPanel } from '../components/HudPanel';
-import { ArrowDownToLine, ArrowUpFromLine, Copy, Wallet, Check, ArrowDown } from 'lucide-react';
+import { ArrowDownToLine, ArrowUpFromLine, Copy, Wallet, Check, ArrowDown, ChevronDown } from 'lucide-react';
 import { formatUSD } from '../utils';
 import { FundsPanelProps } from '../types';
 import { useWalletTransaction } from '../../hooks/useWalletTransaction';
@@ -14,6 +14,9 @@ export const FundsPanel = ({
     isLoaded,
     reduceMotion = false,
     chain = 'cardano',
+    agentWallets = [],
+    selectedWalletId,
+    onWalletChange,
 }: FundsPanelProps) => {
     const { sendLovelace, sendAssets, isLoading, error: txError, txHash, adaBalance, assets } = useWalletTransaction();
     const [recipient, setRecipient] = useState('');
@@ -24,6 +27,14 @@ export const FundsPanel = ({
     const [selectedAsset, setSelectedAsset] = useState<string>('native');
     const [isAssetDropdownOpen, setIsAssetDropdownOpen] = useState(false);
 
+    // Wallet Selection Dropdown State
+    const [isWalletDropdownOpen, setIsWalletDropdownOpen] = useState(false);
+
+    // Get selected agent wallet info
+    const selectedWallet = agentWallets.find(w => w.id === selectedWalletId);
+    const activeWalletAddress = selectedWallet?.address || walletAddress;
+    const activeChain = selectedWallet?.chain || chain;
+
     // Determines currency symbol based on chain
     const getCurrencySymbol = (c: string) => {
         switch (c) {
@@ -32,7 +43,7 @@ export const FundsPanel = ({
             case 'cardano': default: return 'ADA';
         }
     };
-    const nativeCurrency = getCurrencySymbol(chain);
+    const nativeCurrency = getCurrencySymbol(activeChain);
 
     // Helper to format asset name from hex if needed
     const getAssetName = (unit: string) => {
@@ -58,11 +69,18 @@ export const FundsPanel = ({
 
     const handleCopy = async (e: React.MouseEvent) => {
         e.stopPropagation();
-        if (walletAddress) {
-            await navigator.clipboard.writeText(walletAddress);
+        if (activeWalletAddress) {
+            await navigator.clipboard.writeText(activeWalletAddress);
             setIsCopying(true);
             setTimeout(() => setIsCopying(false), 2000);
         }
+    };
+
+    const handleWalletSelect = (walletId: string) => {
+        if (onWalletChange) {
+            onWalletChange(walletId);
+        }
+        setIsWalletDropdownOpen(false);
     };
 
     const handleMaxClick = (e: React.MouseEvent) => {
@@ -115,7 +133,51 @@ export const FundsPanel = ({
             }}
             className="border-amber-500/20"
         >
-            <div className="flex flex-col h-full p-3 gap-1.5" onClick={() => setIsAssetDropdownOpen(false)}>
+            <div className="flex flex-col h-full p-3 gap-1.5" onClick={() => { setIsAssetDropdownOpen(false); setIsWalletDropdownOpen(false); }}>
+                {/* Agent Wallet Selector */}
+                {agentWallets.length > 0 && (
+                    <div className="relative mb-1">
+                        <div className="text-[8px] text-white/30 font-mono tracking-widest uppercase mb-1">
+                            AGENT WALLET
+                        </div>
+                        <button
+                            type="button"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setIsWalletDropdownOpen(!isWalletDropdownOpen);
+                            }}
+                            className="w-full flex items-center justify-between gap-2 px-2 py-1.5 rounded
+                                       bg-white/5 border border-white/10 hover:border-[#c47c48]/30
+                                       text-[10px] text-white/80 font-mono transition-colors"
+                        >
+                            <span className="truncate">
+                                {selectedWallet?.name || 'Select Agent Wallet'}
+                            </span>
+                            <ChevronDown size={12} className={`text-white/40 transition-transform ${isWalletDropdownOpen ? 'rotate-180' : ''}`} />
+                        </button>
+
+                        {/* Wallet Dropdown */}
+                        {isWalletDropdownOpen && (
+                            <div className="absolute top-full left-0 right-0 mt-1 bg-[#0b0b10] border border-white/10 rounded shadow-xl z-50 max-h-32 overflow-y-auto">
+                                {agentWallets.map(wallet => (
+                                    <div
+                                        key={wallet.id}
+                                        className={`px-2 py-1.5 hover:bg-white/5 cursor-pointer flex items-center justify-between
+                                                   ${wallet.id === selectedWalletId ? 'bg-[#c47c48]/10' : ''}`}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleWalletSelect(wallet.id);
+                                        }}
+                                    >
+                                        <span className="text-[10px] text-white truncate">{wallet.name}</span>
+                                        <span className="text-[9px] text-white/40 font-mono">{truncateAddress(wallet.address)}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
+
                 {/* Balance & Wallet Info */}
                 <div className="flex items-start justify-between">
                     <div className="flex flex-col gap-0.5">
@@ -133,7 +195,7 @@ export const FundsPanel = ({
                         onClick={handleCopy}>
                         <Wallet size={10} className="text-amber-500/60" />
                         <span className="font-mono text-[9px] text-white/50 truncate max-w-[60px]">
-                            {truncateAddress(walletAddress)}
+                            {truncateAddress(activeWalletAddress)}
                         </span>
                         <div className="text-white/30 group-hover:text-amber-400 transition-colors">
                             {isCopying ? <Check size={10} /> : <Copy size={10} />}

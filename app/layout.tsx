@@ -3,6 +3,7 @@ import { JetBrains_Mono, Orbitron, Barlow, IBM_Plex_Sans } from "next/font/googl
 import localFont from "next/font/local";
 import "./globals.css";
 import { UiStyleProvider } from "./UiStyleProvider";
+import { SoundProvider } from "./hud/SoundProvider";
 import { ScrollXReset } from "./ScrollXReset";
 import { WalletProvider } from "./contexts/WalletContext";
 
@@ -74,8 +75,10 @@ export default function RootLayout({
       >
         <WalletProvider>
           <UiStyleProvider>
-            <ScrollXReset />
-            {children}
+            <SoundProvider>
+              <ScrollXReset />
+              {children}
+            </SoundProvider>
           </UiStyleProvider>
         </WalletProvider>
       </body>

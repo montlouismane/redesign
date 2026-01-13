@@ -2,6 +2,7 @@
 
 import React, { useState, useRef } from 'react';
 import { Copy, Check, Upload } from 'lucide-react';
+import { useControlSound } from '../controls/useControlSound';
 import styles from './AgentSettingsBoard.module.css';
 
 export type AgentMode = 'standard' | 't-mode' | 'prediction' | 'perpetuals';
@@ -60,6 +61,7 @@ export function AgentProfileCard({
   onUpdate,
   onScrollToSettings,
 }: AgentProfileCardProps) {
+  const { playTick } = useControlSound('toggle');
   const [isEditingName, setIsEditingName] = useState(false);
   const [nameValue, setNameValue] = useState(agent.name);
   const [copied, setCopied] = useState(false);
@@ -210,10 +212,11 @@ export function AgentProfileCard({
 
           <div className={styles.metaRow}>
             <span className={styles.metaLabel}>Mode:</span>
-            <span className={styles.metaValue}>{agent.mode.toUpperCase()}</span>
-            <span className={styles.metaSeparator}>•</span>
-            <span className={styles.metaLabel}>Chain:</span>
-            <span className={styles.metaValue}>{agent.chain.toUpperCase()}</span>
+            <span className={styles.metaValue}>
+              {agent.mode === 't-mode' ? 'T-Mode' :
+               agent.mode === 'perpetuals' ? 'Perpetuals' :
+               agent.mode === 'prediction' ? 'Prediction' : 'Standard'}
+            </span>
           </div>
 
           <div className={styles.walletRow}>
@@ -266,12 +269,12 @@ export function AgentProfileCard({
       {/* Action Buttons */}
       <div className={styles.actionsRow}>
         {agent.status === 'running' ? (
-          <button className={`${styles.actionBtn} ${styles.pauseBtn}`} onClick={onStop}>
+          <button className={`${styles.actionBtn} ${styles.pauseBtn}`} onClick={() => { playTick('down'); onStop(); }}>
             <span className={styles.btnIcon}>⏸</span>
             PAUSE
           </button>
         ) : (
-          <button className={`${styles.actionBtn} ${styles.startBtn}`} onClick={onStart}>
+          <button className={`${styles.actionBtn} ${styles.startBtn}`} onClick={() => { playTick('up'); onStart(); }}>
             <span className={styles.btnIcon}>▶</span>
             START
           </button>

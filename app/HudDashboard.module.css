@@ -50,6 +50,7 @@
   --chartB: rgba(var(--tintR), var(--tintG), var(--tintB), 0.85);
   position: relative;
   height: 100vh;
+  height: 100dvh;
   width: 100%;
   color: var(--text);
   font-family: var(--font);
@@ -99,7 +100,18 @@
   font-size: 9px;
 }
 
-/* Three.js canvas */
+/* Video background */
+.bgVideo {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Legacy Three.js canvas (keeping for fallback) */
 .bg {
   position: fixed;
   inset: 0;
@@ -1296,10 +1308,12 @@
 .modalShell {
   width: min(1180px, 96vw);
   max-height: 92vh;
+  max-height: 92dvh;
 }
 .modalPanel {
   width: 100%;
   max-height: 92vh;
+  max-height: 92dvh;
   overflow: auto;
 }
 .modalBody {
@@ -1392,6 +1406,8 @@
     overflow: auto;
     height: auto;
     min-height: 100vh;
+    min-height: 100dvh;
+  height: 100dvh;
   }
   .hud {
     height: auto;

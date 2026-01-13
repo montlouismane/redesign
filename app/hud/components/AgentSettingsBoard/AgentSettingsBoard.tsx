@@ -7,8 +7,11 @@ import { StandardSettings } from './ModeSettings/StandardSettings';
 import { PredictionSettings } from './ModeSettings/PredictionSettings';
 import { PerpetualsSettings } from './ModeSettings/PerpetualsSettings';
 import { RiskSettings } from './RiskSettings';
+import { HudToggle } from '../controls/HudToggle';
+import { InfoTooltip } from '../controls/InfoTooltip';
 import { Save } from 'lucide-react';
 import styles from './AgentSettingsBoard.module.css';
+import { useControlSound } from '../controls/useControlSound';
 
 export interface AgentSettings {
   // Mode-specific settings are managed by each mode component
@@ -98,6 +101,7 @@ export function AgentSettingsBoard({
 }: AgentSettingsBoardProps) {
   /* State for Tab Navigation */
   const [activeTab, setActiveTab] = useState<'strategy' | 'risk'>('strategy');
+  const { playTick: playConfirmSound } = useControlSound('confirm');
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   const handleSettingsChange = (partial: Partial<AgentSettings>) => {
@@ -116,6 +120,7 @@ export function AgentSettingsBoard({
   };
 
   const handleSave = () => {
+    playConfirmSound();
     onSave();
     setHasUnsavedChanges(false);
   };
@@ -160,7 +165,20 @@ export function AgentSettingsBoard({
         <React.Fragment>
           {/* Mode Selector */}
           <div className={styles.modeSelector}>
-            <div className={styles.modeSelectorTitle}>Trading Mode</div>
+            <div className={styles.modeSelectorHeader}>
+              <div className={styles.modeSelectorTitle}>Trading Mode</div>
+              <div className={styles.paperTradingToggle}>
+                <span className={styles.paperTradingLabel}>
+                  Paper Trading
+                  <InfoTooltip text="Simulate trades without execution" />
+                </span>
+                <HudToggle
+                  value={settings.paperTradingEnabled ?? false}
+                  onChange={(value) => handleSettingsChange({ paperTradingEnabled: value })}
+                  activeColor="copper"
+                />
+              </div>
+            </div>
             <div className={styles.segmentSelector}>
               <button
                 className={`${styles.segmentBtn} ${agent.mode === 'standard' ? styles.active : ''}`}

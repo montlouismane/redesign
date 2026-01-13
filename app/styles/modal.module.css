@@ -24,6 +24,7 @@
     /* Default width for generic modals like Shortcuts */
     max-width: 1200px;
     max-height: 90vh;
+    max-height: 90dvh;
     display: flex;
     flex-direction: column;
 }
@@ -31,6 +32,7 @@
 .modalPanel {
     width: 100%;
     max-height: 92vh;
+    max-height: 92dvh;
     overflow: auto;
     scrollbar-width: none;
 }
@@ -124,4 +126,49 @@
 .shortcutContext {
     color: var(--muted);
     font-size: 11px;
+}
+
+/* ========================================
+   MOBILE MODAL ADJUSTMENTS
+   ======================================== */
+@media (max-width: 767px) {
+    .modalShell {
+        width: 95%;
+        max-height: 85vh;
+        max-height: 85dvh;
+    }
+
+    .modalPanel {
+        max-height: 85vh;
+        max-height: 85dvh;
+    }
+
+    .modalGrid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .subPanel {
+        padding: 10px;
+    }
+
+    .shortcutRow {
+        grid-template-columns: 80px 1fr;
+        gap: 10px;
+        padding: 8px 10px;
+    }
+
+    .shortcutContext {
+        display: none; /* Hide context on mobile to save space */
+    }
+
+    .kbd {
+        padding: 3px 6px;
+        font-size: 10px;
+        min-width: 28px;
+    }
+
+    .shortcutAction {
+        font-size: 11px;
+    }
 }

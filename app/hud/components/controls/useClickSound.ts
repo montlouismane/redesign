@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+import { useSoundEnabled } from '../../SoundProvider';
 
 /**
  * useClickSound - Audio feedback hook for UI interactions
@@ -6,12 +7,19 @@ import { useCallback } from 'react';
  * Uses Web Audio API for low-latency click sounds.
  * Generates a short, crisp tone on interaction.
  *
+ * Respects the global soundEffectsEnabled setting from SoundProvider.
+ *
  * Usage:
  * const { playClick } = useClickSound();
  * <button onClick={playClick}>Click me</button>
  */
 export const useClickSound = () => {
+  const soundEnabled = useSoundEnabled();
+
   const playClick = useCallback(() => {
+    // Skip if sound effects are disabled globally
+    if (!soundEnabled) return;
+
     try {
       // Create audio context (will be reused if already exists)
       const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -46,7 +54,7 @@ export const useClickSound = () => {
       // Silently fail if audio not supported or blocked
       console.warn('Audio playback failed:', err);
     }
-  }, []);
+  }, [soundEnabled]);
 
   return { playClick };
 };

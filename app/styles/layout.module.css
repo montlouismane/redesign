@@ -34,7 +34,9 @@
     --hudGlowBoost: 1;
 
     position: relative;
+    /* Chrome viewport fix: use dvh with vh fallback */
     height: 100vh;
+    height: 100dvh;
     width: 100%;
     color: var(--text);
     font-family: var(--font);
@@ -91,4 +93,54 @@
     grid-template-columns: 1fr 1fr;
     gap: 14px;
     min-height: 0;
+}
+
+/* ========================================
+   RESPONSIVE BREAKPOINTS
+   ======================================== */
+
+/* Tablet: 2-column (768px - 1279px) */
+@media (max-width: 1279px) and (min-width: 768px) {
+    .root {
+        overflow: auto;
+        height: auto;
+        min-height: 100vh;
+        min-height: 100dvh;
+    }
+    .dashboard {
+        grid-template-columns: 280px 1fr;
+        grid-template-rows: auto auto auto;
+        grid-template-areas:
+            "agents performance"
+            "agents market"
+            "bottom system";
+    }
+}
+
+/* Mobile: Single column (<768px) */
+@media (max-width: 767px) {
+    .root {
+        overflow: auto;
+        height: auto;
+        min-height: 100vh;
+        min-height: 100dvh;
+    }
+    .hud {
+        padding-bottom: 80px;
+    }
+    .dashboard {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto;
+        grid-template-areas:
+            "performance"
+            "agents"
+            "market"
+            "bottom"
+            "system";
+        padding: 0 8px;
+        gap: 10px;
+    }
+    .bottomWrap {
+        grid-template-columns: 1fr;
+    }
 }

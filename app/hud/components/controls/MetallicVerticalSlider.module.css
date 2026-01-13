@@ -458,64 +458,11 @@
    Safe Zone Styles
    ============================================ */
 
-/* Green tint when in safe zone */
-.trackFill[data-safe="true"] {
-  background:
-    linear-gradient(
-      90deg,
-      rgba(40, 160, 100, 0.9) 0%,
-      rgba(53, 200, 130, 0.8) 30%,
-      rgba(100, 220, 160, 0.9) 50%,
-      rgba(53, 200, 130, 0.8) 70%,
-      rgba(40, 160, 100, 0.9) 100%
-    );
-  box-shadow:
-    inset 1px 0 0 rgba(255, 255, 255, 0.3),
-    inset -1px 0 0 rgba(0, 0, 0, 0.3),
-    0 0 8px rgba(53, 255, 155, 0.4);
-}
+/* Track fill and thumb stay copper even in safe zone
+   Green is only used for safe zone tick marks
 
-/* Safe zone thumb styling */
-.thumbInner[data-safe="true"] {
-  background:
-    radial-gradient(
-      ellipse 80% 50% at 50% 20%,
-      rgba(100, 220, 160, 0.9) 0%,
-      rgba(53, 200, 130, 0.8) 40%,
-      rgba(40, 160, 100, 0.9) 100%
-    );
-  border-color: rgba(53, 200, 130, 0.8);
-  box-shadow:
-    0 0 12px rgba(53, 255, 155, 0.4),
-    0 4px 8px rgba(0, 0, 0, 0.4),
-    inset 0 2px 4px rgba(255, 255, 255, 0.3),
-    inset 0 -2px 4px rgba(0, 0, 0, 0.3);
-}
-
-/* Safe zone value label */
-.valueLabel[data-safe="true"] {
-  background:
-    linear-gradient(
-      135deg,
-      rgba(100, 220, 160, 0.9) 0%,
-      rgba(53, 200, 130, 0.8) 50%,
-      rgba(40, 160, 100, 0.9) 100%
-    );
-  border-color: rgba(53, 200, 130, 0.6);
-}
-
-.valueLabel[data-safe="true"] .valueLabelArrow {
-  border-left-color: rgba(40, 160, 100, 0.9);
-}
-
-/* Safe zone value display */
-.valueDisplay[data-safe="true"] {
-  border-color: rgba(53, 255, 155, 0.3);
-}
-
-.valueDisplay[data-safe="true"] .valueNumber {
-  color: rgba(100, 220, 160, 0.9);
-}
+   REMOVED: trackFill[data-safe], thumbInner[data-safe], valueLabel[data-safe]
+   The slider parts stay metallic copper throughout. */
 
 /* ============================================
    Inline Edit Mode

@@ -380,11 +380,36 @@
   border-radius: 4px;
 }
 
+.modeSelectorHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
 .modeSelectorTitle {
   font-family: var(--font-display, sans-serif);
   font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.14em;
+  color: var(--textMuted);
+  text-transform: uppercase;
+}
+
+.paperTradingToggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.paperTradingLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-display, sans-serif);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
   color: var(--textMuted);
   text-transform: uppercase;
 }
@@ -518,7 +543,9 @@
 .controlRow {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  align-items: center;
+  gap: 12px;
+  padding-top: 12px;
 }
 
 .controlLabel {
@@ -528,6 +555,7 @@
   letter-spacing: 0.12em;
   color: var(--textMuted);
   text-transform: uppercase;
+  text-align: center;
 }
 
 .controlHelper {
@@ -535,6 +563,7 @@
   color: var(--textMuted);
   letter-spacing: 0.08em;
   line-height: 1.4;
+  text-align: center;
 }
 
 .controlPlaceholder {
@@ -769,7 +798,7 @@
 
 .denseGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 12px 16px;
 }
 
@@ -821,9 +850,136 @@
   border-bottom: 1px solid var(--borderLight);
 }
 
+.faqButton {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border: 1px solid var(--borderLight);
+  background: var(--bg);
+  color: var(--textMuted);
+  border-radius: 2px;
+  font-family: var(--font-display, sans-serif);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+}
+
+.faqButton:hover {
+  border-color: var(--border);
+  color: var(--copper);
+  background: rgba(196, 124, 72, 0.08);
+}
+
 .sectionContent {
   padding: 16px;
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+
+/* ========================================
+   MOBILE ADJUSTMENTS
+   ======================================== */
+@media (max-width: 767px) {
+  .settingsBoard {
+    padding: 16px;
+    gap: 16px;
+  }
+
+  .profileCard {
+    padding: 16px;
+    gap: 12px;
+  }
+
+  .profileLayout {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .avatarSection {
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 16px;
+  }
+
+  .avatarButton {
+    width: 80px;
+    height: 80px;
+  }
+
+  .avatarFallback {
+    font-size: 32px;
+  }
+
+  .agentName {
+    font-size: 18px;
+  }
+
+  .nameInput {
+    font-size: 18px;
+  }
+
+  .actionsRow {
+    flex-wrap: wrap;
+  }
+
+  .actionBtn {
+    flex: 1 1 calc(50% - 5px);
+    min-width: 120px;
+    padding: 10px 12px;
+    font-size: 11px;
+  }
+
+  .statsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .gridContainer {
+    grid-template-columns: 1fr;
+  }
+
+  .sectionRow {
+    grid-template-columns: 1fr;
+  }
+
+  .sectionRow .section {
+    border-right: none;
+    border-bottom: 1px solid var(--borderLight);
+  }
+
+  .sectionRow .section:last-child {
+    border-bottom: none;
+  }
+
+  .tabBar {
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .tabBar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tabButton {
+    padding: 10px 16px;
+    font-size: 11px;
+    white-space: nowrap;
+  }
+
+  .helpContent {
+    width: 95%;
+    padding: 16px;
+  }
+
+  .helpTitle {
+    font-size: 14px;
+  }
+
+  .denseGrid {
+    grid-template-columns: 1fr 1fr;
+  }
 }

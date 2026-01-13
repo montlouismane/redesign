@@ -39,6 +39,34 @@ export function AllocationEditor({
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+  const [showScrollHint, setShowScrollHint] = useState(false);
+
+  // Track if there's more content to scroll
+  useEffect(() => {
+    const el = listRef.current;
+    if (!el) return;
+
+    const updateScrollHint = () => {
+      const canScroll = el.scrollHeight > el.clientHeight + 2;
+      const atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 2;
+      setShowScrollHint(canScroll && !atBottom);
+    };
+
+    updateScrollHint();
+
+    el.addEventListener('scroll', updateScrollHint, { passive: true });
+    let ro: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== 'undefined') {
+      ro = new ResizeObserver(updateScrollHint);
+      ro.observe(el);
+    }
+
+    return () => {
+      el.removeEventListener('scroll', updateScrollHint);
+      if (ro) ro.disconnect();
+    };
+  }, [allocations]);
 
   // Calculate total allocation
   const totalAllocation = useMemo(() => {
@@ -138,41 +166,58 @@ export function AllocationEditor({
         </div>
       </div>
 
-      {/* Token allocation list */}
-      <div className={styles.allocationList}>
-        {allocationEntries.length === 0 ? (
-          <div className={styles.emptyState}>
-            No tokens allocated. Add tokens below to set your target portfolio.
-          </div>
-        ) : (
-          allocationEntries.map(([token, percentage]) => (
-            <div key={token} className={styles.allocationRow}>
-              <div className={styles.tokenInfo}>
-                <span className={styles.tokenSymbol}>{token}</span>
-                <button
-                  className={styles.removeBtn}
-                  onClick={() => removeToken(token)}
-                  disabled={disabled}
-                  title={`Remove ${token}`}
-                >
-                  <X size={14} />
-                </button>
-              </div>
-              <div className={styles.sliderWrapper}>
-                <HorizontalSlider
-                  value={percentage}
-                  onChange={(val) => updateAllocation(token, val)}
-                  min={0}
-                  max={100}
-                  step={1}
-                  unit="%"
-                  disabled={disabled}
-                  tickCount={6}
-                  showTicks={false}
-                />
-              </div>
+      {/* Token allocation list - 2 column grid with scroll hint */}
+      <div className={styles.allocationListWrapper}>
+        <div
+          ref={listRef}
+          className={styles.allocationList}
+          data-show-hint={showScrollHint}
+        >
+          {allocationEntries.length === 0 ? (
+            <div className={styles.emptyState}>
+              No tokens allocated. Add tokens below to set your target portfolio.
             </div>
-          ))
+          ) : (
+            <div className={styles.allocationGrid}>
+              {allocationEntries.map(([token, percentage]) => (
+                <div key={token} className={styles.allocationRow}>
+                  <div className={styles.tokenInfo}>
+                    <span className={styles.tokenSymbol}>{token}</span>
+                    <button
+                      className={styles.removeBtn}
+                      onClick={() => removeToken(token)}
+                      disabled={disabled}
+                      title={`Remove ${token}`}
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                  <div className={styles.sliderWrapper}>
+                    <HorizontalSlider
+                      value={percentage}
+                      onChange={(val) => updateAllocation(token, val)}
+                      min={0}
+                      max={100}
+                      step={1}
+                      unit="%"
+                      disabled={disabled}
+                      tickCount={6}
+                      showTicks={false}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Scroll hint arrow */}
+        {showScrollHint && (
+          <div className={styles.scrollHint} aria-hidden>
+            <div className={styles.scrollHintIcon}>
+              <ChevronDown size={16} />
+            </div>
+          </div>
         )}
       </div>
 

@@ -109,20 +109,8 @@
   cursor: grabbing;
 }
 
-/* Safe zone outer knob tint */
-.knobOuter[data-safe="true"] {
-  background-image:
-    radial-gradient(
-      100% 70%,
-      rgba(60, 140, 100, 0.9) 6%,
-      rgba(30, 80, 60, 0.95) 90%
-    );
-  box-shadow:
-    0 5px 15px 2px rgba(0, 0, 0, 0.6),
-    0 0 5px 3px rgba(0, 0, 0, 0.4),
-    0 0 0 8px rgba(40, 70, 55, 0.8),
-    inset 0 2px 4px rgba(150, 255, 200, 0.15);
-}
+/* Safe zone outer knob tint - REMOVED: keep copper throughout
+   Green is only used for safe zone tick marks */
 
 /* Inner knob (rotates) */
 .knobInner {
@@ -133,12 +121,12 @@
   transition: transform 0.05s ease-out;
 }
 
-/* Grip indicator dot */
+/* Grip indicator dot - positioned on outer edge of knob */
 .grip {
   position: absolute;
-  width: 8%;
-  height: 8%;
-  bottom: 8%;
+  width: 7%;
+  height: 7%;
+  bottom: 2%;
   left: 50%;
   transform: translateX(-50%);
   border-radius: 50%;
@@ -148,12 +136,7 @@
     inset 0 1px 2px rgba(255, 255, 255, 0.4);
 }
 
-.grip[data-safe="true"] {
-  background: var(--safe-color);
-  box-shadow:
-    0 0 6px 2px rgba(53, 255, 155, 0.5),
-    inset 0 1px 2px rgba(255, 255, 255, 0.4);
-}
+/* Grip stays copper - REMOVED green safe zone styling */
 
 /* Value overlay in center */
 .valueOverlay {
@@ -174,8 +157,8 @@
   background: rgba(0, 0, 0, 0.7);
   border: 1px solid rgba(184, 115, 51, 0.3);
   border-radius: 50%;
-  width: calc(var(--dial-size) * 0.4);
-  height: calc(var(--dial-size) * 0.4);
+  width: calc(var(--dial-size) * 0.48);
+  height: calc(var(--dial-size) * 0.48);
   cursor: pointer;
   transition: all 0.2s ease;
   padding: 0;
@@ -191,14 +174,7 @@
   cursor: not-allowed;
 }
 
-.valueButton[data-safe="true"] {
-  border-color: rgba(53, 255, 155, 0.3);
-}
-
-.valueButton[data-safe="true"]:hover:not(:disabled) {
-  border-color: var(--safe-color);
-  box-shadow: 0 0 12px rgba(53, 255, 155, 0.4);
-}
+/* Value button stays copper - REMOVED green safe zone styling */
 
 /* Value number */
 .valueNumber {
@@ -210,9 +186,13 @@
   line-height: 1;
 }
 
-.valueButton[data-safe="true"] .valueNumber {
-  color: rgba(100, 220, 160, 0.95);
+/* Smaller font for decimal values */
+.valueNumber[data-decimal="true"] {
+  font-size: calc(var(--dial-size) * 0.12);
+  letter-spacing: 0.02em;
 }
+
+/* Value number stays copper - REMOVED green safe zone styling */
 
 /* Value unit */
 .valueUnit {
@@ -225,10 +205,17 @@
   margin-top: 2px;
 }
 
+/* Smaller unit for decimal values */
+.valueUnit[data-decimal="true"] {
+  font-size: calc(var(--dial-size) * 0.07);
+  letter-spacing: 0.08em;
+  margin-top: 1px;
+}
+
 /* Value input (edit mode) */
 .valueInput {
-  width: calc(var(--dial-size) * 0.35);
-  height: calc(var(--dial-size) * 0.35);
+  width: calc(var(--dial-size) * 0.42);
+  height: calc(var(--dial-size) * 0.42);
   background: rgba(0, 0, 0, 0.8);
   border: 1px solid var(--copper);
   border-radius: 50%;
@@ -268,8 +255,4 @@
     inset 0 1px 2px rgba(255, 255, 255, 0.5);
 }
 
-.knobOuter[data-safe="true"]:hover .grip {
-  box-shadow:
-    0 0 10px 3px rgba(53, 255, 155, 0.6),
-    inset 0 1px 2px rgba(255, 255, 255, 0.5);
-}
+/* Knob hover stays copper - REMOVED green safe zone hover styling */

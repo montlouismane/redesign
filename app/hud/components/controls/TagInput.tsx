@@ -2,7 +2,7 @@
 
 import React, { useState, useRef } from 'react';
 import { X } from 'lucide-react';
-import { useClickSound } from './useClickSound';
+import { useControlSound } from './useControlSound';
 import styles from './controls.module.css';
 
 interface TagInputProps {
@@ -34,7 +34,7 @@ export function TagInput({
   placeholder = 'Add tag...',
   disabled = false,
 }: TagInputProps) {
-  const { playClick } = useClickSound();
+  const { playTick } = useControlSound('toggle');
   const [inputValue, setInputValue] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -44,13 +44,13 @@ export function TagInput({
     if (!trimmed) return;
     if (tags.includes(trimmed)) return;
 
-    playClick();
+    playTick();
     onChange([...tags, trimmed]);
     setInputValue('');
   };
 
   const handleRemoveTag = (index: number) => {
-    playClick();
+    playTick();
     onChange(tags.filter((_, i) => i !== index));
   };
 
@@ -75,7 +75,7 @@ export function TagInput({
       .filter((tag) => tag && !tags.includes(tag));
 
     if (newTags.length > 0) {
-      playClick();
+      playTick();
       onChange([...tags, ...newTags]);
     }
   };

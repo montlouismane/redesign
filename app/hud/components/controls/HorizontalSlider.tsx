@@ -2,6 +2,7 @@
 
 import React, { useRef, useState, useCallback, useEffect, useMemo } from 'react';
 import styles from './MetallicSlider.module.css';
+import { useControlSound } from './useControlSound';
 
 interface HorizontalSliderProps {
   value: number;
@@ -17,6 +18,14 @@ interface HorizontalSliderProps {
   tickCount?: number;
   showTicks?: boolean;
   snapToTicks?: boolean;
+  /** Use exponential scale for fine control at lower values */
+  exponentialScale?: boolean;
+  /** Error message to display (shows error state when set) */
+  error?: string;
+  /** Minimum allowed value (for validation display, doesn't block input) */
+  minAllowed?: number;
+  /** Maximum allowed value (for validation display, doesn't block input) */
+  maxAllowed?: number;
 }
 
 /**
@@ -46,35 +55,100 @@ export function HorizontalSlider({
   tickCount = 11,
   showTicks = true,
   snapToTicks = false,
+  exponentialScale = false,
+  error,
+  minAllowed,
+  maxAllowed,
 }: HorizontalSliderProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [inputValue, setInputValue] = useState(String(value));
+  const lastValueRef = useRef<number>(value);
+  const { playTick } = useControlSound('slider');
 
-  // Calculate percentage for positioning
-  const percentage = ((value - min) / (max - min)) * 100;
+  // Exponential scale conversion functions
+  // Maps linear slider position (0-1) to exponential value
+  // Gives fine control in lower 2/3 of range, exponential in upper 1/3
+  const linearToExponential = useCallback((linearValue: number): number => {
+    if (!exponentialScale) return linearValue;
+    const normalized = (linearValue - min) / (max - min);
+    // Use power of 2.5 for exponential curve - fine control at start, fast growth at end
+    const exponential = Math.pow(normalized, 2.5);
+    return min + exponential * (max - min);
+  }, [exponentialScale, min, max]);
 
-  // Safe zone percentages
-  const safeMinPercent = safeMin !== undefined ? ((safeMin - min) / (max - min)) * 100 : 0;
-  const safeMaxPercent = safeMax !== undefined ? ((safeMax - min) / (max - min)) * 100 : 100;
+  const exponentialToLinear = useCallback((expValue: number): number => {
+    if (!exponentialScale) return expValue;
+    const normalized = (expValue - min) / (max - min);
+    // Inverse: take root to convert back to linear
+    const linear = Math.pow(normalized, 1 / 2.5);
+    return min + linear * (max - min);
+  }, [exponentialScale, min, max]);
+
+  // Calculate percentage for positioning (uses exponential conversion if enabled)
+  // Caps at 100% so slider thumb stays at max even if value exceeds max
+  const percentage = useMemo(() => {
+    let pct: number;
+    if (exponentialScale) {
+      // Convert actual value to linear position for display
+      const linearPos = exponentialToLinear(Math.min(value, max));
+      pct = ((linearPos - min) / (max - min)) * 100;
+    } else {
+      pct = ((value - min) / (max - min)) * 100;
+    }
+    // Cap at 100% for values above max (manual entry)
+    return Math.min(100, Math.max(0, pct));
+  }, [value, min, max, exponentialScale, exponentialToLinear]);
+
+  // Check for validation errors
+  const hasError = !!error || (minAllowed !== undefined && value < minAllowed) || (maxAllowed !== undefined && value > maxAllowed);
+  const validationError = error || (minAllowed !== undefined && value < minAllowed ? `Min: ${minAllowed} ${unit}` : undefined) || (maxAllowed !== undefined && value > maxAllowed ? `Max: ${maxAllowed} ${unit}` : undefined);
+
+  // Safe zone percentages (converted for exponential scale if enabled)
+  const safeMinPercent = useMemo(() => {
+    if (safeMin === undefined) return 0;
+    if (exponentialScale) {
+      const linearPos = exponentialToLinear(safeMin);
+      return ((linearPos - min) / (max - min)) * 100;
+    }
+    return ((safeMin - min) / (max - min)) * 100;
+  }, [safeMin, min, max, exponentialScale, exponentialToLinear]);
+
+  const safeMaxPercent = useMemo(() => {
+    if (safeMax === undefined) return 100;
+    if (exponentialScale) {
+      const linearPos = exponentialToLinear(safeMax);
+      return ((linearPos - min) / (max - min)) * 100;
+    }
+    return ((safeMax - min) / (max - min)) * 100;
+  }, [safeMax, min, max, exponentialScale, exponentialToLinear]);
+
   const hasSafeZone = safeMin !== undefined && safeMax !== undefined;
 
   // Check if value is in safe zone
   const isInSafeZone = hasSafeZone ? value >= safeMin && value <= safeMax : true;
 
-  // Generate tick positions
+  // Generate tick positions (accounts for exponential scale)
   const ticks = useMemo(() => {
     const tickArray: { position: number; value: number }[] = [];
-    const tickStep = (max - min) / (tickCount - 1);
     for (let i = 0; i < tickCount; i++) {
-      const tickValue = min + i * tickStep;
-      const position = ((tickValue - min) / (max - min)) * 100;
+      // Position ticks evenly across the visual slider
+      const position = (i / (tickCount - 1)) * 100;
+      // Calculate the actual value at this position
+      let tickValue: number;
+      if (exponentialScale) {
+        // For exponential scale, convert linear position to exponential value
+        const linearValue = min + (i / (tickCount - 1)) * (max - min);
+        tickValue = linearToExponential(linearValue);
+      } else {
+        tickValue = min + (i / (tickCount - 1)) * (max - min);
+      }
       tickArray.push({ position, value: tickValue });
     }
     return tickArray;
-  }, [min, max, tickCount]);
+  }, [min, max, tickCount, exponentialScale, linearToExponential]);
 
   // Snap to nearest tick if enabled
   const snapValue = useCallback((val: number): number => {
@@ -87,10 +161,20 @@ export function HorizontalSlider({
 
   // Handle native input change
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = parseFloat(e.target.value);
-    const snapped = snapToTicks ? snapValue(newValue) : newValue;
-    onChange(snapped);
-  }, [onChange, snapToTicks, snapValue]);
+    const linearValue = parseFloat(e.target.value);
+    // Convert from linear slider position to exponential value if needed
+    const actualValue = exponentialScale ? linearToExponential(linearValue) : linearValue;
+    const snapped = snapToTicks ? snapValue(actualValue) : actualValue;
+    // Round to step
+    const stepped = Math.round(snapped / step) * step;
+
+    // Play tick when value changes (stepped)
+    if (stepped !== lastValueRef.current) {
+      playTick(stepped > lastValueRef.current ? 'up' : 'down');
+      lastValueRef.current = stepped;
+    }
+    onChange(stepped);
+  }, [onChange, snapToTicks, snapValue, exponentialScale, linearToExponential, step, playTick]);
 
   // Track mouse/touch interaction for visual feedback
   const handleMouseDown = useCallback(() => {
@@ -126,12 +210,13 @@ export function HorizontalSlider({
   const commitEdit = useCallback(() => {
     const num = parseFloat(inputValue.replace(/,/g, ''));
     if (!isNaN(num)) {
-      const clamped = Math.max(min, Math.min(max, num));
+      // Only enforce minimum - allow values above max for manual entry
+      const clamped = Math.max(min, num);
       const stepped = Math.round(clamped / step) * step;
       onChange(stepped);
     }
     setIsEditing(false);
-  }, [inputValue, min, max, step, onChange]);
+  }, [inputValue, min, step, onChange]);
 
   const cancelEdit = useCallback(() => {
     setInputValue(String(value));
@@ -153,12 +238,18 @@ export function HorizontalSlider({
   // Format display value
   const displayValue = step < 1 ? value.toFixed(1) : value.toLocaleString();
 
+  // For exponential scale, the native input works in linear space
+  // Cap at max so native range input doesn't break when value exceeds max
+  const clampedValue = Math.min(value, max);
+  const inputDisplayValue = exponentialScale ? exponentialToLinear(clampedValue) : clampedValue;
+
   return (
     <div
       className={styles.metallicSlider}
       data-disabled={disabled}
       data-dragging={isDragging}
       data-safe={isInSafeZone}
+      data-error={hasError}
     >
       {label && (
         <label className={styles.sliderLabel}>
@@ -241,17 +332,18 @@ export function HorizontalSlider({
         </div>
 
         {/* Native range input (invisible but functional) */}
+        {/* For exponential scale, input works in linear space and we convert */}
         <input
           ref={inputRef}
           type="range"
           className={styles.rangeInput}
-          value={value}
+          value={inputDisplayValue}
           onChange={handleInputChange}
           onMouseDown={handleMouseDown}
           onTouchStart={handleMouseDown}
           min={min}
           max={max}
-          step={step}
+          step={exponentialScale ? (max - min) / 100 : step}
           disabled={disabled}
           aria-label={label}
           aria-valuemin={min}
@@ -281,10 +373,16 @@ export function HorizontalSlider({
           onClick={startEditing}
           disabled={disabled}
           data-safe={isInSafeZone}
+          data-error={hasError}
         >
-          <span className={styles.valueNumber}>{displayValue}</span>
+          <span className={styles.valueNumber} data-error={hasError}>{displayValue}</span>
           {unit && <span className={styles.valueUnit}>{unit}</span>}
         </button>
+      )}
+
+      {/* Error message */}
+      {validationError && (
+        <div className={styles.errorMessage}>{validationError}</div>
       )}
     </div>
   );

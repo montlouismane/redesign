@@ -5,6 +5,7 @@ import { RefreshCw } from 'lucide-react';
 import { SystemPanelProps } from '../types';
 import { PANEL_TITLES } from '../constants';
 import { ScrollHintArea } from '../../ScrollHintArea';
+import { HudToggle } from '../components/controls';
 
 export const SystemPanel = ({
     systemStatus,
@@ -32,43 +33,49 @@ export const SystemPanel = ({
             shapeVariant="a"
             disableBodyClick={true}
         >
-            {/* Agent Controls */}
-            <div className="flex items-center justify-between px-3 py-2 mb-2 border-b border-white/10">
-                {/* Left side: Status + Label */}
-                <div className="flex items-center gap-2">
-                    <div
-                        className={`w-2.5 h-2.5 rounded-full ${isTradingActive ? 'bg-[#35ff9b]' : 'bg-[#f59e0b]'
-                            } ${isTradingActive && !reduceMotion ? 'animate-pulse' : ''}`}
-                    />
-                    <span className="text-[10px] text-white/60 uppercase tracking-widest font-mono">
-                        {isTradingActive ? 'TRADING ACTIVE' : 'TRADING PAUSED'}
-                    </span>
+            {/* Master Controls - All Agents */}
+            <div className="flex flex-col px-3 py-2 mb-2 border-b border-white/10 gap-2">
+                {/* Status Row */}
+                <div className="flex items-center justify-between">
+                    {/* Left side: Status + Label */}
+                    <div className="flex items-center gap-2">
+                        <div
+                            className={`w-2.5 h-2.5 rounded-full ${isTradingActive ? 'bg-[#35ff9b]' : 'bg-[#f59e0b]'
+                                } ${isTradingActive && !reduceMotion ? 'animate-pulse' : ''}`}
+                        />
+                        <span className="text-[10px] text-white/60 uppercase tracking-widest font-mono">
+                            {isTradingActive ? 'ALL AGENTS ACTIVE' : 'ALL AGENTS PAUSED'}
+                        </span>
+                    </div>
+
+                    {/* Right side: Update button + Toggle */}
+                    <div className="flex items-center gap-2">
+                        {/* Sync All Button */}
+                        <button
+                            onClick={(e) => { e.stopPropagation(); onUpdate(); }}
+                            className="p-1.5 rounded text-white/40 hover:text-[#c47c48] hover:bg-[#c47c48]/10
+                                       border border-transparent hover:border-[#c47c48]/30 transition-all"
+                            title="Sync All Agent Status"
+                            aria-label="Sync All Agent Status"
+                        >
+                            <RefreshCw size={14} />
+                        </button>
+
+                        {/* Master Trading Toggle */}
+                        <div onClick={(e) => e.stopPropagation()}>
+                            <HudToggle
+                                value={isTradingActive}
+                                onChange={onTradingToggle}
+                                size="small"
+                                activeColor="green"
+                            />
+                        </div>
+                    </div>
                 </div>
 
-                {/* Right side: Update button + Toggle */}
-                <div className="flex items-center gap-2">
-                    {/* Update Button */}
-                    <button
-                        onClick={(e) => { e.stopPropagation(); onUpdate(); }}
-                        className="p-1.5 rounded text-white/40 hover:text-[#c47c48] hover:bg-[#c47c48]/10
-                                   border border-transparent hover:border-[#c47c48]/30 transition-all"
-                        title="Update Agents"
-                    >
-                        <RefreshCw size={14} />
-                    </button>
-
-                    {/* Trading Toggle */}
-                    <button
-                        onClick={(e) => { e.stopPropagation(); onTradingToggle(); }}
-                        className={`relative w-10 h-5 rounded-full transition-colors ${isTradingActive ? 'bg-[#35ff9b]/30' : 'bg-white/20'
-                            }`}
-                        title={isTradingActive ? 'Pause Trading' : 'Resume Trading'}
-                    >
-                        <span
-                            className={`absolute top-0.5 w-4 h-4 rounded-full transition-all duration-200 ${isTradingActive ? 'left-5 bg-[#35ff9b]' : 'left-0.5 bg-white/60'
-                                }`}
-                        />
-                    </button>
+                {/* Clarifying label */}
+                <div className="text-[9px] text-white/30 font-mono tracking-wide">
+                    Toggle controls all deployed agents
                 </div>
             </div>
 

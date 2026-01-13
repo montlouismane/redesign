@@ -57,8 +57,8 @@ export const PerformanceExpanded = ({ data, summary, activeRange, setActiveRange
                 visible: true,
                 borderColor: 'rgba(255, 255, 255, 0.1)',
                 scaleMargins: {
-                    top: 0.05,
-                    bottom: 0.05,
+                    top: 0.02,
+                    bottom: 0.02,
                 },
             },
             timeScale: {
@@ -66,7 +66,7 @@ export const PerformanceExpanded = ({ data, summary, activeRange, setActiveRange
                 timeVisible: true,
                 secondsVisible: false,
                 borderColor: 'rgba(255, 255, 255, 0.1)',
-                rightOffset: 5,
+                rightOffset: 2,
             },
             crosshair: {
                 mode: 1, // CrosshairMode.Normal
@@ -125,8 +125,9 @@ export const PerformanceExpanded = ({ data, summary, activeRange, setActiveRange
     }, [data, selectedIds.length]);
 
     return (
-        <div className="h-full flex flex-col p-6">
-            <div className="flex justify-between items-start mb-6">
+        <div className="h-full flex flex-col p-3 md:p-6">
+            {/* Header: Agent Filter + Range Selector - Stack on mobile */}
+            <div className="flex flex-col md:flex-row justify-between items-stretch md:items-start gap-3 md:gap-0 mb-4 md:mb-6">
                 {/* Agent Filter */}
                 <AgentPnLFilter
                     agents={agentsPnL}
@@ -136,17 +137,17 @@ export const PerformanceExpanded = ({ data, summary, activeRange, setActiveRange
                     onSelectAll={selectAllAgents}
                     onClearSelection={clearSelection}
                     isLoading={isLoading}
-                    className="flex-1 mr-6"
+                    className="flex-1 md:mr-6"
                 />
 
                 {/* Range Selector */}
-                <div className="flex border border-white/10 rounded overflow-hidden bg-black/20 shrink-0">
+                <div className="flex border border-white/10 rounded overflow-hidden bg-black/20 shrink-0 self-start md:self-auto">
                     {(['1H', '24H', '7D', '30D', 'ALL'] as const).map((t) => (
                         <button
                             key={t}
                             type="button"
                             className={`
-                                px-4 py-2 text-[11px] font-mono tracking-widest min-w-[50px] transition-all
+                                px-2 md:px-4 py-1.5 md:py-2 text-[10px] md:text-[11px] font-mono tracking-widest min-w-[40px] md:min-w-[50px] transition-all
                                 ${activeRange === t
                                     ? 'text-white bg-white/10'
                                     : 'text-white/40 hover:text-white hover:bg-white/5'
@@ -160,67 +161,67 @@ export const PerformanceExpanded = ({ data, summary, activeRange, setActiveRange
                 </div>
             </div>
 
-            {/* Combined P&L Stats for Selected Agents */}
-            <div className="flex justify-between items-start mb-6">
+            {/* Combined P&L Stats for Selected Agents - Stack on mobile */}
+            <div className="flex flex-col md:flex-row justify-between items-start gap-4 md:gap-0 mb-4 md:mb-6">
                 <div>
-                    <div className="text-white/50 text-xs tracking-widest mb-2">
+                    <div className="text-white/50 text-[10px] md:text-xs tracking-widest mb-2">
                         COMBINED P&L ({combinedPnL.agentCount} AGENT{combinedPnL.agentCount !== 1 ? 'S' : ''})
                     </div>
-                    <div className="flex gap-6">
+                    <div className="flex flex-wrap gap-4 md:gap-6">
                         <div>
-                            <div className="text-white/40 text-xs">24H</div>
-                            <div className={`text-xl font-mono ${combinedPnL.pnl24h >= 0 ? 'text-green-400' : 'text-rose-400'}`}>
+                            <div className="text-white/40 text-[10px] md:text-xs">24H</div>
+                            <div className={`text-base md:text-xl font-mono ${combinedPnL.pnl24h >= 0 ? 'text-green-400' : 'text-rose-400'}`}>
                                 {combinedPnL.pnl24h >= 0 ? '+' : ''}{formatUSD(combinedPnL.pnl24h)}
                             </div>
                         </div>
                         <div>
-                            <div className="text-white/40 text-xs">7D</div>
-                            <div className={`text-xl font-mono ${combinedPnL.pnl7d >= 0 ? 'text-green-400' : 'text-rose-400'}`}>
+                            <div className="text-white/40 text-[10px] md:text-xs">7D</div>
+                            <div className={`text-base md:text-xl font-mono ${combinedPnL.pnl7d >= 0 ? 'text-green-400' : 'text-rose-400'}`}>
                                 {combinedPnL.pnl7d >= 0 ? '+' : ''}{formatUSD(combinedPnL.pnl7d)}
                             </div>
                         </div>
                         <div>
-                            <div className="text-white/40 text-xs">TOTAL</div>
-                            <div className={`text-xl font-mono ${combinedPnL.pnlTotal >= 0 ? 'text-green-400' : 'text-rose-400'}`}>
+                            <div className="text-white/40 text-[10px] md:text-xs">TOTAL</div>
+                            <div className={`text-base md:text-xl font-mono ${combinedPnL.pnlTotal >= 0 ? 'text-green-400' : 'text-rose-400'}`}>
                                 {combinedPnL.pnlTotal >= 0 ? '+' : ''}{formatUSD(combinedPnL.pnlTotal)}
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div className="text-right">
-                    <div className="text-white/50 text-xs tracking-widest mb-1">TRADES (24H)</div>
-                    <div className="text-xl font-mono text-white">{combinedPnL.trades24h}</div>
-                    <div className="text-xs text-white/40">Win Rate: {combinedPnL.winRate}%</div>
+                <div className="text-left md:text-right">
+                    <div className="text-white/50 text-[10px] md:text-xs tracking-widest mb-1">TRADES (24H)</div>
+                    <div className="text-base md:text-xl font-mono text-white">{combinedPnL.trades24h}</div>
+                    <div className="text-[10px] md:text-xs text-white/40">Win Rate: {combinedPnL.winRate}%</div>
                 </div>
             </div>
 
-            {/* Main Stats */}
-            <div className="grid grid-cols-4 gap-4 mb-6">
-                <div className="p-4 bg-white/5 rounded border border-white/10">
-                    <div className="text-white/40 text-xs mb-1">NET VALUE</div>
-                    <div className="text-2xl font-mono text-white">{formatUSD(summary.endValue)}</div>
+            {/* Main Stats - 2 cols on mobile, 4 on desktop */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4 mb-4 md:mb-6">
+                <div className="p-3 md:p-4 bg-white/5 rounded border border-white/10">
+                    <div className="text-white/40 text-[10px] md:text-xs mb-1">NET VALUE</div>
+                    <div className="text-lg md:text-2xl font-mono text-white">{formatUSD(summary.endValue)}</div>
                 </div>
-                <div className="p-4 bg-white/5 rounded border border-white/10">
-                    <div className="text-white/40 text-xs mb-1">CHANGE ({activeRange})</div>
-                    <div className={`text-2xl font-mono ${summary.changePct >= 0 ? 'text-green-400' : 'text-rose-400'}`}>
+                <div className="p-3 md:p-4 bg-white/5 rounded border border-white/10">
+                    <div className="text-white/40 text-[10px] md:text-xs mb-1">CHANGE ({activeRange})</div>
+                    <div className={`text-lg md:text-2xl font-mono ${summary.changePct >= 0 ? 'text-green-400' : 'text-rose-400'}`}>
                         {summary.changePct >= 0 ? '+' : ''}{formatPct(summary.changePct)}
                     </div>
                 </div>
-                <div className="p-4 bg-white/5 rounded border border-white/10">
-                    <div className="text-white/40 text-xs mb-1">WIN RATE</div>
-                    <div className="text-2xl font-mono text-blue-400">{combinedPnL.winRate}%</div>
+                <div className="p-3 md:p-4 bg-white/5 rounded border border-white/10">
+                    <div className="text-white/40 text-[10px] md:text-xs mb-1">WIN RATE</div>
+                    <div className="text-lg md:text-2xl font-mono text-blue-400">{combinedPnL.winRate}%</div>
                 </div>
-                <div className="p-4 bg-white/5 rounded border border-white/10">
-                    <div className="text-white/40 text-xs mb-1">ACTIVE AGENTS</div>
-                    <div className="text-2xl font-mono text-amber-400">{combinedPnL.agentCount}</div>
+                <div className="p-3 md:p-4 bg-white/5 rounded border border-white/10">
+                    <div className="text-white/40 text-[10px] md:text-xs mb-1">ACTIVE AGENTS</div>
+                    <div className="text-lg md:text-2xl font-mono text-amber-400">{combinedPnL.agentCount}</div>
                 </div>
             </div>
 
             {/* Chart Area */}
-            <div className="flex-1 min-h-0 bg-white/2 rounded border border-white/10 relative">
-                <div ref={chartContainerRef} className="absolute inset-4" />
-                <div className="absolute top-4 left-4 text-xs font-mono text-white/20">
+            <div className="flex-1 min-h-[200px] md:min-h-0 bg-white/2 rounded border border-white/10 relative">
+                <div ref={chartContainerRef} className="absolute inset-2 md:inset-4" />
+                <div className="absolute top-2 md:top-4 left-2 md:left-4 text-[10px] md:text-xs font-mono text-white/20">
                     EQUITY CURVE (USD) — {selectedIds.length === agentsPnL.length ? 'ALL AGENTS' : `${selectedIds.length} SELECTED`}
                 </div>
             </div>

@@ -149,12 +149,14 @@ const LiquidMetalRim = ({
 };
 
 
+type AgentMode = 't-mode' | 'perpetuals' | 'prediction' | 'standard';
+
 type AgentRow = {
   id: string;
   chip: string;
   name: string;
   role: string;
-  chain: string;
+  mode: AgentMode;
   runtimeState: AgentRuntimeState;
   pnlPct: number;
 };
@@ -392,9 +394,9 @@ export function HudDashboard() {
   };
 
   const [agents, setAgents] = useState<AgentRow[]>(() => [
-    { id: 'alpha', chip: 'AS', name: 'Alpha Sniper', role: 'Momentum', chain: 'SOL', runtimeState: 'running', pnlPct: 12.4 },
-    { id: 'snek', chip: 'SF', name: 'Snek Farmer', role: 'Grid Bot', chain: 'ADA', runtimeState: 'idle', pnlPct: 3.2 },
-    { id: 'base', chip: 'BR', name: 'Base Runner', role: 'Perps', chain: 'BASE', runtimeState: 'alert', pnlPct: 0.0 },
+    { id: 'alpha', chip: 'AS', name: 'Alpha Sniper', role: 'Momentum', mode: 't-mode', runtimeState: 'running', pnlPct: 12.4 },
+    { id: 'snek', chip: 'SF', name: 'Snek Farmer', role: 'Grid Bot', mode: 'standard', runtimeState: 'idle', pnlPct: 3.2 },
+    { id: 'base', chip: 'BR', name: 'Base Runner', role: 'Perps', mode: 'perpetuals', runtimeState: 'alert', pnlPct: 0.0 },
   ]);
 
   const [selectedAgentId, setSelectedAgentId] = useState<string>('alpha');
@@ -1000,7 +1002,9 @@ export function HudDashboard() {
                             {a.name}
                           </div>
                           <div className={styles.agentSub}>
-                            {a.role} · {a.chain}
+                            {a.mode === 't-mode' ? 'T-Mode' :
+                             a.mode === 'perpetuals' ? 'Perpetuals' :
+                             a.mode === 'prediction' ? 'Prediction' : 'Standard'}
                           </div>
                         </div>
                         <div className={styles.agentRight}>
@@ -1710,7 +1714,9 @@ export function HudDashboard() {
                                 {a.name}
                               </div>
                               <div className={styles.agentSub}>
-                                {a.role} · {a.chain}
+                                {a.mode === 't-mode' ? 'T-Mode' :
+                                 a.mode === 'perpetuals' ? 'Perpetuals' :
+                                 a.mode === 'prediction' ? 'Prediction' : 'Standard'}
                               </div>
                             </div>
                             <div className={styles.agentRight}>
@@ -1734,7 +1740,11 @@ export function HudDashboard() {
                   <div className={styles.subPanel}>
                     <div className={styles.subTitle}>SELECTED AGENT</div>
                     <div className={styles.subNote}>
-                      {selectedAgent ? `${selectedAgent.role} · ${selectedAgent.chain}` : '—'}
+                      {selectedAgent ? (
+                        selectedAgent.mode === 't-mode' ? 'T-Mode' :
+                        selectedAgent.mode === 'perpetuals' ? 'Perpetuals' :
+                        selectedAgent.mode === 'prediction' ? 'Prediction' : 'Standard'
+                      ) : '—'}
                     </div>
                     <div style={{ height: 14 }} />
 
