@@ -18,6 +18,7 @@ interface SettingsViewProps {
         dataDensity: 'comfortable' | 'compact';
         realtimePulseEnabled: boolean;
         reduceMotion: boolean;
+        backgroundType: 'threejs' | 'video';
     };
     updateSetting: (key: keyof SettingsViewProps['settings'], val: unknown) => void;
     onClose: () => void;
@@ -54,6 +55,22 @@ export const SettingsView = ({ settings, updateSetting, onClose }: SettingsViewP
                                     value={settings.animationsEnabled}
                                     onChange={(v) => updateSetting('animationsEnabled', v)}
                                 />
+                                <div style={{ marginBottom: 16 }}>
+                                    <div style={{ fontSize: 13, color: 'var(--text)', fontWeight: 500, marginBottom: 4 }}>
+                                        Background Type
+                                    </div>
+                                    <div style={{ fontSize: 11, color: 'var(--muted)', marginBottom: 12 }}>
+                                        Choose between animated 3D stars or video background.
+                                    </div>
+                                    <SegmentSelector
+                                        value={settings.backgroundType}
+                                        onChange={(v) => updateSetting('backgroundType', v)}
+                                        options={[
+                                            { value: 'threejs', label: '3D STARS' },
+                                            { value: 'video', label: 'VIDEO' },
+                                        ]}
+                                    />
+                                </div>
                                 <SettingRow
                                     label="Reduced Motion"
                                     desc="Simplify transitions and disable parallax."

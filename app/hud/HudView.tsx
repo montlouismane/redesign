@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation';
 import { useUiStyle } from '../UiStyleProvider'; // Import from app root
 import { ThreeBackground } from './components/ThreeBackground';
+import { VideoBackground } from './components/VideoBackground';
 import { HudHeader } from './components/HudHeader';
 import { HudLayout } from './HudLayout';
 import { HudPanel } from './components/HudPanel';
@@ -60,6 +61,7 @@ export function HudView() {
         dataDensity: 'comfortable' as 'comfortable' | 'compact',
         realtimePulseEnabled: true,
         reduceMotion: false,
+        backgroundType: 'threejs' as 'threejs' | 'video',
     });
 
     // Settings Persistence
@@ -249,11 +251,15 @@ export function HudView() {
                 />
             }
             background={
-                <ThreeBackground
-                    animationsEnabled={settings.animationsEnabled}
-                    noiseIntensity={0.9}
-                    bloomStrength={0.85}
-                />
+                settings.backgroundType === 'video' ? (
+                    <VideoBackground animationsEnabled={settings.animationsEnabled} />
+                ) : (
+                    <ThreeBackground
+                        animationsEnabled={settings.animationsEnabled}
+                        noiseIntensity={0.9}
+                        bloomStrength={0.85}
+                    />
+                )
             }
         >
             {/* Main View Router */}
