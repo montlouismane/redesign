@@ -1,15 +1,18 @@
-/* Share Card Modal - HUD "Winning Session" Style */
+/* Share Card Modal - HUD Style */
 /* Using PERCENTAGE positioning so preview matches generated image */
 
 .overlay {
   position: fixed;
-  inset: 0;
-  z-index: 1000;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.85);
-  backdrop-filter: blur(8px);
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
   animation: fadeIn 0.2s ease-out;
 }
 
@@ -17,12 +20,14 @@
   position: relative;
   width: 90%;
   max-width: 420px;
+  max-height: 90vh;
+  overflow-y: auto;
   background: linear-gradient(135deg, rgba(11, 11, 16, 0.98) 0%, rgba(7, 7, 10, 0.99) 100%);
-  border: 1px solid rgba(53, 255, 155, 0.2);
-  border-radius: 4px;
+  border: 1px solid rgba(196, 124, 72, 0.3);
+  border-radius: 8px;
   box-shadow:
     0 20px 50px rgba(0, 0, 0, 0.5),
-    0 0 30px rgba(53, 255, 155, 0.1);
+    0 0 30px rgba(196, 124, 72, 0.15);
   animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -31,13 +36,14 @@
   align-items: center;
   justify-content: space-between;
   padding: 16px 20px;
-  border-bottom: 1px solid rgba(53, 255, 155, 0.12);
+  border-bottom: 1px solid rgba(196, 124, 72, 0.2);
+  font-family: Orbitron;
 }
 
 .title {
   font-size: 14px;
   font-weight: 600;
-  color: #35ff9b;
+  color: #c47c48;
   letter-spacing: 0.05em;
   text-transform: uppercase;
   margin: 0;
@@ -75,7 +81,7 @@
   width: 100%;
   max-width: 280px;
   aspect-ratio: 928 / 1152;
-  background-image: url('/agents/share-template-928.jpg');
+  background-image: url('/agents/share-template-v2.jpg');
   background-size: cover;
   background-position: center;
   border: 1px solid rgba(53, 255, 155, 0.15);
@@ -132,17 +138,19 @@
   font-weight: 600;
   color: #e8e8ee;
   line-height: 1.2;
+  font-family: "JetBrains Mono";
 }
 
 .agentMode {
   font-size: 5px;
   color: rgba(255, 255, 255, 0.5);
+  font-family: "JetBrains Mono";
 }
 
 /* PnL Section - Absolutely positioned with percentages */
 .pnlSection {
   position: absolute;
-  top: 45%;
+  top: 39%;
   left: 0;
   right: 0;
   display: flex;
@@ -151,17 +159,17 @@
 }
 
 .pnlValue {
-  font-size: 30px;
+  font-size: 32px;
   font-weight: 800;
-  font-family: var(--mono);
+  font-family: "JetBrains Mono";
   line-height: 1;
 }
 
 .pnlPct {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 600;
-  font-family: var(--mono);
-  margin-top: 2px;
+  font-family: "JetBrains Mono";
+  margin-top: 35px;
   opacity: 0.8;
 }
 
@@ -199,7 +207,7 @@
   font-size: 9px;
   font-weight: 700;
   color: #35ff9b;
-  font-family: var(--mono);
+  font-family: "JetBrains Mono";
   text-shadow: 0 0 5px rgba(53, 255, 155, 0.3);
 }
 
@@ -215,6 +223,7 @@
   text-transform: uppercase;
   letter-spacing: 0.1em;
   margin-bottom: 8px;
+  font-family: "JetBrains Mono";
 }
 
 .timeframeSelector {
@@ -236,7 +245,7 @@
   border-radius: 1px;
   cursor: pointer;
   transition: all 0.2s;
-  font-family: var(--mono);
+  font-family: "JetBrains Mono";
 }
 
 .timeframeBtn:hover {
@@ -265,7 +274,7 @@
   display: flex;
   gap: 12px;
   padding: 16px 20px;
-  border-top: 1px solid rgba(53, 255, 155, 0.12);
+  border-top: 1px solid rgba(196, 124, 72, 0.2);
 }
 
 .cancelBtn {
@@ -279,6 +288,7 @@
   border-radius: 2px;
   cursor: pointer;
   transition: all 0.2s;
+  font-family: "JetBrains Mono";
 }
 
 .cancelBtn:hover {
@@ -301,6 +311,7 @@
   border-radius: 2px;
   cursor: pointer;
   transition: all 0.2s;
+  font-family: "JetBrains Mono";
 }
 
 .generateBtn:hover:not(:disabled) {

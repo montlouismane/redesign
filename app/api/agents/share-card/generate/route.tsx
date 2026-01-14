@@ -77,7 +77,7 @@ export async function POST(req: NextRequest) {
     const origin = req.headers.get('origin') || req.headers.get('host') || 'localhost:3001';
     const protocol = origin.includes('localhost') ? 'http' : 'https';
     const baseUrl = origin.startsWith('http') ? origin : `${protocol}://${origin}`;
-    const templateUrl = `${baseUrl}/agents/share-template-928.jpg`;
+    const templateUrl = `${baseUrl}/agents/share-template-v2.jpg`;
 
     const isPositive = realizedPnl >= 0;
 
@@ -168,7 +168,7 @@ export async function POST(req: NextRequest) {
             <div
               style={{
                 position: 'absolute',
-                top: '45%',
+                top: '39%',
                 left: '0',
                 right: '0',
                 display: 'flex',
@@ -178,7 +178,7 @@ export async function POST(req: NextRequest) {
             >
               <div
                 style={{
-                  fontSize: '96px',
+                  fontSize: '102px',
                   fontWeight: 800,
                   color: isPositive ? '#35ff9b' : '#ff4444',
                   fontFamily: 'monospace',
@@ -192,11 +192,11 @@ export async function POST(req: NextRequest) {
               </div>
               <div
                 style={{
-                  fontSize: '32px',
+                  fontSize: '38px',
                   fontWeight: 600,
                   color: isPositive ? '#35ff9b' : '#ff4444',
                   fontFamily: 'monospace',
-                  marginTop: '8px',
+                  marginTop: '116px',
                   opacity: 0.8,
                 }}
               >

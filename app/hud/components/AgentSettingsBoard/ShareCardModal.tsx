@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Download, Loader2 } from 'lucide-react';
 import type { Agent } from './AgentProfileCard';
 import styles from './ShareCardModal.module.css';
@@ -16,13 +17,19 @@ interface ShareCardModalProps {
 /**
  * Modal for generating and downloading agent performance share cards
  * Uses template image as background with dynamic stats overlay
+ * Rendered via Portal to ensure proper positioning over HUD
  */
 export function ShareCardModal({ agent, isOpen, onClose }: ShareCardModalProps) {
   const [selectedTimeframe, setSelectedTimeframe] = useState<Timeframe>('all');
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
 
-  if (!isOpen) return null;
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!isOpen || !mounted) return null;
 
   const timeframes: { value: Timeframe; label: string }[] = [
     { value: '24h', label: '24H' },
@@ -138,7 +145,7 @@ export function ShareCardModal({ agent, isOpen, onClose }: ShareCardModalProps) 
   const realizedPnlPct = getRealizedPnlPct(selectedTimeframe);
   const isPositive = realizedPnl >= 0;
 
-  return (
+  return createPortal(
     <div className={styles.overlay} onClick={onClose}>
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
         {/* Header */}
@@ -241,6 +248,7 @@ export function ShareCardModal({ agent, isOpen, onClose }: ShareCardModalProps) 
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
