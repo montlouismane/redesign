@@ -8,6 +8,7 @@ interface HudLayoutProps {
     className?: string;
     isCompact?: boolean;
     reduceMotion?: boolean;
+    isModalOpen?: boolean;
 }
 
 export const HudLayout = ({
@@ -17,15 +18,18 @@ export const HudLayout = ({
     className = "",
     isCompact = false,
     reduceMotion = false,
+    isModalOpen = false,
 }: HudLayoutProps) => {
     return (
-        <div className={`${styles.root} ${isCompact ? styles.compactMode : ''} ${className}`}>
+        <div className={`${styles.root} ${isCompact ? styles.compactMode : ''} ${isModalOpen ? styles.scrollLocked : ''} ${className}`}>
             {background}
             <div className={styles.hud}>
                 {header}
-                <main className={styles.dashboard} aria-label="Dashboard">
-                    {children}
-                </main>
+                <div className={styles.scrollContainer}>
+                    <main className={styles.dashboard} aria-label="Dashboard">
+                        {children}
+                    </main>
+                </div>
             </div>
         </div>
     );

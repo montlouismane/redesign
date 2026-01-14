@@ -148,6 +148,7 @@ export const ChatFullView = ({
                                         }}
                                         placeholder="What do you want to know?"
                                         className="h-11 flex-1 rounded-sm bg-[#0F131B]/80 border border-white/10 px-4 text-sm text-white/85 placeholder:text-white/30 focus:outline-none focus:border-amber-300/40"
+                                        autoComplete="off"
                                     />
 
                                     <div className="relative">

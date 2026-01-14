@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useEffect, useCallback, useState, useMemo } from 'react';
+import React, { useEffect, useCallback, useState, useMemo, useRef } from 'react';
 import { useSpring, animated } from '@react-spring/web';
-import { X, Trash2, AlertCircle } from 'lucide-react';
+import { X, Trash2, AlertCircle, ChevronDown } from 'lucide-react';
 import type { Agent as ProductionAgent, AgentMode } from '../../features/agents/types';
 import { useAgentSettings } from '../../features/agents/hooks/useAgentSettings';
 import {
@@ -101,6 +101,10 @@ export function AgentDetailSlide({
   const [boardSettings, setBoardSettings] = useState<BoardAgentSettings>({});
   const [riskSettings, setRiskSettings] = useState<RiskConfig>(getDefaultRiskConfig());
 
+  // Scroll hint state
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [showScrollHint, setShowScrollHint] = useState(false);
+
   // Convert production agent to board agent format
   const boardAgent = useMemo(() => {
     if (!agent) return null;
@@ -121,6 +125,21 @@ export function AgentDetailSlide({
     opacity: isOpen ? 1 : 0,
     config: { tension: 300, friction: 30 },
   });
+
+  // Lock scroll when slide is open
+  useEffect(() => {
+    if (isOpen) {
+      document.documentElement.style.overflow = 'hidden';
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
 
   // Handle escape key
   useEffect(() => {
@@ -149,6 +168,30 @@ export function AgentDetailSlide({
 
     return () => clearTimeout(timer);
   }, [agent, isDirty, formValues, name, mode, validate, getUpdatePayload, onUpdate]);
+
+  // Scroll hint detection
+  useEffect(() => {
+    const el = contentRef.current;
+    if (!el || !isOpen) return;
+
+    const checkScroll = () => {
+      const isScrollable = el.scrollHeight > el.clientHeight;
+      const isAtBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 20;
+      setShowScrollHint(isScrollable && !isAtBottom);
+    };
+
+    // Initial check with slight delay for content to render
+    const initialTimer = setTimeout(checkScroll, 100);
+
+    el.addEventListener('scroll', checkScroll);
+    window.addEventListener('resize', checkScroll);
+
+    return () => {
+      clearTimeout(initialTimer);
+      el.removeEventListener('scroll', checkScroll);
+      window.removeEventListener('resize', checkScroll);
+    };
+  }, [isOpen, boardAgent]);
 
   // Handlers for AgentSettingsBoard
   const handleNameChange = useCallback((newName: string) => {
@@ -252,7 +295,7 @@ export function AgentDetailSlide({
         </div>
 
         {/* Content - AgentSettingsBoard */}
-        <div className={styles.content}>
+        <div ref={contentRef} className={styles.content}>
           {boardAgent ? (
             <>
               <AgentSettingsBoard
@@ -292,6 +335,12 @@ export function AgentDetailSlide({
               <p>Select an agent to view settings</p>
             </div>
           )}
+        </div>
+
+        {/* Scroll Hint */}
+        <div className={`${styles.scrollHint} ${!showScrollHint ? styles.hidden : ''}`}>
+          <ChevronDown size={20} className={styles.scrollHintChevron} />
+          <ChevronDown size={20} className={styles.scrollHintChevron} />
         </div>
       </animated.div>
     </>

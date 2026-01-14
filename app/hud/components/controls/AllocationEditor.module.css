@@ -64,7 +64,7 @@
   background: var(--bgDark);
   border: 1px solid var(--border);
   color: var(--copper-light);
-  transition: all 0.2s ease;
+  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
 }
 
 .totalBadge[data-valid="true"] {
@@ -95,7 +95,7 @@
   padding: 6px 12px;
   border-radius: 4px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
 
   background:
     linear-gradient(
@@ -229,7 +229,7 @@
   background: rgba(0, 0, 0, 0.25);
   border: 1px solid var(--borderLight);
   border-radius: 4px;
-  transition: all 0.2s ease;
+  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
   min-width: 0; /* Allow flex shrinking */
 }
 
@@ -270,7 +270,7 @@
   border-radius: 4px;
   color: var(--textMuted);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
 }
 
 .removeBtn:hover:not(:disabled) {
@@ -305,7 +305,7 @@
   padding: 12px 16px;
   border-radius: 4px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
 
   font-family: var(--font-display, 'Orbitron', sans-serif);
   font-size: 11px;
@@ -372,7 +372,12 @@
   font-size: 12px;
   color: var(--text);
   outline: none;
-  transition: all 0.2s ease;
+  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
+}
+
+.filterInput:focus-visible {
+  border-color: var(--copper);
+  box-shadow: 0 0 0 2px rgba(184, 115, 51, 0.3);
 }
 
 .searchInput::placeholder {
@@ -406,7 +411,7 @@
   border: none;
   border-bottom: 1px solid var(--borderLight);
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: background 0.15s ease, color 0.15s ease;
 
   font-family: var(--font-display, 'Orbitron', sans-serif);
   font-size: 12px;

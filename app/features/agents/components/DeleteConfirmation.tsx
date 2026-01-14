@@ -86,11 +86,12 @@ export function DeleteConfirmation({
       onClick={onCancel}
     >
       <div
-        className="w-full max-w-md p-6 rounded-xl"
+        className="w-full max-w-md p-6"
         style={{
           background: 'var(--ui-bg1)',
           border: '1px solid var(--ui-control-border)',
           boxShadow: '0 20px 40px rgba(0, 0, 0, 0.3)',
+          borderRadius: '1px',
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -143,11 +144,12 @@ export function DeleteConfirmation({
           <button
             onClick={onCancel}
             disabled={isDeleting || isHolding}
-            className="flex-1 px-4 py-3 rounded-lg font-medium transition-colors"
+            className="flex-1 px-4 py-3 font-medium transition-colors"
             style={{
               background: 'var(--ui-control-bg)',
               border: '1px solid var(--ui-control-border)',
               color: 'var(--ui-text)',
+              borderRadius: '1px',
             }}
           >
             Cancel
@@ -161,11 +163,12 @@ export function DeleteConfirmation({
             onTouchStart={handleHoldStart}
             onTouchEnd={handleHoldEnd}
             disabled={isDeleting}
-            className="flex-1 px-4 py-3 rounded-lg font-medium transition-colors flex flex-col items-center justify-center gap-1 disabled:opacity-50 relative overflow-hidden select-none"
+            className="flex-1 px-4 py-3 font-medium transition-colors flex flex-col items-center justify-center gap-1 disabled:opacity-50 relative overflow-hidden select-none"
             style={{
               background: isDeleting ? 'rgb(200, 60, 60)' : 'rgb(239, 68, 68)',
               color: 'white',
               cursor: isDeleting ? 'wait' : 'pointer',
+              borderRadius: '1px',
             }}
           >
             {/* Progress fill overlay */}

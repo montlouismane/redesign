@@ -30,6 +30,16 @@ export interface RiskSettingsProps {
 export function RiskSettings({ settings, onChange }: RiskSettingsProps) {
   return (
     <div className={styles.unifiedBoard}>
+      {/* Angular frame overlay */}
+      <div className={styles.panelFrame}>
+        <div className={styles.frameLines} />
+        <div className={styles.frameAccents}>
+          <div className={`${styles.accent} ${styles.accentTL}`} />
+          <div className={`${styles.accent} ${styles.accentTR}`} />
+          <div className={`${styles.accent} ${styles.accentBL}`} />
+          <div className={`${styles.accent} ${styles.accentBR}`} />
+        </div>
+      </div>
       {/* Row: Edge Gate & Liquidity Guard */}
       <div className={styles.sectionRow}>
         {/* Edge Gate */}

@@ -2,6 +2,7 @@
 
 .panelSystem {
     grid-area: system;
+    min-height: 0; /* Desktop: fit to grid */
 }
 
 .sysList {
@@ -71,4 +72,49 @@
 .mono {
     font-family: var(--mono);
     letter-spacing: 0.02em;
+}
+
+/* ========================================
+   RESPONSIVE BREAKPOINTS
+   ======================================== */
+
+/* Tablet */
+@media (max-width: 1279px) and (min-width: 768px) {
+    .panelSystem {
+        min-height: 180px;
+    }
+    .sysList {
+        gap: 10px;
+    }
+    .sysRow {
+        padding: 10px 12px;
+        padding-right: 70px;
+    }
+    .sysName {
+        font-size: 11px;
+    }
+}
+
+/* Mobile */
+@media (max-width: 767px) {
+    .panelSystem {
+        min-height: 200px;
+    }
+    .sysList {
+        gap: 10px;
+    }
+    .sysRow {
+        padding: 14px;
+        padding-right: 14px;
+        min-height: 52px;
+        flex-wrap: wrap;
+    }
+    .sysName {
+        font-size: 12px;
+        flex: 1 1 auto;
+    }
+    .sysDot {
+        width: 12px;
+        height: 12px;
+    }
 }

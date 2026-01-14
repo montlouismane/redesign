@@ -202,21 +202,18 @@ body {
 }
 
 @keyframes adam-scroll-hint {
-
   0%,
   100% {
     transform: translateY(0);
-    opacity: 0.55;
   }
 
   50% {
-    transform: translateY(3px);
-    opacity: 0.9;
+    transform: translateY(4px);
   }
 }
 
 .adam-scroll-hint {
-  animation: adam-scroll-hint 1.8s ease-in-out infinite;
+  animation: adam-scroll-hint 1.5s ease-in-out infinite;
 }
 
 /* --- ADAM MATERIAL SYSTEM --- */
@@ -377,4 +374,30 @@ body {
   background-size: cover;
   background-position: center;
   filter: none;
+}
+
+/* ========================================
+   REDUCED MOTION ACCESSIBILITY
+   Respect user's motion preferences
+   ======================================== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Utility class for components that need motion control */
+.motion-safe {
+  /* Only animate when user hasn't requested reduced motion */
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .motion-safe {
+    transition: transform 0.2s ease, opacity 0.2s ease;
+  }
 }

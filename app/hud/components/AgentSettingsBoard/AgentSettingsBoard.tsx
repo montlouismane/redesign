@@ -146,6 +146,16 @@ export function AgentSettingsBoard({
 
       {/* Tab Navigation */}
       <div className={styles.tabBar}>
+        {/* Angular frame overlay */}
+        <div className={styles.panelFrame}>
+          <div className={styles.frameLines} />
+          <div className={styles.frameAccents}>
+            <div className={`${styles.accent} ${styles.accentTL}`} />
+            <div className={`${styles.accent} ${styles.accentTR}`} />
+            <div className={`${styles.accent} ${styles.accentBL}`} />
+            <div className={`${styles.accent} ${styles.accentBR}`} />
+          </div>
+        </div>
         <button
           className={`${styles.tabButton} ${activeTab === 'strategy' ? styles.active : ''}`}
           onClick={() => setActiveTab('strategy')}
@@ -165,6 +175,16 @@ export function AgentSettingsBoard({
         <React.Fragment>
           {/* Mode Selector */}
           <div className={styles.modeSelector}>
+            {/* Angular frame overlay */}
+            <div className={styles.panelFrame}>
+              <div className={styles.frameLines} />
+              <div className={styles.frameAccents}>
+                <div className={`${styles.accent} ${styles.accentTL}`} />
+                <div className={`${styles.accent} ${styles.accentTR}`} />
+                <div className={`${styles.accent} ${styles.accentBL}`} />
+                <div className={`${styles.accent} ${styles.accentBR}`} />
+              </div>
+            </div>
             <div className={styles.modeSelectorHeader}>
               <div className={styles.modeSelectorTitle}>Trading Mode</div>
               <div className={styles.paperTradingToggle}>

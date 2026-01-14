@@ -74,6 +74,7 @@ export const PortfolioBento = ({
             onExpandClick={() => openModal('allocation')} // Using allocation modal for deep dive
             onDoubleClick={() => openModal('allocation')}
             style={{
+                gridArea: 'market', // Grid placement
                 animationDelay: reduceMotion ? '0ms' : '200ms',
                 opacity: isLoaded ? 1 : 0,
                 transform: isLoaded ? 'translateY(0)' : 'translateY(20px)',

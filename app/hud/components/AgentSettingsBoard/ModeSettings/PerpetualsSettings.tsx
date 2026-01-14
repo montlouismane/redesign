@@ -60,8 +60,18 @@ export function PerpetualsSettings({ settings, onChange }: PerpetualsSettingsPro
 
   return (
     <div className={styles.unifiedBoard}>
+      {/* Angular frame overlay */}
+      <div className={styles.panelFrame}>
+        <div className={styles.frameLines} />
+        <div className={styles.frameAccents}>
+          <div className={`${styles.accent} ${styles.accentTL}`} />
+          <div className={`${styles.accent} ${styles.accentTR}`} />
+          <div className={`${styles.accent} ${styles.accentBL}`} />
+          <div className={`${styles.accent} ${styles.accentBR}`} />
+        </div>
+      </div>
       {/* Top Row: Leverage (Left) & Risk (Right) */}
-      <div className={styles.sectionRow} style={{ gridTemplateColumns: '1fr 1fr' }}>
+      <div className={styles.sectionRow}>
 
         {/* LEVERAGE SETTINGS */}
         <div className={styles.section}>
@@ -70,7 +80,7 @@ export function PerpetualsSettings({ settings, onChange }: PerpetualsSettingsPro
             <div className={styles.cardSubtitle} style={{ fontSize: '11px', opacity: 0.7 }}>Position leverage controls</div>
           </div>
           <div className={styles.sectionContent}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+            <div className={styles.denseGrid} style={{ marginBottom: '16px' }}>
               <ControlRow label="Max Leverage" helper="">
                 <VerticalSlider
                   value={defaults.maxLeverage}
@@ -105,7 +115,7 @@ export function PerpetualsSettings({ settings, onChange }: PerpetualsSettingsPro
             <div className={styles.cardSubtitle} style={{ fontSize: '11px', opacity: 0.7 }}>Stop loss, take profit, and limits</div>
           </div>
           <div className={styles.sectionContent}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', rowGap: '24px' }}>
+            <div className={styles.denseGrid}>
               <ControlRow label="Stop Loss" helper="">
                 <MetallicDial
                   value={defaults.stopLoss}
@@ -146,7 +156,7 @@ export function PerpetualsSettings({ settings, onChange }: PerpetualsSettingsPro
       </div>
 
       {/* Bottom Row: Assets (Left) & Limits (Right) */}
-      <div className={styles.sectionRow} style={{ gridTemplateColumns: '1fr 1fr' }}>
+      <div className={styles.sectionRow}>
 
         {/* ALLOWED ASSETS */}
         <div className={styles.section}>
@@ -155,7 +165,7 @@ export function PerpetualsSettings({ settings, onChange }: PerpetualsSettingsPro
             <div className={styles.cardSubtitle} style={{ fontSize: '11px', opacity: 0.7 }}>Which assets to trade</div>
           </div>
           <div className={styles.sectionContent}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+            <div className={styles.assetsGrid}>
               {ASSET_OPTIONS.map(asset => (
                 <div key={asset} style={{
                   display: 'flex',
@@ -192,7 +202,7 @@ export function PerpetualsSettings({ settings, onChange }: PerpetualsSettingsPro
             <div className={styles.cardSubtitle} style={{ fontSize: '11px', opacity: 0.7 }}>Concurrent position controls</div>
           </div>
           <div className={styles.sectionContent}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', rowGap: '24px' }}>
+            <div className={styles.denseGrid}>
               <ControlRow label="Max Concurrent" helper="">
                 <TimeAdjuster
                   value={defaults.maxConcurrent}

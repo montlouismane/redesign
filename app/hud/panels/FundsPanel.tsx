@@ -215,6 +215,7 @@ export const FundsPanel = ({
                         className="w-full bg-white/5 border border-white/10 rounded-[1px] px-2 py-1
                                  text-[10px] text-white focus:outline-none focus:border-[#c47c48]/50 transition-colors
                                  placeholder:text-white/20 font-mono h-6"
+                        autoComplete="off"
                     />
 
                     {/* Amount Row */}
@@ -269,6 +270,7 @@ export const FundsPanel = ({
                                 className="w-full bg-white/5 border border-white/10 rounded-[1px] px-2 py-1 pl-2 pr-8
                                          text-[10px] text-white focus:outline-none focus:border-[#c47c48]/50 transition-colors
                                          placeholder:text-white/20 font-mono text-right h-6"
+                                autoComplete="off"
                             />
                             <button
                                 onClick={handleMaxClick}

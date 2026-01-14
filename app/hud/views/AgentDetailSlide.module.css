@@ -2,7 +2,10 @@
 
 .backdrop {
   position: fixed;
-  inset: 0;
+  top: var(--header-height, 105px); /* Start below main header */
+  left: 0;
+  right: 0;
+  bottom: 0;
   z-index: 900;
   background: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(2px);
@@ -11,13 +14,15 @@
 
 .slidePanel {
   position: fixed;
-  inset: 0;
+  top: var(--header-height, 105px); /* Start below main header */
+  left: 0;
+  right: 0;
+  bottom: 0;
   z-index: 910;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(135deg,
-      rgba(11, 11, 16, 0.99) 0%,
-      rgba(7, 7, 10, 1) 100%);
+  /* Transparent - let video/3D background show through */
+  background: transparent;
   overflow: hidden;
   font-family: var(--font-jetbrains-mono);
 }
@@ -60,7 +65,9 @@
   justify-content: space-between;
   padding: 20px 24px;
   border-bottom: 1px solid rgba(196, 124, 72, 0.15);
-  background: rgba(0, 0, 0, 0.3);
+  /* Semi-transparent glass header */
+  background: rgba(12, 16, 22, 0.75);
+  backdrop-filter: blur(20px);
 }
 
 .headerTitle {
@@ -116,25 +123,50 @@
   max-width: 1400px;
   margin: 0 auto;
   width: 100%;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(196, 124, 72, 0.3) transparent;
+  /* Hide scrollbar but keep scrolling */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
 .content::-webkit-scrollbar {
-  width: 6px;
+  display: none;
+  width: 0;
+  height: 0;
 }
 
-.content::-webkit-scrollbar-track {
-  background: transparent;
+/* Scroll Hint Indicator */
+.scrollHint {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  opacity: 0.6;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+  z-index: 100;
 }
 
-.content::-webkit-scrollbar-thumb {
-  background: rgba(196, 124, 72, 0.3);
-  border-radius: 3px;
+.scrollHint.hidden {
+  opacity: 0;
 }
 
-.content::-webkit-scrollbar-thumb:hover {
-  background: rgba(196, 124, 72, 0.5);
+.scrollHintChevron {
+  color: rgba(196, 124, 72, 0.7);
+  animation: scrollBounce 1.5s ease-in-out infinite;
+}
+
+.scrollHintChevron:nth-child(2) {
+  animation-delay: 0.15s;
+  opacity: 0.5;
+}
+
+@keyframes scrollBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(4px); }
 }
 
 /* Sections */
@@ -261,8 +293,8 @@
   letter-spacing: 0.05em;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
+/* Responsive - Mobile */
+@media (max-width: 767px) {
   .content {
     padding: 16px 20px;
   }

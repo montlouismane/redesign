@@ -148,6 +148,16 @@ export function ShareCardModal({ agent, isOpen, onClose }: ShareCardModalProps) 
   return createPortal(
     <div className={styles.overlay} onClick={onClose}>
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+        {/* Angular frame overlay */}
+        <div className={styles.panelFrame}>
+          <div className={styles.frameLines} />
+          <div className={styles.frameAccents}>
+            <div className={`${styles.accent} ${styles.accentTL}`} />
+            <div className={`${styles.accent} ${styles.accentTR}`} />
+            <div className={`${styles.accent} ${styles.accentBL}`} />
+            <div className={`${styles.accent} ${styles.accentBR}`} />
+          </div>
+        </div>
         {/* Header */}
         <div className={styles.header}>
           <h2 className={styles.title}>Share Performance</h2>

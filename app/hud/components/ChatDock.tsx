@@ -229,6 +229,7 @@ export const ChatDock = ({
                                 }}
                                 placeholder="What do you want to know?"
                                 className="h-9 flex-1 rounded-sm bg-white/5 border border-white/10 px-3 text-xs text-white/85 placeholder:text-white/30 focus:outline-none focus:border-amber-300/40"
+                                autoComplete="off"
                             />
 
                             <div className="relative">

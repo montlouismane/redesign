@@ -247,6 +247,7 @@ export function AllocationEditor({
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className={styles.searchInput}
+                  autoComplete="off"
                   autoFocus
                 />
               </div>

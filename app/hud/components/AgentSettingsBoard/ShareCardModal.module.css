@@ -17,18 +17,111 @@
 }
 
 .modal {
+  /* Angular frame variables */
+  --cut-s: 10px;
+  --cut-l: 16px;
+  --tl: var(--cut-s);
+  --tr: var(--cut-l);
+  --br: var(--cut-s);
+  --bl: var(--cut-l);
+  --tlW: 1px;
+  --trW: 2px;
+  --brW: 1px;
+  --blW: 2px;
+
   position: relative;
   width: 90%;
   max-width: 420px;
   max-height: 90vh;
-  overflow-y: auto;
-  background: linear-gradient(135deg, rgba(11, 11, 16, 0.98) 0%, rgba(7, 7, 10, 0.99) 100%);
-  border: 1px solid rgba(196, 124, 72, 0.3);
-  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: rgba(12, 16, 22, 0.95);
+  backdrop-filter: blur(40px);
+  border: none;
+  border-radius: 0;
   box-shadow:
     0 20px 50px rgba(0, 0, 0, 0.5),
     0 0 30px rgba(196, 124, 72, 0.15);
   animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  clip-path: polygon(
+    var(--tl) 0,
+    calc(100% - var(--tr)) 0,
+    100% var(--tr),
+    100% calc(100% - var(--br)),
+    calc(100% - var(--br)) 100%,
+    var(--bl) 100%,
+    0 calc(100% - var(--bl)),
+    0 var(--tl)
+  );
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.modal::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+/* Angular frame overlay */
+.panelFrame {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.frameLines {
+  position: absolute;
+  inset: 0;
+  border: 1px solid rgba(196, 124, 72, 0.3);
+  clip-path: inherit;
+}
+
+.frameAccents {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.accent {
+  position: absolute;
+  background: rgba(196, 124, 72, 0.5);
+  box-shadow: 0 0 10px rgba(196, 124, 72, 0.25);
+  z-index: 15;
+}
+
+.accentTL {
+  width: calc(var(--tl) * 1.4142);
+  height: var(--tlW);
+  top: calc(var(--tl) / 2);
+  left: calc(var(--tl) / 2);
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+.accentTR {
+  width: calc(var(--tr) * 1.4142);
+  height: var(--trW);
+  top: calc(var(--tr) / 2);
+  right: calc(var(--tr) / 2);
+  transform: translate(50%, -50%) rotate(45deg);
+}
+
+.accentBL {
+  width: calc(var(--bl) * 1.4142);
+  height: var(--blW);
+  bottom: calc(var(--bl) / 2);
+  left: calc(var(--bl) / 2);
+  transform: translate(-50%, 50%) rotate(45deg);
+}
+
+.accentBR {
+  width: calc(var(--br) * 1.4142);
+  height: var(--brW);
+  bottom: calc(var(--br) / 2);
+  right: calc(var(--br) / 2);
+  transform: translate(50%, 50%) rotate(-45deg);
 }
 
 .header {
@@ -38,6 +131,7 @@
   padding: 16px 20px;
   border-bottom: 1px solid rgba(196, 124, 72, 0.2);
   font-family: Orbitron;
+  flex-shrink: 0;
 }
 
 .title {
@@ -74,6 +168,8 @@
   padding: 20px;
   display: flex;
   justify-content: center;
+  flex-shrink: 0;
+  min-height: 0;
 }
 
 .cardPreview {
@@ -84,7 +180,7 @@
   background-image: url('/agents/share-template-v2.jpg');
   background-size: cover;
   background-position: center;
-  border: 1px solid rgba(53, 255, 155, 0.15);
+  border: 1px solid rgba(255, 190, 51, 0.15);
   border-radius: 4px;
   overflow: hidden;
 }
@@ -214,6 +310,7 @@
 /* Timeframe Selector */
 .timeframeSection {
   padding: 0 20px 16px;
+  flex-shrink: 0;
 }
 
 .timeframeLabel {
@@ -267,6 +364,7 @@
   background: rgba(255, 59, 59, 0.1);
   border: 1px solid rgba(255, 59, 59, 0.2);
   border-radius: 2px;
+  flex-shrink: 0;
 }
 
 /* Actions */
@@ -275,6 +373,7 @@
   gap: 12px;
   padding: 16px 20px;
   border-top: 1px solid rgba(196, 124, 72, 0.2);
+  flex-shrink: 0;
 }
 
 .cancelBtn {

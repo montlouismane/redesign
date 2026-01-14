@@ -133,6 +133,7 @@ export function ValueInput({
               onChange={handleChange}
               onKeyDown={handleKeyDown}
               data-error={error !== null}
+              autoComplete="off"
             />
             <span className={styles.valueInputUnit}>{unit}</span>
           </div>

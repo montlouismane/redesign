@@ -80,3 +80,48 @@
 .muted {
     color: var(--muted);
 }
+
+/* ========================================
+   RESPONSIVE BREAKPOINTS
+   ======================================== */
+
+/* Tablet */
+@media (max-width: 1279px) and (min-width: 768px) {
+    .tradeHead,
+    .tradeRow {
+        gap: 8px;
+    }
+    .tradeHead {
+        padding: 10px 12px;
+        font-size: 10px;
+    }
+    .tradeRow {
+        padding: 10px 12px;
+        font-size: 11px;
+    }
+}
+
+/* Mobile */
+@media (max-width: 767px) {
+    .tradeTable {
+        min-height: 180px;
+    }
+    .tradeHead,
+    .tradeRow {
+        gap: 8px;
+    }
+    .tradeHead {
+        padding: 12px 14px;
+        font-size: 10px;
+    }
+    .tradeRow {
+        padding: 14px;
+        font-size: 12px;
+        min-height: 52px;
+    }
+    .tradeType {
+        min-width: 50px;
+        padding: 6px 10px;
+        font-size: 10px;
+    }
+}

@@ -122,7 +122,7 @@
   height: var(--tick-height);
   transform: translateX(-50%);
   border-radius: 1px;
-  transition: all 0.15s ease;
+  transition: background 0.15s ease, box-shadow 0.15s ease;
 
   /* Inactive tick - subtle copper tint */
   background:
@@ -356,6 +356,10 @@
   outline: none;
 }
 
+.rangeInput:focus-visible + .sliderTrack {
+  box-shadow: 0 0 0 2px rgba(184, 115, 51, 0.5);
+}
+
 .rangeInput:focus-visible~.thumbVisual .thumbInner {
   box-shadow:
     0 0 0 3px rgba(184, 115, 51, 0.3),
@@ -372,7 +376,7 @@
   justify-content: center;
   gap: 4px;
   padding: 8px 16px;
-  border-radius: 4px;
+  border-radius: 2px;
   background: rgba(0, 0, 0, 0.3);
   border: 1px solid rgba(184, 115, 51, 0.2);
 }
@@ -504,11 +508,11 @@
   justify-content: center;
   gap: 4px;
   padding: 8px 16px;
-  border-radius: 4px;
+  border-radius: 2px;
   background: rgba(0, 0, 0, 0.3);
   border: 1px solid rgba(184, 115, 51, 0.2);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background 0.2s ease, border-color 0.2s ease;
 }
 
 .valueDisplay:hover:not(:disabled) {

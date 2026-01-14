@@ -109,6 +109,7 @@ export function TagInput({
           onPaste={handlePaste}
           placeholder={tags.length === 0 ? placeholder : ''}
           disabled={disabled}
+          autoComplete="off"
         />
       </div>
     </div>

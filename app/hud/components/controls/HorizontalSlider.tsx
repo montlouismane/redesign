@@ -414,6 +414,7 @@ export function HorizontalSlider({
             onKeyDown={handleInputKeyDown}
             onBlur={handleInputBlur}
             disabled={disabled}
+            autoComplete="off"
             autoFocus
           />
           <span className={styles.valueUnit}>{unit}</span>

@@ -174,6 +174,7 @@ export const FundsExpanded = ({
                                 className="w-full bg-[#0b0b10] border border-white/10 rounded-[1px] px-4 py-3
                                          text-sm text-white focus:outline-none focus:border-[#f59e0b]/50 transition-colors
                                          placeholder:text-white/20"
+                                autoComplete="off"
                             />
                         </div>
 
@@ -224,6 +225,7 @@ export const FundsExpanded = ({
                                 className="w-full bg-[#0b0b10] border border-white/10 rounded-[1px] px-4 py-3
                                          text-sm text-white focus:outline-none focus:border-[#f59e0b]/50 transition-colors
                                          placeholder:text-white/20"
+                                autoComplete="off"
                             />
                         </div>
                     </div>

@@ -37,6 +37,16 @@ export function PredictionSettings({ settings, onChange, onFaqClick }: Predictio
 
   return (
     <div className={styles.unifiedBoard}>
+      {/* Angular frame overlay */}
+      <div className={styles.panelFrame}>
+        <div className={styles.frameLines} />
+        <div className={styles.frameAccents}>
+          <div className={`${styles.accent} ${styles.accentTL}`} />
+          <div className={`${styles.accent} ${styles.accentTR}`} />
+          <div className={`${styles.accent} ${styles.accentBL}`} />
+          <div className={`${styles.accent} ${styles.accentBR}`} />
+        </div>
+      </div>
       {/* Prediction Strategy */}
       <div className={styles.section}>
         <div className={styles.sectionHeader}>

@@ -297,6 +297,7 @@ export function MetallicDial({
               onChange={(e) => setInputValue(e.target.value)}
               onKeyDown={handleInputKeyDown}
               onBlur={commitEdit}
+              autoComplete="off"
               autoFocus
             />
           ) : (

@@ -140,6 +140,16 @@ export function AgentProfileCard({
 
   return (
     <div className={styles.profileCard}>
+      {/* Angular frame overlay */}
+      <div className={styles.panelFrame}>
+        <div className={styles.frameLines} />
+        <div className={styles.frameAccents}>
+          <div className={`${styles.accent} ${styles.accentTL}`} />
+          <div className={`${styles.accent} ${styles.accentTR}`} />
+          <div className={`${styles.accent} ${styles.accentBL}`} />
+          <div className={`${styles.accent} ${styles.accentBR}`} />
+        </div>
+      </div>
       <div className={styles.profileLayout}>
         {/* Avatar Section */}
         <div className={styles.avatarSection}>
@@ -191,6 +201,7 @@ export function AgentProfileCard({
                   }
                 }}
                 className={styles.nameInput}
+                autoComplete="off"
                 autoFocus
               />
             ) : (

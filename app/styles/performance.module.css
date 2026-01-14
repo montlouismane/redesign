@@ -5,7 +5,7 @@
     display: flex;
     flex-direction: column;
     position: relative;
-    min-height: 0;
+    min-height: 0; /* Desktop: fit to grid */
     z-index: 5;
     overflow: hidden;
 }
@@ -89,8 +89,9 @@
     background: rgba(0, 0, 0, 0.12);
     border-radius: 2px;
     padding: 12px;
-    height: 420px;
+    min-height: 120px; /* Minimum size for chart readability */
     overflow: hidden;
+    flex: 1; /* Fill remaining space */
 }
 
 .chartCanvas {
@@ -135,4 +136,59 @@
 
 .muted {
     color: var(--muted);
+}
+
+/* ========================================
+   RESPONSIVE BREAKPOINTS
+   ======================================== */
+
+/* Tablet */
+@media (max-width: 1279px) and (min-width: 768px) {
+    .chartWrap {
+        height: auto;
+        min-height: 160px;
+    }
+    .kpi {
+        min-width: 140px;
+        padding: 8px 10px;
+    }
+}
+
+/* Mobile */
+@media (max-width: 767px) {
+    .panelPerformance {
+        min-height: 280px;
+    }
+    .chartWrap {
+        height: auto;
+        min-height: 180px;
+    }
+    .perfTop {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    .seg {
+        flex-wrap: wrap;
+    }
+    .segBtn {
+        padding: 10px 12px;
+        font-size: 10px;
+        min-height: 44px;
+    }
+    .kpis {
+        gap: 8px;
+        padding-left: 8px;
+        padding-right: 8px;
+    }
+    .kpi {
+        min-width: 100px;
+        flex: 1 1 calc(50% - 8px);
+        padding: 10px;
+    }
+    .kpiKey {
+        font-size: 9px;
+    }
+    .kpiVal {
+        font-size: 14px;
+    }
 }

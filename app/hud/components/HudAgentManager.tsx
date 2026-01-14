@@ -33,6 +33,9 @@ export interface HudAgentManagerRenderProps {
   // Open create modal
   openCreateModal: () => void;
 
+  // Whether the agent detail overlay is open (for hiding dashboard panels)
+  isOverlayActive: boolean;
+
   // Convert to legacy format for existing AgentsPanel
   toLegacyAgentRow: (agent: AgentListItem) => {
     id: string;
@@ -158,6 +161,7 @@ export function HudAgentManager({ children }: HudAgentManagerProps) {
     selectAgent: setSelectedAgentId,
     openAgentDetail,
     openCreateModal: () => setIsCreateModalOpen(true),
+    isOverlayActive: isDetailOpen,
     toLegacyAgentRow,
   };
 

@@ -125,9 +125,9 @@ export const PerformanceExpanded = ({ data, summary, activeRange, setActiveRange
     }, [data, selectedIds.length]);
 
     return (
-        <div className="h-full flex flex-col p-3 md:p-6">
+        <div className="h-full flex flex-col p-3 md:p-6 overflow-hidden">
             {/* Header: Agent Filter + Range Selector - Stack on mobile */}
-            <div className="flex flex-col md:flex-row justify-between items-stretch md:items-start gap-3 md:gap-0 mb-4 md:mb-6">
+            <div className="flex flex-col md:flex-row justify-between items-stretch md:items-start gap-3 md:gap-0 mb-4 md:mb-6 flex-shrink-0">
                 {/* Agent Filter */}
                 <AgentPnLFilter
                     agents={agentsPnL}
@@ -162,7 +162,7 @@ export const PerformanceExpanded = ({ data, summary, activeRange, setActiveRange
             </div>
 
             {/* Combined P&L Stats for Selected Agents - Stack on mobile */}
-            <div className="flex flex-col md:flex-row justify-between items-start gap-4 md:gap-0 mb-4 md:mb-6">
+            <div className="flex flex-col md:flex-row justify-between items-start gap-4 md:gap-0 mb-4 md:mb-6 flex-shrink-0">
                 <div>
                     <div className="text-white/50 text-[10px] md:text-xs tracking-widest mb-2">
                         COMBINED P&L ({combinedPnL.agentCount} AGENT{combinedPnL.agentCount !== 1 ? 'S' : ''})
@@ -197,7 +197,7 @@ export const PerformanceExpanded = ({ data, summary, activeRange, setActiveRange
             </div>
 
             {/* Main Stats - 2 cols on mobile, 4 on desktop */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4 mb-4 md:mb-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4 mb-4 md:mb-6 flex-shrink-0">
                 <div className="p-3 md:p-4 bg-white/5 rounded border border-white/10">
                     <div className="text-white/40 text-[10px] md:text-xs mb-1">NET VALUE</div>
                     <div className="text-lg md:text-2xl font-mono text-white">{formatUSD(summary.endValue)}</div>
@@ -219,9 +219,9 @@ export const PerformanceExpanded = ({ data, summary, activeRange, setActiveRange
             </div>
 
             {/* Chart Area */}
-            <div className="flex-1 min-h-[200px] md:min-h-0 bg-white/2 rounded border border-white/10 relative">
+            <div className="flex-1 min-h-0 bg-white/2 rounded border border-white/10 relative overflow-hidden">
                 <div ref={chartContainerRef} className="absolute inset-2 md:inset-4" />
-                <div className="absolute top-2 md:top-4 left-2 md:left-4 text-[10px] md:text-xs font-mono text-white/20">
+                <div className="absolute top-2 md:top-4 left-2 md:left-4 text-[10px] md:text-xs font-mono text-white/20 z-10 pointer-events-none">
                     EQUITY CURVE (USD) — {selectedIds.length === agentsPnL.length ? 'ALL AGENTS' : `${selectedIds.length} SELECTED`}
                 </div>
             </div>

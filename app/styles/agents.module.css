@@ -4,7 +4,7 @@
     grid-area: agents;
     display: flex;
     flex-direction: column;
-    min-height: 0;
+    min-height: 0; /* Desktop: fit to grid */
 }
 
 .panelLoaded {
@@ -202,4 +202,69 @@
 
 .deployBtn:active {
     transform: translateY(0);
+}
+
+/* ========================================
+   RESPONSIVE BREAKPOINTS
+   ======================================== */
+
+/* Tablet */
+@media (max-width: 1279px) and (min-width: 768px) {
+    .panelAgents {
+        min-height: 280px;
+    }
+    .agentItem {
+        gap: 12px;
+        padding: 12px 14px;
+    }
+    .agentIcon {
+        width: 40px;
+        height: 40px;
+    }
+    .agentName {
+        font-size: 12px;
+    }
+    .agentSub {
+        font-size: 10px;
+    }
+}
+
+/* Mobile */
+@media (max-width: 767px) {
+    .panelAgents {
+        min-height: 300px;
+    }
+    .agentList {
+        gap: 10px;
+    }
+    .agentItem {
+        grid-template-columns: 44px 1fr auto;
+        gap: 12px;
+        padding: 12px 14px;
+        min-height: 72px;
+    }
+    .agentIcon {
+        width: 44px;
+        height: 44px;
+        font-size: 14px;
+    }
+    .agentName {
+        font-size: 13px;
+        letter-spacing: 0.08em;
+    }
+    .agentSub {
+        font-size: 11px;
+        margin-top: 2px;
+    }
+    .agentPnl {
+        font-size: 13px;
+    }
+    .agentAum {
+        font-size: 10px;
+    }
+    .deployBtn {
+        min-height: 60px;
+        padding: 12px 14px;
+        font-size: 12px;
+    }
 }

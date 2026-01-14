@@ -239,12 +239,14 @@ export function HudView() {
 
     // --- RENDER HELPERS ---
     const isCompact = settings.dataDensity === 'compact';
+    const isAnyModalOpen = Boolean(modalPanel) || showShortcutsModal;
 
     return (
         <HudLayout
             className=""
             isCompact={isCompact}
             reduceMotion={visualConfig.reduceMotion}
+            isModalOpen={isAnyModalOpen}
             header={
                 <HudHeader
                     view={view}
@@ -271,8 +273,9 @@ export function HudView() {
             {/* Main View Router */}
             {view === 'dashboard' && (
                 <HudAgentManager>
-                    {({ agents: managedAgents, selectedAgentId: managedSelectedId, selectAgent, openAgentDetail, openCreateModal, toLegacyAgentRow }) => (
+                    {({ agents: managedAgents, selectedAgentId: managedSelectedId, selectAgent, openAgentDetail, openCreateModal, isOverlayActive, toLegacyAgentRow }) => (
                         <DashboardView
+                            isOverlayActive={isOverlayActive}
                             agentsProps={{
                                 agents: managedAgents.map(toLegacyAgentRow),
                                 selectedAgentId: managedSelectedId || '',
@@ -460,7 +463,7 @@ export function HudView() {
 
                         {modalPanel === 'trades' && (
                             <HudPanel
-                                title="RECENT TRADES (EXPANDED)"
+                                title="RECENT TRADES"
                                 accentVariant="both"
                                 shapeVariant="a"
                                 variant="glass"
@@ -496,7 +499,7 @@ export function HudView() {
 
                         {modalPanel === 'allocation' && (
                             <HudPanel
-                                title="ASSET ALLOCATION (EXPANDED)"
+                                title="ASSET ALLOCATION"
                                 accentVariant="both"
                                 shapeVariant="b"
                                 variant="glass"
@@ -604,7 +607,7 @@ export function HudView() {
 
                         {modalPanel === 'system' && (
                             <HudPanel
-                                title="SYSTEM STATUS (EXPANDED)"
+                                title="SYSTEM STATUS"
                                 accentVariant="both"
                                 shapeVariant="a"
                                 variant="glass"

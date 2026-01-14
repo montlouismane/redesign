@@ -33,8 +33,11 @@
     --stateB: 72;
     --hudGlowBoost: 1;
 
+    /* Header height for positioning overlays */
+    --header-height: 105px;
+
     position: relative;
-    /* Chrome viewport fix: use dvh with vh fallback */
+    /* Desktop: Lock to viewport height, no page scroll */
     height: 100vh;
     height: 100dvh;
     width: 100%;
@@ -54,26 +57,36 @@
 .hud {
     position: relative;
     z-index: 3;
-    height: 100%;
     display: flex;
     flex-direction: column;
-    padding-bottom: 12px;
-    gap: 14px;
+    height: 100%;
+    min-height: 0;
+    gap: 0; /* Remove gap - scrollContainer handles spacing */
     background: radial-gradient(1200px 900px at 50% 30%, transparent 45%, rgba(0, 0, 0, 0.75) 85%),
         repeating-linear-gradient(180deg, rgba(255, 255, 255, 0.02) 0px, rgba(255, 255, 255, 0.02) 1px, transparent 2px, transparent 4px);
+}
+
+/* Scroll container - content scrolls here on mobile/tablet, fits viewport on desktop */
+.scrollContainer {
+    flex: 1;
+    min-height: 0; /* Allow flex shrinking */
+    overflow: hidden; /* Desktop: no scroll, fit to viewport */
+    background: transparent; /* Allow 3D background to show through */
+    display: flex;
+    flex-direction: column;
 }
 
 .dashboard {
     display: grid;
     grid-template-columns: 340px 1fr 400px;
-    grid-template-rows: 1.25fr 240px;
+    grid-template-rows: 71fr 29fr; /* Top 71%, Bottom 29% */
     grid-template-areas:
         "agents performance market"
         "agents bottom system";
     gap: 14px;
-    min-height: 0;
     flex: 1;
-    padding: 0 16px;
+    min-height: 0;
+    padding: 14px 16px 16px 16px; /* Top padding moved from scrollContainer */
 }
 
 /* Compact Mode */
@@ -81,9 +94,41 @@
     --pad: 12px;
 }
 
+/* Scroll Lock - when modal/overlay is open */
+.root.scrollLocked {
+    overflow: hidden !important;
+}
+
+.root.scrollLocked .dashboard {
+    overflow: hidden !important;
+    pointer-events: none;
+}
+
 .root.compactMode .hud,
 .root.compactMode .dashboard {
     gap: 10px;
+}
+
+/* Dashboard Panels Container - for overlay fade effect */
+.dashboardPanels {
+    /* Span entire grid to contain all panels */
+    grid-column: 1 / -1;
+    grid-row: 1 / -1;
+    /* Create subgrid to inherit parent grid lines */
+    display: grid;
+    grid-template-columns: subgrid;
+    grid-template-rows: subgrid;
+    grid-template-areas:
+        "agents performance market"
+        "agents bottom system";
+    gap: 14px;
+    /* Fade animation */
+    transition: opacity 0.3s ease-out;
+}
+
+.dashboardPanels.hidden {
+    opacity: 0;
+    pointer-events: none;
 }
 
 /* Bottom Wrap (Trades + Funds) */
@@ -99,48 +144,87 @@
    RESPONSIVE BREAKPOINTS
    ======================================== */
 
-/* Tablet: 2-column (768px - 1279px) */
+/* Tablet: (768px - 1279px) - scrollable */
 @media (max-width: 1279px) and (min-width: 768px) {
     .root {
-        overflow: auto;
-        height: auto;
-        min-height: 100vh;
-        min-height: 100dvh;
+        --header-height: 105px; /* Same as desktop */
+        height: 100vh;
+        height: 100dvh;
+        overflow: hidden; /* Scroll happens in scrollContainer, not here */
+    }
+    .hud {
+        height: 100%;
+    }
+    .scrollContainer {
+        overflow-y: auto; /* Enable scroll on tablet */
+        overflow-x: hidden;
+        padding-bottom: 16px;
     }
     .dashboard {
-        grid-template-columns: 280px 1fr;
-        grid-template-rows: auto auto auto;
+        /* 3-column grid: agents short in row 1, portfolio full width row 2 */
+        grid-template-columns: 280px 1.5fr 1fr;
+        grid-template-rows: minmax(160px, auto) minmax(320px, auto) minmax(180px, auto);
         grid-template-areas:
-            "agents performance"
-            "agents market"
-            "bottom system";
+            "agents performance performance"
+            "market market market"
+            "bottom bottom system";
+        gap: 10px; /* Tighter gaps */
+        flex: none; /* Don't flex - use auto height */
+    }
+    .dashboardPanels {
+        /* Inherit parent grid structure */
+        grid-template-areas:
+            "agents performance performance"
+            "market market market"
+            "bottom bottom system";
+        gap: 10px;
+    }
+    /* Give Funds more space than Trades */
+    .bottomWrap {
+        grid-template-columns: 1fr 1.5fr;
     }
 }
 
-/* Mobile: Single column (<768px) */
+/* Mobile: Single column (<768px) - scrollable */
 @media (max-width: 767px) {
     .root {
-        overflow: auto;
-        height: auto;
-        min-height: 100vh;
-        min-height: 100dvh;
+        --header-height: 64px; /* Smaller header on mobile */
+        height: 100vh;
+        height: 100dvh;
+        overflow: hidden; /* Scroll happens in scrollContainer, not here */
     }
     .hud {
-        padding-bottom: 80px;
+        height: 100%;
+    }
+    .scrollContainer {
+        overflow-y: auto; /* Enable scroll on mobile */
+        overflow-x: hidden;
+        padding-bottom: 80px; /* Extra padding for mobile nav */
     }
     .dashboard {
         grid-template-columns: 1fr;
-        grid-template-rows: auto;
+        grid-template-rows: minmax(280px, auto) minmax(300px, auto) minmax(280px, auto) minmax(200px, auto) minmax(200px, auto);
         grid-template-areas:
             "performance"
             "agents"
             "market"
             "bottom"
             "system";
-        padding: 0 8px;
-        gap: 10px;
+        padding: 14px 8px 16px 8px;
+        gap: 12px;
+        flex: none; /* Don't flex - use auto height */
+    }
+    .dashboardPanels {
+        grid-template-areas:
+            "performance"
+            "agents"
+            "market"
+            "bottom"
+            "system";
+        gap: 12px;
     }
     .bottomWrap {
         grid-template-columns: 1fr;
+        gap: 12px;
     }
 }

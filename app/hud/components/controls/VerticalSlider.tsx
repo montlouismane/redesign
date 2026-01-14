@@ -285,6 +285,7 @@ export function VerticalSlider({
             onKeyDown={handleInputKeyDown}
             onBlur={handleInputBlur}
             disabled={disabled}
+            autoComplete="off"
             autoFocus
           />
           <span className={styles.valueUnit}>{unit}</span>

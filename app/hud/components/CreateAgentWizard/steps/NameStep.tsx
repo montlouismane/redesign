@@ -88,6 +88,7 @@ export function NameStep({
             onBlur={() => validateName(botName)}
             placeholder="e.g., QUANTUM OMEGA, ALPHA PRIME..."
             className={`${styles.textInput} ${nameError ? styles.inputError : ''}`}
+            autoComplete="off"
             autoFocus
           />
           {nameError && (

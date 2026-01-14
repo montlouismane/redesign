@@ -20,7 +20,7 @@
   border: none;
   box-shadow: 0 18px 55px var(--shadow);
   overflow: hidden;
-  min-height: 0;
+  min-height: 0; /* Desktop: fit to grid, no minimum */
 
   /* Dynamic Octagonal clip path */
   clip-path: polygon(var(--tl) 0,
@@ -239,6 +239,16 @@
   flex-direction: column;
   height: 100%;
   min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.panelContent::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 .panelHeader {
@@ -259,4 +269,50 @@
   font-weight: 800;
   letter-spacing: 0.14em;
   font-size: 14px;
+}
+
+/* ========================================
+   RESPONSIVE BREAKPOINTS
+   ======================================== */
+
+/* Tablet */
+@media (max-width: 1279px) and (min-width: 768px) {
+  .panel {
+    --cutS: 14px;
+    --cutL: 24px;
+    padding: 14px;
+    min-height: 180px;
+  }
+  .panelHeader {
+    margin-bottom: 12px;
+    padding: 0 8px;
+  }
+  .panelTitle {
+    font-size: 12px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 767px) {
+  .panel {
+    --cutS: 12px;
+    --cutL: 18px;
+    padding: 14px;
+    min-height: 200px;
+  }
+  .panelHeader {
+    margin-bottom: 10px;
+    padding: 0 6px;
+  }
+  .panelTitle {
+    font-size: 12px;
+    letter-spacing: 0.1em;
+  }
+  .plusDetail {
+    top: 10px;
+    right: 12px;
+    padding: 8px;
+    min-width: 44px;
+    min-height: 44px;
+  }
 }

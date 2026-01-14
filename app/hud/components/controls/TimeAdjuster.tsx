@@ -169,6 +169,7 @@ export function TimeAdjuster({
               onKeyDown={handleKeyDown}
               onBlur={commitEdit}
               disabled={disabled}
+              autoComplete="off"
               autoFocus
             />
           </div>

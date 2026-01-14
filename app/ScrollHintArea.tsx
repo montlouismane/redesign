@@ -78,13 +78,26 @@ export const ScrollHintArea = ({ children, className = '' }: ScrollHintAreaProps
         {children}
       </div>
 
-      {showHint ? (
-        <div aria-hidden className="pointer-events-none absolute bottom-3 left-0 right-0 flex justify-center z-20">
-          <div className="h-7 w-9 rounded-sm bg-black/40 border border-white/20 flex items-center justify-center shadow-lg">
-            <ChevronDown size={16} className="text-white adam-scroll-hint" />
-          </div>
-        </div>
-      ) : null}
+      {/* Scroll Hint - Double chevron with copper styling */}
+      <div
+        aria-hidden
+        className={`pointer-events-none absolute bottom-2 left-0 right-0 flex flex-col items-center justify-center gap-0.5 z-20 transition-opacity duration-300 ${showHint ? 'opacity-60' : 'opacity-0'}`}
+      >
+        <ChevronDown
+          size={16}
+          className="adam-scroll-hint"
+          style={{ color: 'rgba(196, 124, 72, 0.8)' }}
+        />
+        <ChevronDown
+          size={16}
+          className="adam-scroll-hint -mt-2"
+          style={{
+            color: 'rgba(196, 124, 72, 0.8)',
+            animationDelay: '0.15s',
+            opacity: 0.5
+          }}
+        />
+      </div>
     </div>
   );
 };

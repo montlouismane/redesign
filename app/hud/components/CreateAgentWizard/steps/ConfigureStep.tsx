@@ -114,6 +114,7 @@ export function ConfigureStep({ formData, onUpdate, onNext, onBack }: ConfigureS
                     max={100}
                     value={target.percentage}
                     onChange={(e) => updateTarget(index, 'percentage', parseFloat(e.target.value) || 0)}
+                    autoComplete="off"
                   />
                   <span className={styles.percentSymbol}>%</span>
                 </div>

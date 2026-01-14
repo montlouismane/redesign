@@ -58,6 +58,16 @@ export function TModeSettings({ settings, onChange, onFaqClick, onAdvancedClick 
 
   return (
     <div className={styles.unifiedBoard}>
+      {/* Angular frame overlay */}
+      <div className={styles.panelFrame}>
+        <div className={styles.frameLines} />
+        <div className={styles.frameAccents}>
+          <div className={`${styles.accent} ${styles.accentTL}`} />
+          <div className={`${styles.accent} ${styles.accentTR}`} />
+          <div className={`${styles.accent} ${styles.accentBL}`} />
+          <div className={`${styles.accent} ${styles.accentBR}`} />
+        </div>
+      </div>
       {/* Header with FAQ and Advanced buttons */}
       <div className={styles.section} style={{ background: 'transparent', border: 'none', padding: '0 0 8px 0' }}>
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
@@ -79,16 +89,16 @@ export function TModeSettings({ settings, onChange, onFaqClick, onAdvancedClick 
         </div>
       </div>
 
-      {/* Row: Buy Configuration (wider) | Sell Configuration (narrower) */}
-      <div className={styles.sectionRow} style={{ gridTemplateColumns: '1.5fr 1fr' }}>
+      {/* Row: Buy Configuration | Sell Configuration */}
+      <div className={styles.sectionRow}>
         {/* Buy Configuration - 4 column layout */}
         <div className={styles.section}>
           <div className={styles.sectionHeader}>
             <div className={styles.cardTitle}>Buy Configuration</div>
           </div>
           <div className={styles.sectionContent}>
-            {/* Row 1: Confidence + Tier Sizes (4 columns) */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
+            {/* Row 1: Confidence + Tier Sizes */}
+            <div className={styles.denseGrid}>
               <ControlRow label="Min Confidence" helper="AI threshold">
                 <MetallicDial
                   value={defaults.minBuyConfidence}
@@ -153,7 +163,7 @@ export function TModeSettings({ settings, onChange, onFaqClick, onAdvancedClick 
             <div className={styles.cardTitle}>Sell Configuration</div>
           </div>
           <div className={styles.sectionContent}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
+            <div className={styles.denseGrid}>
               <ControlRow label="Stop Loss" helper="Exit on drop">
                 <MetallicDial
                   value={defaults.stopLoss}

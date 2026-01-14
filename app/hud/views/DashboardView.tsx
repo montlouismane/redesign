@@ -18,6 +18,8 @@ interface DashboardViewProps {
     allocationProps: AllocationPanelProps;
     systemProps: SystemPanelProps;
     fundsProps: FundsPanelProps;
+    /** When true, panels fade out to show only the background */
+    isOverlayActive?: boolean;
 }
 
 export const DashboardView = ({
@@ -27,10 +29,16 @@ export const DashboardView = ({
     tradesProps,
     allocationProps,
     systemProps,
-    fundsProps
+    fundsProps,
+    isOverlayActive = false
 }: DashboardViewProps) => {
+    // Container class for fade animation
+    const containerClass = isOverlayActive
+        ? `${styles.dashboardPanels} ${styles.hidden}`
+        : styles.dashboardPanels;
+
     return (
-        <>
+        <div className={containerClass}>
             <AgentsPanel {...agentsProps} />
             <PerformancePanel {...performanceProps} />
 
@@ -52,6 +60,6 @@ export const DashboardView = ({
             </div>
 
             <SystemPanel {...systemProps} />
-        </>
+        </div>
     );
 };

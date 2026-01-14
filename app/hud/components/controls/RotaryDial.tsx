@@ -409,6 +409,7 @@ export function RotaryDial({
               onKeyDown={handleInputKeyDown}
               onBlur={handleInputBlur}
               disabled={disabled}
+              autoComplete="off"
             />
           ) : (
             <button
