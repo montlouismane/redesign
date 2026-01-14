@@ -307,6 +307,7 @@ export const agentService = {
       performance: {
         pnl24h: 0, // Would need telemetry endpoint
         pnl7d: 0,
+        pnl30d: 0,
         pnlTotal: 0,
         trades24h: 0,
         winRate: 0,
@@ -337,6 +338,7 @@ export const agentService = {
         performance: {
           pnl24h: 0,
           pnl7d: 0,
+        pnl30d: 0,
           pnlTotal: 0,
           trades24h: 0,
           winRate: 0,
@@ -387,6 +389,7 @@ export const agentService = {
       performance: {
         pnl24h: 0,
         pnl7d: 0,
+        pnl30d: 0,
         pnlTotal: 0,
         trades24h: 0,
         winRate: 0,

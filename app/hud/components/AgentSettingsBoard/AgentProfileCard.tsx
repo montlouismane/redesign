@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import { Copy, Check, Upload } from 'lucide-react';
+import { Copy, Check, Upload, Share2 } from 'lucide-react';
 import { useControlSound } from '../controls/useControlSound';
 import styles from './AgentSettingsBoard.module.css';
+import { ShareCardModal } from './ShareCardModal';
 
 export type AgentMode = 'standard' | 't-mode' | 'prediction' | 'perpetuals';
 export type AgentChain = 'cardano' | 'solana' | 'base';
@@ -65,6 +66,7 @@ export function AgentProfileCard({
   const [isEditingName, setIsEditingName] = useState(false);
   const [nameValue, setNameValue] = useState(agent.name);
   const [copied, setCopied] = useState(false);
+  const [shareModalOpen, setShareModalOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleNameSubmit = () => {
@@ -283,13 +285,18 @@ export function AgentProfileCard({
           <span className={styles.btnIcon}>↻</span>
           UPDATE
         </button>
-        {onScrollToSettings && (
-          <button className={`${styles.actionBtn} ${styles.settingsBtn}`} onClick={onScrollToSettings}>
-            <span className={styles.btnIcon}>⚙</span>
-            SETTINGS
-          </button>
-        )}
+        <button className={`${styles.actionBtn} ${styles.shareBtn}`} onClick={() => setShareModalOpen(true)}>
+          <Share2 size={12} />
+          SHARE
+        </button>
       </div>
+
+      {/* Share Modal */}
+      <ShareCardModal
+        agent={agent}
+        isOpen={shareModalOpen}
+        onClose={() => setShareModalOpen(false)}
+      />
     </div>
   );
 }

@@ -31,6 +31,7 @@ export const mockAgents: Agent[] = [
     performance: {
       pnl24h: 127.45,
       pnl7d: 543.21,
+      pnl30d: 1876.54,
       pnlTotal: 2341.87,
       trades24h: 12,
       winRate: 68,
@@ -59,6 +60,7 @@ export const mockAgents: Agent[] = [
     performance: {
       pnl24h: 45.32,
       pnl7d: 234.56,
+      pnl30d: 892.33,
       pnlTotal: 1567.89,
       trades24h: 3,
       winRate: 72,
@@ -83,6 +85,7 @@ export const mockAgents: Agent[] = [
     performance: {
       pnl24h: 0,
       pnl7d: 89.12,
+      pnl30d: 312.45,
       pnlTotal: 456.78,
       trades24h: 0,
       winRate: 61,
@@ -110,6 +113,7 @@ export const mockAgents: Agent[] = [
     performance: {
       pnl24h: 0,
       pnl7d: -123.45,
+      pnl30d: -456.78,
       pnlTotal: 234.56,
       trades24h: 0,
       winRate: 52,
@@ -137,6 +141,7 @@ export const mockAgents: Agent[] = [
     performance: {
       pnl24h: 12.34,
       pnl7d: 67.89,
+      pnl30d: 234.12,
       pnlTotal: 890.12,
       trades24h: 1,
       winRate: 85,
@@ -153,6 +158,7 @@ export const mockAgents: Agent[] = [
     performance: {
       pnl24h: 0,
       pnl7d: -45.67,
+      pnl30d: -178.90,
       pnlTotal: -45.67,
       trades24h: 0,
       winRate: 0,

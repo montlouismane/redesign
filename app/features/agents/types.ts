@@ -86,6 +86,8 @@ export interface AgentPerformance {
   pnl24h: number;
   /** Profit/loss in last 7 days (USD) */
   pnl7d: number;
+  /** Profit/loss in last 30 days (USD) */
+  pnl30d: number;
   /** Total profit/loss since creation (USD) */
   pnlTotal: number;
   /** Number of trades in last 24 hours */
