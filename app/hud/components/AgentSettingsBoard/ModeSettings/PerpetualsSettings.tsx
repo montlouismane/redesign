@@ -115,7 +115,8 @@ export function PerpetualsSettings({ settings, onChange }: PerpetualsSettingsPro
             <div className={styles.cardSubtitle} style={{ fontSize: '11px', opacity: 0.7 }}>Stop loss, take profit, and limits</div>
           </div>
           <div className={styles.sectionContent}>
-            <div className={styles.denseGrid}>
+            {/* 4 controls = 2x2 grid */}
+            <div className={styles.grid2x2}>
               <ControlRow label="Stop Loss" helper="">
                 <MetallicDial
                   value={defaults.stopLoss}
@@ -202,7 +203,8 @@ export function PerpetualsSettings({ settings, onChange }: PerpetualsSettingsPro
             <div className={styles.cardSubtitle} style={{ fontSize: '11px', opacity: 0.7 }}>Concurrent position controls</div>
           </div>
           <div className={styles.sectionContent}>
-            <div className={styles.denseGrid}>
+            {/* 4 controls = 2x2 grid */}
+            <div className={styles.grid2x2}>
               <ControlRow label="Max Concurrent" helper="">
                 <TimeAdjuster
                   value={defaults.maxConcurrent}

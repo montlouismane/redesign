@@ -118,7 +118,8 @@ export function StandardSettings({ settings, onChange, onFaqClick, onBacktestCli
                 <div className={styles.cardTitle}>Rebalance Settings</div>
               </div>
               <div className={styles.sectionContent}>
-                <div className={styles.denseGrid}>
+                {/* 3 controls = 3-col (responsive: 2+1 centered on smaller) */}
+                <div className={styles.grid3col}>
                   <ControlRow label="Slippage" helper="Max price impact">
                     <MetallicDial
                       value={defaults.slippageTolerance}
@@ -152,7 +153,8 @@ export function StandardSettings({ settings, onChange, onFaqClick, onBacktestCli
                 <div className={styles.cardTitle}>Trade Limits</div>
               </div>
               <div className={styles.sectionContent}>
-                <div className={styles.denseGrid}>
+                {/* 3 controls = 3-col (responsive: 2+1 centered on smaller) */}
+                <div className={styles.grid3col}>
                   <ControlRow label="Min Trade Size" helper="Prevents tiny trades">
                     <HorizontalSlider
                       value={defaults.minTradeSize}
@@ -182,7 +184,8 @@ export function StandardSettings({ settings, onChange, onFaqClick, onBacktestCli
 
           {/* Safety Controls - Collapsed by default */}
           <CollapsibleSection id="standard-safety" title="Safety Controls" defaultExpanded={false}>
-            <div className={styles.denseGrid}>
+            {/* 4 controls = 4 across on desktop, 2x2 on smaller */}
+            <div className={styles.grid4col}>
               <ControlRow label="Min Hold Time" helper="Hold period">
                 <TimeAdjuster
                   value={defaults.minHoldTime}
@@ -196,6 +199,7 @@ export function StandardSettings({ settings, onChange, onFaqClick, onBacktestCli
                   onChange={(val) => onChange({ profitUnlock: val })}
                   min={0} max={50} step={1} unit="%"
                   safeMin={10} safeMax={30}
+                  size={140}
                 />
               </ControlRow>
               <ControlRow label="Emergency Stop" helper="Loss % sells">
@@ -204,13 +208,15 @@ export function StandardSettings({ settings, onChange, onFaqClick, onBacktestCli
                   onChange={(val) => onChange({ emergencyStop: val })}
                   min={0} max={50} step={1} unit="%"
                   safeMin={3} safeMax={15}
+                  size={140}
                 />
               </ControlRow>
               <ControlRow label="Trailing Unlock" helper="% from peak">
-                <HorizontalSlider
+                <MetallicDial
                   value={defaults.trailingUnlock}
                   onChange={(val) => onChange({ trailingUnlock: val })}
                   min={0} max={20} step={1} unit="%"
+                  size={140}
                 />
               </ControlRow>
             </div>

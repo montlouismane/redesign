@@ -115,7 +115,8 @@ export function RiskSettings({ settings, onChange }: RiskSettingsProps) {
           />
         </div>
         <div className={styles.sectionContent}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+          {/* 3 controls = 3-col (responsive: 2+1 centered on smaller) */}
+          <div className={styles.grid3col}>
             <ControlRow label="Win Cooldown">
               <VerticalSlider
                 value={settings.winCooldown ?? 15}

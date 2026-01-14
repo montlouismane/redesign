@@ -97,62 +97,41 @@ export function TModeSettings({ settings, onChange, onFaqClick, onAdvancedClick 
             <div className={styles.cardTitle}>Buy Configuration</div>
           </div>
           <div className={styles.sectionContent}>
-            {/* Row 1: Confidence + Tier Sizes */}
-            <div className={styles.denseGrid}>
+            {/* Confidence dial - primary control, centered and prominent */}
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
               <ControlRow label="Min Confidence" helper="AI threshold">
                 <MetallicDial
                   value={defaults.minBuyConfidence}
                   onChange={(value) => updateSetting('minBuyConfidence', value)}
                   min={40} max={90} safeMin={65} safeMax={75} unit="%"
+                  size={160}
                 />
               </ControlRow>
-              <ControlRow label="Low (ADA)" helper="Low confidence buy">
+            </div>
+
+            {/* Tier Sizes - 3 across row (Low → Mid → High) */}
+            <div className={styles.tierRow}>
+              <ControlRow label="Low (ADA)" helper="Low confidence">
                 <HorizontalSlider
                   value={defaults.lowTierSize}
                   onChange={(value) => updateSetting('lowTierSize', value)}
                   min={50} max={250} step={10} inputMin={0} unit="ADA"
                 />
               </ControlRow>
-              <ControlRow label="Mid (ADA)" helper="Mid confidence buy">
+              <ControlRow label="Mid (ADA)" helper="Mid confidence">
                 <HorizontalSlider
                   value={defaults.midTierSize}
                   onChange={(value) => updateSetting('midTierSize', value)}
                   min={75} max={500} step={25} inputMin={0} unit="ADA"
                 />
               </ControlRow>
-              <ControlRow label="High (ADA)" helper="High confidence buy">
+              <ControlRow label="High (ADA)" helper="High confidence">
                 <HorizontalSlider
                   value={defaults.highTierSize}
                   onChange={(value) => updateSetting('highTierSize', value)}
                   min={100} max={750} step={25} inputMin={0} unit="ADA"
                 />
               </ControlRow>
-            </div>
-
-            {/* Divider */}
-            <div style={{
-              borderTop: '1px solid var(--borderLight)',
-              margin: '8px 0 4px 0',
-              opacity: 0.5
-            }} />
-
-            {/* Row 2: Token Blacklist (full width) */}
-            <div>
-              <div style={{
-                fontSize: '10px',
-                fontWeight: 600,
-                color: 'var(--textMuted)',
-                letterSpacing: '0.08em',
-                marginBottom: '6px',
-                textTransform: 'uppercase'
-              }}>
-                Token Blacklist
-              </div>
-              <TagInput
-                tags={defaults.tokenBlacklist}
-                onChange={(tags) => updateSetting('tokenBlacklist', tags)}
-                placeholder="SCAM, RUG, FAKE..."
-              />
             </div>
           </div>
         </div>
@@ -163,12 +142,14 @@ export function TModeSettings({ settings, onChange, onFaqClick, onAdvancedClick 
             <div className={styles.cardTitle}>Sell Configuration</div>
           </div>
           <div className={styles.sectionContent}>
-            <div className={styles.denseGrid}>
+            {/* 4 controls = 2x2 grid */}
+            <div className={styles.grid2x2}>
               <ControlRow label="Stop Loss" helper="Exit on drop">
                 <MetallicDial
                   value={defaults.stopLoss}
                   onChange={(value) => updateSetting('stopLoss', value)}
                   min={0} max={50} safeMin={5} safeMax={20} unit="%"
+                  size={140}
                 />
               </ControlRow>
               <ControlRow label="Take Profit" helper="Exit on rise">
@@ -176,13 +157,15 @@ export function TModeSettings({ settings, onChange, onFaqClick, onAdvancedClick 
                   value={defaults.takeProfit}
                   onChange={(value) => updateSetting('takeProfit', value)}
                   min={1} max={100} safeMin={5} safeMax={30} unit="%"
+                  size={140}
                 />
               </ControlRow>
               <ControlRow label="Price Trigger" helper="Min price move before re-evaluation">
-                <HorizontalSlider
+                <MetallicDial
                   value={defaults.priceTrigger}
                   onChange={(value) => updateSetting('priceTrigger', value)}
                   min={0.5} max={10} step={0.5} unit="%"
+                  size={140}
                 />
               </ControlRow>
               <ControlRow label="Re-entry Cooldown" helper="Token wait">
@@ -197,9 +180,24 @@ export function TModeSettings({ settings, onChange, onFaqClick, onAdvancedClick 
         </div>
       </div>
 
+      {/* Token Blacklist - Full width section */}
+      <div className={styles.section}>
+        <div className={styles.sectionHeader}>
+          <div className={styles.cardTitle}>Token Blacklist</div>
+        </div>
+        <div className={styles.sectionContent}>
+          <TagInput
+            tags={defaults.tokenBlacklist}
+            onChange={(tags) => updateSetting('tokenBlacklist', tags)}
+            placeholder="Add tokens to exclude: SCAM, RUG, FAKE..."
+          />
+        </div>
+      </div>
+
       {/* Safety Controls - Collapsible */}
       <CollapsibleSection id="tmode-safety" title="Safety Controls" defaultExpanded={false}>
-        <div className={styles.denseGrid}>
+        {/* 4 controls = 4 across on desktop, 2x2 on smaller */}
+        <div className={styles.grid4col}>
           <ControlRow label="Min Hold Time" helper="Hold period after buy">
             <TimeAdjuster
               value={defaults.minHoldTime}
@@ -212,6 +210,7 @@ export function TModeSettings({ settings, onChange, onFaqClick, onAdvancedClick 
               value={defaults.profitUnlock}
               onChange={(value) => updateSetting('profitUnlock', value)}
               min={0} max={50} safeMin={10} safeMax={30} unit="%"
+              size={140}
             />
           </ControlRow>
           <ControlRow label="Emergency Stop" helper="Loss % triggers sell">
@@ -219,13 +218,15 @@ export function TModeSettings({ settings, onChange, onFaqClick, onAdvancedClick 
               value={defaults.emergencyStop}
               onChange={(value) => updateSetting('emergencyStop', value)}
               min={0} max={50} safeMin={3} safeMax={15} unit="%"
+              size={140}
             />
           </ControlRow>
           <ControlRow label="Trailing Unlock" helper="% from peak">
-            <HorizontalSlider
+            <MetallicDial
               value={defaults.trailingUnlock}
               onChange={(value) => updateSetting('trailingUnlock', value)}
               min={0} max={20} step={1} unit="%"
+              size={140}
             />
           </ControlRow>
         </div>
