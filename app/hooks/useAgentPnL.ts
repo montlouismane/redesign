@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
+import { apiCallJson, isBackendMode, withUserAddress } from '@/lib/backend/api';
 
 // Types for agent P&L data
 export interface AgentPnLData {
@@ -124,27 +125,57 @@ export function useAgentPnL(options: UseAgentPnLOptions = {}): UseAgentPnLReturn
     setError(null);
 
     try {
-      // TODO: Replace with real API call when backend is connected
-      // const response = await fetch(`/api/analytics/pnl-by-agent?${params}`, {
-      //   headers: { 'x-user-address': walletAddress || '' }
-      // });
-      // const data = await response.json();
-      // setAgentsPnL(data.agents);
+      // Demo mode: return mock data
+      if (!isBackendMode()) {
+        await new Promise((resolve) => setTimeout(resolve, 300));
+        setAgentsPnL(MOCK_AGENTS_PNL);
 
-      // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 300));
-      setAgentsPnL(MOCK_AGENTS_PNL);
+        // Default to all agents selected if none specified
+        if (selectedIds.length === 0) {
+          setSelectedIds(MOCK_AGENTS_PNL.map((a) => a.id));
+        }
+        return;
+      }
+
+      // Backend mode: fetch from production API
+      const params = new URLSearchParams();
+      if (walletAddress) params.set('walletId', walletAddress);
+      if (selectedIds.length > 0) params.set('agentIds', selectedIds.join(','));
+      params.set('range', range);
+
+      interface PnLApiResponse {
+        agents: AgentPnLData[];
+        combined: {
+          totalPnl: number;
+          totalPnlPercentage: number;
+          totalTrades: number;
+        };
+      }
+
+      const data = await apiCallJson<PnLApiResponse>(
+        `/api/analytics/pnl-by-agent?${params.toString()}`,
+        {
+          headers: withUserAddress({}, walletAddress),
+        }
+      );
+
+      setAgentsPnL(data.agents || []);
 
       // Default to all agents selected if none specified
-      if (selectedIds.length === 0) {
-        setSelectedIds(MOCK_AGENTS_PNL.map((a) => a.id));
+      if (selectedIds.length === 0 && data.agents?.length > 0) {
+        setSelectedIds(data.agents.map((a) => a.id));
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch agent P&L');
+      // Fall back to mock data on error
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[useAgentPnL] Error fetching P&L, using mock data:', err);
+        setAgentsPnL(MOCK_AGENTS_PNL);
+      }
     } finally {
       setIsLoading(false);
     }
-  }, [walletAddress, range]);
+  }, [walletAddress, range, selectedIds]);
 
   // Initial fetch
   useEffect(() => {

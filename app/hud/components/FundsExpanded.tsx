@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
     ArrowDownToLine,
     ArrowUpFromLine,
@@ -15,6 +15,8 @@ import {
 import { formatUSD } from '../utils';
 import styles from '../../styles/modal.module.css';
 import { useWalletTransaction } from '../../hooks/useWalletTransaction';
+import { useTaptoolsTradeHistory } from '@/lib/backend/taptoolsClient';
+import { isBackendMode } from '@/lib/backend/api';
 import type { Asset } from '@meshsdk/core';
 
 interface Transaction {
@@ -33,7 +35,7 @@ interface FundsExpandedProps {
     onWithdraw: () => void;
 }
 
-// Mock transaction history
+// Mock transaction history (used in demo mode)
 const MOCK_TRANSACTIONS: Transaction[] = [
     { id: '1', type: 'deposit', amount: 500, status: 'completed', timestamp: '2024-01-06T10:30:00Z', txHash: '0x1234...abcd' },
     { id: '2', type: 'withdraw', amount: 150, status: 'completed', timestamp: '2024-01-05T14:22:00Z', txHash: '0x5678...efgh' },
@@ -52,6 +54,26 @@ export const FundsExpanded = ({
     const [copied, setCopied] = useState(false);
     const [showQR, setShowQR] = useState(false);
     const [activeTab, setActiveTab] = useState<'all' | 'deposits' | 'withdrawals'>('all');
+
+    // Fetch trade history from TapTools (only in backend mode)
+    const inDemoMode = !isBackendMode();
+    const tradeHistoryState = useTaptoolsTradeHistory(inDemoMode ? null : walletAddress);
+
+    // Transform TapTools trades to Transaction format, or use mock data in demo mode
+    const transactions = useMemo<Transaction[]>(() => {
+        if (inDemoMode || !tradeHistoryState.data?.trades) {
+            return MOCK_TRANSACTIONS;
+        }
+
+        return tradeHistoryState.data.trades.map((trade) => ({
+            id: trade.id,
+            type: trade.side === 'buy' ? 'deposit' as const : 'withdraw' as const,
+            amount: trade.value,
+            status: 'completed' as const,
+            timestamp: trade.timestamp,
+            txHash: trade.txHash ? `${trade.txHash.slice(0, 6)}...${trade.txHash.slice(-4)}` : undefined,
+        }));
+    }, [inDemoMode, tradeHistoryState.data]);
 
     // Transaction State
     const [recipient, setRecipient] = useState('');
@@ -113,7 +135,7 @@ export const FundsExpanded = ({
         }
     };
 
-    const filteredTransactions = MOCK_TRANSACTIONS.filter(tx => {
+    const filteredTransactions = transactions.filter(tx => {
         if (activeTab === 'all') return true;
         if (activeTab === 'deposits') return tx.type === 'deposit';
         return tx.type === 'withdraw';

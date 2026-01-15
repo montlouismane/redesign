@@ -30,6 +30,7 @@ import { formatPct, formatUSD } from './utils';
 // Hooks
 import { useEquitySeries, type PortfolioRange as EquityRange } from '../hooks/useEquitySeries';
 import { useKeyboardShortcuts, type ShortcutAction } from '../hooks/useKeyboardShortcuts';
+import { usePortfolioData, useAllocationStats } from '../hooks/usePortfolioData';
 
 export function HudView() {
     // --- STATE & CORE ---
@@ -173,40 +174,11 @@ export function HudView() {
 
     // Agent State - now managed by HudAgentManager in the render tree
 
-    // Market/Portfolio Data (Mock)
-    const holdings = useMemo<HoldingRow[]>(() => [
-        { symbol: 'SOL', name: 'Solana', value: '$4,200', changePct: 5.2, color: '#7c3aed' },
-        { symbol: 'ADA', name: 'Cardano', value: '$1,840', changePct: -1.4, color: '#2563eb' },
-        { symbol: 'SNEK', name: 'Snek', value: '$920', changePct: 12.8, color: '#eab308' },
-        { symbol: 'WIF', name: 'Dogwifhat', value: '$410', changePct: -3.2, color: '#7c2d12' },
-        { symbol: 'BONK', name: 'Bonk', value: '$220', changePct: 8.4, color: '#ea580c' },
-        { symbol: 'ETH', name: 'Ethereum', value: '$140', changePct: 1.1, color: '#4f46e5' },
-        { symbol: 'USDC', name: 'USD Coin', value: '$50', changePct: 0.0, color: '#60a5fa' },
-        { symbol: 'XRP', name: 'Ripple', value: '$45', changePct: -0.5, color: '#9ca3af' },
-        { symbol: 'DOT', name: 'Polkadot', value: '$32', changePct: 2.3, color: '#db2777' },
-    ], []);
-
-    const { totalValue, solPct, adaPct, otherPct } = useMemo(() => {
-        const total = holdings.reduce((acc, h) => acc + parseFloat(h.value.replace(/[$,]/g, '')), 0);
-        const solVal = parseFloat(holdings.find((h) => h.symbol === 'SOL')?.value.replace(/[$,]/g, '') || '0');
-        const adaVal = parseFloat(holdings.find((h) => h.symbol === 'ADA')?.value.replace(/[$,]/g, '') || '0');
-        const sPct = Math.round((solVal / total) * 100);
-        const aPct = Math.round((adaVal / total) * 100);
-        const oPct = 100 - sPct - aPct;
-        return { totalValue: total, solPct: sPct, adaPct: aPct, otherPct: oPct };
-    }, [holdings]);
-
-    const recentTrades = useMemo<TradeRow[]>(() => [
-        { type: 'BUY', pair: 'SNEK/ADA', time: '2m' },
-        { type: 'SELL', pair: 'SOL/USDC', time: '12m' },
-        { type: 'BUY', pair: 'WIF/SOL', time: '45m' },
-    ], []);
-
-    const systemStatus = useMemo(() => [
-        { label: 'Execution Engine', status: 'ONLINE', tone: 'ok' as const, pulse: true },
-        { label: 'Data Feeds', status: '12ms', tone: 'ok' as const, pulse: false },
-        { label: 'AI Logic Core', status: 'TRAINING', tone: 'warn' as const, pulse: false },
-    ], []);
+    // Market/Portfolio Data - from TapTools API or mock data in demo mode
+    // TODO: Get wallet address from WalletContext when connected
+    const portfolioData = usePortfolioData(null, null);
+    const { holdings, recentTrades, systemStatus, totalValue } = portfolioData;
+    const { solPct, adaPct, otherPct } = useAllocationStats(holdings, totalValue);
 
     // Modals
     const openModal = useCallback((key: PanelKey) => setModalPanel(key), []);
