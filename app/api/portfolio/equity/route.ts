@@ -175,7 +175,15 @@ export async function GET(req: Request) {
     );
   }
 
-  const raw = await upstream.json();
+  let raw;
+  try {
+    raw = await upstream.json();
+  } catch {
+    return NextResponse.json(
+      { error: 'upstream_invalid_json' },
+      { status: 502 }
+    );
+  }
   const basePoints = normalizeTapToolsSeries(raw);
 
   if (basePoints.length === 0) {

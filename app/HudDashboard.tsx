@@ -498,7 +498,7 @@ export function HudDashboard() {
         setActiveRange('ALL');
         break;
       case 'expandPortfolio':
-        openModal('agents');
+        openModal('performance');
         break;
       case 'expandTrades':
         openModal('trades');
@@ -795,19 +795,15 @@ export function HudDashboard() {
     };
   }, [settings.animationsEnabled]);
 
-  // Check for system reduced motion preference
+  // Check for system reduced motion preference (only on mount)
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const handleChange = () => {
-      if (mediaQuery.matches && !settings.reduceMotion) {
-        // Auto-enable if system preference is set and user hasn't manually overridden
-        setSettings(prev => ({ ...prev, reduceMotion: true }));
-      }
-    };
-    handleChange();
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
-  }, [settings.reduceMotion]);
+    if (mediaQuery.matches) {
+      // Auto-enable on first load if system prefers reduced motion
+      setSettings(prev => ({ ...prev, reduceMotion: true }));
+    }
+    // Note: No listener - user can manually override after initial load
+  }, []);
 
   // Loading choreography - trigger staggered panel reveals
   useEffect(() => {
@@ -976,7 +972,7 @@ export function HudDashboard() {
                         : a.runtimeState === 'alert'
                           ? styles.dotAlert
                           : styles.dotStopped;
-                  const pnlTone = a.pnlPct > 0 ? styles.pos : styles.neg;
+                  const pnlTone = a.pnlPct >= 0 ? styles.pos : styles.neg;
                   return (
                     <React.Fragment key={a.id}>
                       <div
@@ -1694,7 +1690,7 @@ export function HudDashboard() {
                               : a.runtimeState === 'alert'
                                 ? styles.dotAlert
                                 : styles.dotStopped;
-                        const pnlTone = a.pnlPct > 0 ? styles.pos : styles.neg;
+                        const pnlTone = a.pnlPct >= 0 ? styles.pos : styles.neg;
                         return (
                           <div
                             key={a.id}

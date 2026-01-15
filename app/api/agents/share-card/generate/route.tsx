@@ -75,8 +75,9 @@ export async function POST(req: NextRequest) {
 
     // Get the origin for absolute URL to template image
     const origin = req.headers.get('origin') || req.headers.get('host') || 'localhost:3001';
-    const protocol = origin.includes('localhost') ? 'http' : 'https';
-    const baseUrl = origin.startsWith('http') ? origin : `${protocol}://${origin}`;
+    const baseUrl = origin.startsWith('http')
+      ? origin
+      : `${origin.includes('localhost') ? 'http' : 'https'}://${origin}`;
     const templateUrl = `${baseUrl}/agents/share-template-v2.jpg`;
 
     const isPositive = realizedPnl >= 0;

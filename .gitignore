@@ -43,3 +43,10 @@ next-env.d.ts
 # nested apps (kept local; excluded from root build)
 /adam-reference
 /adam-hud
+
+# Adobe Premiere Pro project files
+*.prproj
+*.prin
+**/Adobe Premiere Pro Auto-Save/
+**/Adobe Premiere Pro Audio Previews/
+**/Adobe Premiere Pro Captured and Generated/
