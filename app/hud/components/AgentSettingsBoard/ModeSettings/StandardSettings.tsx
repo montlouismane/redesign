@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { CollapsibleSection, ControlRow } from '../CollapsibleSection';
+import { ControlRow } from '../CollapsibleSection';
 import { AgentSettings } from '../AgentSettingsBoard';
 import { MetallicDial } from '../../controls/MetallicDial';
 import { HorizontalSlider } from '../../controls/HorizontalSlider';
@@ -24,7 +24,10 @@ export interface StandardSettingsProps {
  * Uses tabs and 2-column layout to minimize scrolling.
  *
  * Tab: Allocation - Token distribution targets
- * Tab: Settings - Collapsible sections with denseGrid layout
+ * Tab: Settings - Rebalance and trade limit configuration
+ *
+ * Note: Recent Buy Guard (Min Hold, Profit Unlock, Emergency Stop) is now global
+ * and configured in the Risk Management tab.
  */
 export function StandardSettings({ settings, onChange, onFaqClick, onBacktestClick }: StandardSettingsProps) {
   const [activeTab, setActiveTab] = useState<'allocation' | 'settings'>('settings');
@@ -42,13 +45,6 @@ export function StandardSettings({ settings, onChange, onFaqClick, onBacktestCli
     minTradeSize: settings.minTradeSize ?? 10,
     maxTradeSize: settings.maxTradeSize ?? 200,
     nativeReserve: settings.nativeReserve ?? 250,
-
-    // Safety Controls
-    minHoldTime: settings.minHoldTime ?? 30,
-    profitUnlock: settings.profitUnlock ?? 20,
-    emergencyStop: settings.emergencyStop ?? 6,
-    trailingUnlock: settings.trailingUnlock ?? 0,
-
   };
 
   return (
@@ -182,45 +178,6 @@ export function StandardSettings({ settings, onChange, onFaqClick, onBacktestCli
             </div>
           </div>
 
-          {/* Safety Controls - Collapsed by default */}
-          <CollapsibleSection id="standard-safety" title="Safety Controls" defaultExpanded={false}>
-            {/* 4 controls = 4 across on desktop, 2x2 on smaller */}
-            <div className={styles.grid4col}>
-              <ControlRow label="Min Hold Time" helper="Hold period">
-                <TimeAdjuster
-                  value={defaults.minHoldTime}
-                  onChange={(val) => onChange({ minHoldTime: val })}
-                  min={1} max={120} step={1} unit="min" size="large"
-                />
-              </ControlRow>
-              <ControlRow label="Profit Unlock" helper="Bypasses hold">
-                <MetallicDial
-                  value={defaults.profitUnlock}
-                  onChange={(val) => onChange({ profitUnlock: val })}
-                  min={0} max={50} step={1} unit="%"
-                  safeMin={10} safeMax={30}
-                  size={140}
-                />
-              </ControlRow>
-              <ControlRow label="Emergency Stop" helper="Loss % sells">
-                <MetallicDial
-                  value={defaults.emergencyStop}
-                  onChange={(val) => onChange({ emergencyStop: val })}
-                  min={0} max={50} step={1} unit="%"
-                  safeMin={3} safeMax={15}
-                  size={140}
-                />
-              </ControlRow>
-              <ControlRow label="Trailing Unlock" helper="% from peak">
-                <MetallicDial
-                  value={defaults.trailingUnlock}
-                  onChange={(val) => onChange({ trailingUnlock: val })}
-                  min={0} max={20} step={1} unit="%"
-                  size={140}
-                />
-              </ControlRow>
-            </div>
-          </CollapsibleSection>
         </>
       )}
     </div>

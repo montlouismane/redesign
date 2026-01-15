@@ -65,3 +65,31 @@ export { TModeSettings } from './ModeSettings/TModeSettings';
 export { StandardSettings } from './ModeSettings/StandardSettings';
 export { PredictionSettings } from './ModeSettings/PredictionSettings';
 export { PerpetualsSettings } from './ModeSettings/PerpetualsSettings';
+
+// Activity Tab Components
+export { ActivityTab } from './ActivityTab/ActivityTab';
+export { ActivityCard } from './ActivityTab/ActivityCard';
+export { TransactionCard } from './ActivityTab/TransactionCard';
+export { ActivitySummary } from './ActivityTab/ActivitySummary';
+export { ActivityFilters } from './ActivityTab/ActivityFilters';
+export { useActivityData } from './ActivityTab/useActivityData';
+export {
+  exportActivityLogsToCSV,
+  exportActivityLogsToJSON,
+  exportTransactionsToCSV,
+  exportTransactionsToJSON,
+} from './ActivityTab/exportUtils';
+export type {
+  ActivityLevel,
+  ActivityLogEntry,
+  TransactionEntry,
+  ActivityTabProps,
+  ActivityCardProps,
+  TransactionCardProps,
+  EventTypeFilter,
+  TimeRangeFilter,
+  ActivityFiltersState,
+  ActivitySummaryData,
+  UseActivityDataOptions,
+  UseActivityDataReturn,
+} from './ActivityTab/types';

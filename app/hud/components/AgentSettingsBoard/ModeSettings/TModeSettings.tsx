@@ -1,6 +1,6 @@
 'use client';
 
-import { CollapsibleSection, ControlRow } from '../CollapsibleSection';
+import { ControlRow } from '../CollapsibleSection';
 import { AgentSettings } from '../AgentSettingsBoard';
 import styles from '../AgentSettingsBoard.module.css';
 import {
@@ -22,11 +22,12 @@ export interface TModeSettingsProps {
  * T-Mode Settings Component - Primary View
  *
  * Compact layout with efficient space usage:
- * - Buy Configuration (4 cols): Confidence + Low/Mid/High, then Blacklist (3 cols) + Paper Trading (1 col)
- * - Sell Configuration (2 cols): Stop Loss/Take Profit (top), Price Trigger/Re-entry (bottom)
+ * - Buy Configuration: Confidence dial + Low/Mid/High tier sliders
+ * - Sell Configuration: Stop Loss/Take Profit, Price Trigger, Re-entry
+ * - Token Blacklist: Exclude specific tokens from trading
  *
- * Safety Controls (collapsible): Recent Buy Guard settings
- * Advanced Settings (modal): Market Controls, Horizon settings
+ * Note: Recent Buy Guard (Min Hold, Profit Unlock, Emergency Stop) is now global
+ * and configured in the Risk Management tab.
  */
 export function TModeSettings({ settings, onChange, onFaqClick, onAdvancedClick }: TModeSettingsProps) {
   const updateSetting = (key: string, value: unknown) => {
@@ -48,12 +49,6 @@ export function TModeSettings({ settings, onChange, onFaqClick, onAdvancedClick 
 
     // Blacklist
     tokenBlacklist: settings.tokenBlacklist ?? [],
-
-    // Safety Controls
-    minHoldTime: settings.minHoldTime ?? 30,
-    profitUnlock: settings.profitUnlock ?? 20,
-    emergencyStop: settings.emergencyStop ?? 6,
-    trailingUnlock: settings.trailingUnlock ?? 0,
   };
 
   return (
@@ -194,43 +189,6 @@ export function TModeSettings({ settings, onChange, onFaqClick, onAdvancedClick 
         </div>
       </div>
 
-      {/* Safety Controls - Collapsible */}
-      <CollapsibleSection id="tmode-safety" title="Safety Controls" defaultExpanded={false}>
-        {/* 4 controls = 4 across on desktop, 2x2 on smaller */}
-        <div className={styles.grid4col}>
-          <ControlRow label="Min Hold Time" helper="Hold period after buy">
-            <TimeAdjuster
-              value={defaults.minHoldTime}
-              onChange={(value) => updateSetting('minHoldTime', value)}
-              min={1} max={120} step={1} unit="min" size="large"
-            />
-          </ControlRow>
-          <ControlRow label="Profit Unlock" helper="Bypasses hold time">
-            <MetallicDial
-              value={defaults.profitUnlock}
-              onChange={(value) => updateSetting('profitUnlock', value)}
-              min={0} max={50} safeMin={10} safeMax={30} unit="%"
-              size={140}
-            />
-          </ControlRow>
-          <ControlRow label="Emergency Stop" helper="Loss % triggers sell">
-            <MetallicDial
-              value={defaults.emergencyStop}
-              onChange={(value) => updateSetting('emergencyStop', value)}
-              min={0} max={50} safeMin={3} safeMax={15} unit="%"
-              size={140}
-            />
-          </ControlRow>
-          <ControlRow label="Trailing Unlock" helper="% from peak">
-            <MetallicDial
-              value={defaults.trailingUnlock}
-              onChange={(value) => updateSetting('trailingUnlock', value)}
-              min={0} max={20} step={1} unit="%"
-              size={140}
-            />
-          </ControlRow>
-        </div>
-      </CollapsibleSection>
     </div>
   );
 }

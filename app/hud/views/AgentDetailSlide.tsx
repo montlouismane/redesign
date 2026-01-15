@@ -60,6 +60,19 @@ function getDefaultRiskConfig(): RiskConfig {
     maxOpenPositions: 10,
     maxSinglePosition: 20,
     maxDailyLoss: 10,
+    // Safety Controls (global)
+    minHoldTime: 30,
+    profitUnlock: 20,
+    emergencyStop: 6,
+    trailingUnlock: 0,
+    // Partial Profit Taking
+    partialExits: {
+      enabled: false,
+      targets: [
+        { id: '1', pnlPct: 10, sellPct: 50, trailingAfter: false },
+        { id: '2', pnlPct: 20, sellPct: 25, trailingAfter: true, trailingDistancePct: 5 }
+      ]
+    },
     dryRunEnabled: false,
     logToDatabase: true,
     virtualAda: 10000,

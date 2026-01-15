@@ -1,15 +1,16 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { AgentProfileCard, type Agent, type AgentMode } from './AgentProfileCard';
 import { TModeSettings } from './ModeSettings/TModeSettings';
 import { StandardSettings } from './ModeSettings/StandardSettings';
 import { PredictionSettings } from './ModeSettings/PredictionSettings';
 import { PerpetualsSettings } from './ModeSettings/PerpetualsSettings';
 import { RiskSettings } from './RiskSettings';
+import { ActivityTab } from './ActivityTab/ActivityTab';
 import { HudToggle } from '../controls/HudToggle';
 import { InfoTooltip } from '../controls/InfoTooltip';
-import { Save } from 'lucide-react';
+import { Save, AlertTriangle } from 'lucide-react';
 import styles from './AgentSettingsBoard.module.css';
 import { useControlSound } from '../controls/useControlSound';
 
@@ -41,6 +42,24 @@ export interface RiskConfig {
   maxSinglePosition: number;
   maxDailyLoss: number;
 
+  // Safety Controls (global - applies to all modes)
+  minHoldTime: number;
+  profitUnlock: number;
+  emergencyStop: number;
+  trailingUnlock: number;
+
+  // Partial Profit Taking
+  partialExits: {
+    enabled: boolean;
+    targets: Array<{
+      id: string;
+      pnlPct: number;
+      sellPct: number;
+      trailingAfter?: boolean;
+      trailingDistancePct?: number;
+    }>;
+  };
+
   // Dry Run
   dryRunEnabled: boolean;
   logToDatabase: boolean;
@@ -60,6 +79,7 @@ export interface AgentSettingsBoardProps {
   onStop: () => void;
   onUpdate: () => void;
   onSave: () => void;
+  // Activity tab now fetches its own data using agentId and walletAddress from agent prop
 }
 
 /**
@@ -100,9 +120,28 @@ export function AgentSettingsBoard({
   onSave,
 }: AgentSettingsBoardProps) {
   /* State for Tab Navigation */
-  const [activeTab, setActiveTab] = useState<'strategy' | 'risk'>('strategy');
+  const [activeTab, setActiveTab] = useState<'strategy' | 'risk' | 'activity'>('strategy');
   const { playTick: playConfirmSound } = useControlSound('confirm');
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
+  /* Mode Change Alert State */
+  const [showModeAlert, setShowModeAlert] = useState(false);
+  const previousModeRef = useRef<AgentMode>(agent.mode);
+
+  // Detect mode changes (skip initial render)
+  useEffect(() => {
+    if (agent.mode !== previousModeRef.current) {
+      setShowModeAlert(true);
+      previousModeRef.current = agent.mode;
+    }
+  }, [agent.mode]);
+
+  // Auto-dismiss when visiting Risk tab
+  useEffect(() => {
+    if (activeTab === 'risk') {
+      setShowModeAlert(false);
+    }
+  }, [activeTab]);
 
   const handleSettingsChange = (partial: Partial<AgentSettings>) => {
     setHasUnsavedChanges(true);
@@ -168,6 +207,12 @@ export function AgentSettingsBoard({
         >
           Risk Management
         </button>
+        <button
+          className={`${styles.tabButton} ${activeTab === 'activity' ? styles.active : ''}`}
+          onClick={() => setActiveTab('activity')}
+        >
+          Activity
+        </button>
       </div>
 
       {/* STRATEGY TAB CONTENT */}
@@ -225,6 +270,34 @@ export function AgentSettingsBoard({
                 Perps
               </button>
             </div>
+
+            {/* Mode Change Alert */}
+            {showModeAlert && (
+              <div className={styles.modeChangeAlert}>
+                <div className={styles.alertContent}>
+                  <AlertTriangle size={16} />
+                  <span>
+                    Mode changed to <strong>{agent.mode.toUpperCase()}</strong>.
+                    Different modes have different risk profiles.
+                  </span>
+                </div>
+                <div className={styles.alertActions}>
+                  <button
+                    className={styles.alertLink}
+                    onClick={() => { setActiveTab('risk'); setShowModeAlert(false); }}
+                  >
+                    Review Risk Settings →
+                  </button>
+                  <button
+                    className={styles.alertDismiss}
+                    onClick={() => setShowModeAlert(false)}
+                    aria-label="Dismiss"
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Mode-Specific Settings */}
@@ -270,6 +343,14 @@ export function AgentSettingsBoard({
             onChange={handleRiskSettingsChange}
           />
         </div>
+      )}
+
+      {/* ACTIVITY TAB CONTENT */}
+      {activeTab === 'activity' && (
+        <ActivityTab
+          agentId={agent.id}
+          walletAddress={agent.walletAddress}
+        />
       )}
 
       {/* Save Button */}
