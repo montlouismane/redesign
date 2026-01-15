@@ -1,12 +1,11 @@
 'use client';
 
-import { useState } from 'react';
 import { ControlRow } from '../CollapsibleSection';
 import { AgentSettings } from '../AgentSettingsBoard';
 import { MetallicDial } from '../../controls/MetallicDial';
 import { HorizontalSlider } from '../../controls/HorizontalSlider';
 import { TimeAdjuster } from '../../controls/TimeAdjuster';
-import { AllocationEditor } from '../../controls/AllocationEditor';
+import { AllocationCarousel } from '../../controls/AllocationCarousel';
 import { HelpCircle } from 'lucide-react';
 import styles from '../AgentSettingsBoard.module.css';
 
@@ -18,20 +17,17 @@ export interface StandardSettingsProps {
 }
 
 /**
- * Standard Mode Settings Component - Primary View
+ * Standard Mode Settings Component
  *
- * Compact configuration with MetallicDials for percentages.
- * Uses tabs and 2-column layout to minimize scrolling.
+ * Single-screen configuration with:
+ * - Token allocation carousel at top
+ * - Rebalance settings (slippage, tolerance, cycle)
+ * - Trade limits (min/max size, native reserve)
  *
- * Tab: Allocation - Token distribution targets
- * Tab: Settings - Rebalance and trade limit configuration
- *
- * Note: Recent Buy Guard (Min Hold, Profit Unlock, Emergency Stop) is now global
+ * Note: Safety Controls (Min Hold, Profit Unlock, Emergency Stop) are now global
  * and configured in the Risk Management tab.
  */
 export function StandardSettings({ settings, onChange, onFaqClick, onBacktestClick }: StandardSettingsProps) {
-  const [activeTab, setActiveTab] = useState<'allocation' | 'settings'>('settings');
-
   const defaults = {
     // Asset Allocation
     targetAllocations: settings.targetAllocations ?? { ADA: 100 },
@@ -59,20 +55,9 @@ export function StandardSettings({ settings, onChange, onFaqClick, onBacktestCli
           <div className={`${styles.accent} ${styles.accentBR}`} />
         </div>
       </div>
-      {/* Tab Bar */}
-      <div className={styles.tabBar}>
-        <button
-          className={`${styles.tabButton} ${activeTab === 'allocation' ? styles.active : ''}`}
-          onClick={() => setActiveTab('allocation')}
-        >
-          Allocation
-        </button>
-        <button
-          className={`${styles.tabButton} ${activeTab === 'settings' ? styles.active : ''}`}
-          onClick={() => setActiveTab('settings')}
-        >
-          Settings
-        </button>
+
+      {/* Header with actions */}
+      <div className={styles.settingsHeader}>
         <div style={{ flex: 1 }} />
         {onBacktestClick && (
           <button
@@ -91,95 +76,87 @@ export function StandardSettings({ settings, onChange, onFaqClick, onBacktestCli
         )}
       </div>
 
-      {/* Allocation Tab */}
-      {activeTab === 'allocation' && (
+      {/* Allocation Section - Full Width Carousel */}
+      <div className={styles.section}>
+        <div className={styles.sectionContent}>
+          <AllocationCarousel
+            allocations={defaults.targetAllocations}
+            onChange={(allocations) => onChange({ targetAllocations: allocations })}
+          />
+        </div>
+      </div>
+
+      {/* Row: Rebalance Settings | Trade Limits */}
+      <div className={styles.sectionRow}>
+        {/* Rebalance Settings */}
         <div className={styles.section}>
+          <div className={styles.sectionHeader}>
+            <div className={styles.cardTitle}>Rebalance Settings</div>
+          </div>
           <div className={styles.sectionContent}>
-            <AllocationEditor
-              allocations={defaults.targetAllocations}
-              onChange={(allocations) => onChange({ targetAllocations: allocations })}
-            />
+            {/* 3 controls = 3-col (responsive: 2+1 centered on smaller) */}
+            <div className={styles.grid3col}>
+              <ControlRow label="Slippage" helper="Max price impact">
+                <MetallicDial
+                  value={defaults.slippageTolerance}
+                  onChange={(val) => onChange({ slippageTolerance: val })}
+                  min={0.1} max={5} step={0.1} unit="%"
+                  safeMin={0.5} safeMax={2}
+                />
+              </ControlRow>
+              <ControlRow label="Rebalance Tolerance" helper="Drift threshold">
+                <MetallicDial
+                  value={defaults.rebalanceTolerance}
+                  onChange={(val) => onChange({ rebalanceTolerance: val })}
+                  min={1} max={20} step={1} unit="%"
+                  safeMin={3} safeMax={10}
+                />
+              </ControlRow>
+              <ControlRow label="Cycle Interval" helper="Check frequency">
+                <TimeAdjuster
+                  value={defaults.cycleInterval}
+                  onChange={(val) => onChange({ cycleInterval: val })}
+                  min={1} max={60} step={1} unit="min" size="large"
+                />
+              </ControlRow>
+            </div>
           </div>
         </div>
-      )}
 
-      {/* Settings Tab */}
-      {activeTab === 'settings' && (
-        <>
-          {/* Row: Rebalance Settings | Trade Limits */}
-          <div className={styles.sectionRow}>
-            {/* Rebalance Settings */}
-            <div className={styles.section}>
-              <div className={styles.sectionHeader}>
-                <div className={styles.cardTitle}>Rebalance Settings</div>
-              </div>
-              <div className={styles.sectionContent}>
-                {/* 3 controls = 3-col (responsive: 2+1 centered on smaller) */}
-                <div className={styles.grid3col}>
-                  <ControlRow label="Slippage" helper="Max price impact">
-                    <MetallicDial
-                      value={defaults.slippageTolerance}
-                      onChange={(val) => onChange({ slippageTolerance: val })}
-                      min={0.1} max={5} step={0.1} unit="%"
-                      safeMin={0.5} safeMax={2}
-                    />
-                  </ControlRow>
-                  <ControlRow label="Rebalance Tolerance" helper="Drift threshold">
-                    <MetallicDial
-                      value={defaults.rebalanceTolerance}
-                      onChange={(val) => onChange({ rebalanceTolerance: val })}
-                      min={1} max={20} step={1} unit="%"
-                      safeMin={3} safeMax={10}
-                    />
-                  </ControlRow>
-                  <ControlRow label="Cycle Interval" helper="Check frequency">
-                    <TimeAdjuster
-                      value={defaults.cycleInterval}
-                      onChange={(val) => onChange({ cycleInterval: val })}
-                      min={1} max={60} step={1} unit="min" size="large"
-                    />
-                  </ControlRow>
-                </div>
-              </div>
-            </div>
-
-            {/* Trade Limits */}
-            <div className={styles.section}>
-              <div className={styles.sectionHeader}>
-                <div className={styles.cardTitle}>Trade Limits</div>
-              </div>
-              <div className={styles.sectionContent}>
-                {/* 3 controls = 3-col (responsive: 2+1 centered on smaller) */}
-                <div className={styles.grid3col}>
-                  <ControlRow label="Min Trade Size" helper="Prevents tiny trades">
-                    <HorizontalSlider
-                      value={defaults.minTradeSize}
-                      onChange={(val) => onChange({ minTradeSize: val })}
-                      min={40} max={100} step={1} unit="ADA"
-                    />
-                  </ControlRow>
-                  <ControlRow label="Max Trade Size" helper="Caps single trade">
-                    <HorizontalSlider
-                      value={defaults.maxTradeSize}
-                      onChange={(val) => onChange({ maxTradeSize: val })}
-                      min={80} max={1000} step={10} unit="ADA"
-                    />
-                  </ControlRow>
-                  <ControlRow label="Native Reserve" helper="Min balance to keep in wallet">
-                    <HorizontalSlider
-                      value={defaults.nativeReserve}
-                      onChange={(val) => onChange({ nativeReserve: val })}
-                      min={50} max={500} step={10} unit="ADA"
-                      inputStep={1} inputMin={0}
-                    />
-                  </ControlRow>
-                </div>
-              </div>
+        {/* Trade Limits */}
+        <div className={styles.section}>
+          <div className={styles.sectionHeader}>
+            <div className={styles.cardTitle}>Trade Limits</div>
+          </div>
+          <div className={styles.sectionContent}>
+            {/* 3 controls = 3-col (responsive: 2+1 centered on smaller) */}
+            <div className={styles.grid3col}>
+              <ControlRow label="Min Trade Size" helper="Prevents tiny trades">
+                <HorizontalSlider
+                  value={defaults.minTradeSize}
+                  onChange={(val) => onChange({ minTradeSize: val })}
+                  min={40} max={100} step={1} unit="ADA"
+                />
+              </ControlRow>
+              <ControlRow label="Max Trade Size" helper="Caps single trade">
+                <HorizontalSlider
+                  value={defaults.maxTradeSize}
+                  onChange={(val) => onChange({ maxTradeSize: val })}
+                  min={80} max={1000} step={10} unit="ADA"
+                />
+              </ControlRow>
+              <ControlRow label="Native Reserve" helper="Min balance to keep in wallet">
+                <HorizontalSlider
+                  value={defaults.nativeReserve}
+                  onChange={(val) => onChange({ nativeReserve: val })}
+                  min={50} max={500} step={10} unit="ADA"
+                  inputStep={1} inputMin={0}
+                />
+              </ControlRow>
             </div>
           </div>
-
-        </>
-      )}
+        </div>
+      </div>
     </div>
   );
 }

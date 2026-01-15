@@ -80,12 +80,14 @@ export function PerpetualsSettings({ settings, onChange }: PerpetualsSettingsPro
             <div className={styles.cardSubtitle} style={{ fontSize: '11px', opacity: 0.7 }}>Position leverage controls</div>
           </div>
           <div className={styles.sectionContent}>
-            <div className={styles.denseGrid} style={{ marginBottom: '16px' }}>
+            <div className={styles.denseGrid} style={{ marginBottom: '12px', justifyItems: 'center' }}>
               <ControlRow label="Max Leverage" helper="">
                 <VerticalSlider
                   value={defaults.maxLeverage}
                   onChange={(v) => updateSetting('maxLeverage', v)}
                   min={1} max={10} step={1} unit="x"
+                  height={200}
+                  valueSize="xlarge"
                 />
               </ControlRow>
               <ControlRow label="Default Leverage" helper="">
@@ -93,11 +95,13 @@ export function PerpetualsSettings({ settings, onChange }: PerpetualsSettingsPro
                   value={defaults.defaultLeverage}
                   onChange={(v) => updateSetting('defaultLeverage', v)}
                   min={1} max={10} step={1} unit="x"
+                  height={200}
+                  valueSize="xlarge"
                 />
               </ControlRow>
             </div>
             <ControlRow label="Max Position Size (ADA)" helper="">
-              <div style={{ width: '90%', margin: '0 auto', display: 'flex', justifyContent: 'center' }}>
+              <div style={{ width: '70%', maxWidth: '280px', margin: '0 auto' }}>
                 <HorizontalSlider
                   value={defaults.maxPositionSize}
                   onChange={(v) => updateSetting('maxPositionSize', v)}

@@ -18,6 +18,10 @@ interface VerticalSliderProps {
   tickCount?: number;
   showTicks?: boolean;
   snapToTicks?: boolean;
+  /** Track height in pixels (default: 160) */
+  height?: number;
+  /** Value display font size: 'default' | 'large' | 'xlarge' */
+  valueSize?: 'default' | 'large' | 'xlarge';
 }
 
 /**
@@ -48,6 +52,8 @@ export function VerticalSlider({
   tickCount = 11,
   showTicks = true,
   snapToTicks = false,
+  height = 160,
+  valueSize = 'default',
 }: VerticalSliderProps) {
   const trackRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -205,6 +211,7 @@ export function VerticalSlider({
 
       <div
         className={styles.sliderContainer}
+        style={{ height: `${height}px` }}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
@@ -287,8 +294,9 @@ export function VerticalSlider({
             disabled={disabled}
             autoComplete="off"
             autoFocus
+            style={valueSize === 'xlarge' ? { fontSize: '24px', width: '50px' } : valueSize === 'large' ? { fontSize: '18px' } : undefined}
           />
-          <span className={styles.valueUnit}>{unit}</span>
+          <span className={styles.valueUnit} style={valueSize === 'xlarge' ? { fontSize: '14px' } : valueSize === 'large' ? { fontSize: '11px' } : undefined}>{unit}</span>
         </div>
       ) : (
         <button
@@ -296,9 +304,10 @@ export function VerticalSlider({
           onClick={startEditing}
           disabled={disabled}
           data-safe={isInSafeZone}
+          style={valueSize === 'xlarge' ? { minWidth: '80px', padding: '6px 14px' } : valueSize === 'large' ? { minWidth: '70px' } : undefined}
         >
-          <span className={styles.valueNumber}>{displayValue}</span>
-          {unit && <span className={styles.valueUnit}>{unit}</span>}
+          <span className={styles.valueNumber} style={valueSize === 'xlarge' ? { fontSize: '24px' } : valueSize === 'large' ? { fontSize: '18px' } : undefined}>{displayValue}</span>
+          {unit && <span className={styles.valueUnit} style={valueSize === 'xlarge' ? { fontSize: '14px' } : valueSize === 'large' ? { fontSize: '11px' } : undefined}>{unit}</span>}
         </button>
       )}
     </div>

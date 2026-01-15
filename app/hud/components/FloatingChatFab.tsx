@@ -8,7 +8,7 @@ interface FloatingChatFabProps {
 
 export const FloatingChatFab = ({ onClick }: FloatingChatFabProps) => {
     return (
-        <div className="fixed bottom-8 right-8 z-[11060]">
+        <div className="fixed bottom-8 right-8 z-[11060] pointer-events-auto">
             <button
                 type="button"
                 onClick={onClick}

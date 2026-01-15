@@ -387,7 +387,7 @@ export function HudView() {
             {/* Expanded Panel Modals */}
             {modalPanel && (
                 <div
-                    className="fixed inset-0 z-[1000] bg-black/60 backdrop-blur-[2px] flex items-center justify-center p-[4%]"
+                    className="fixed inset-0 z-[1000] bg-black/60 backdrop-blur-[2px] flex items-center justify-center p-[4%] pointer-events-auto"
                     onClick={closeModal}
                 >
                     <div
