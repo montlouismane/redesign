@@ -7,18 +7,24 @@ import { MetallicDial } from '../controls/MetallicDial';
 import { HorizontalSlider } from '../controls/HorizontalSlider';
 import { TimeAdjuster } from '../controls/TimeAdjuster';
 import { HudToggle } from '../controls/HudToggle';
+import { InfoTooltip } from '../controls/InfoTooltip';
 import { Plus, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { TOOLTIPS, DISABLED_REASONS } from '../../constants/tooltips';
 import styles from './AgentSettingsBoard.module.css';
+import type { AgentMode } from './AgentProfileCard';
 
 export interface RiskSettingsProps {
   settings: RiskConfig;
   onChange: (settings: Partial<RiskConfig>) => void;
+  /** Current trading mode - some settings are disabled in Standard mode */
+  mode?: AgentMode;
 }
 
 /**
  * Partial Profit Taking Section - Carousel Layout
  */
-function PartialProfitTakingSection({ settings, onChange }: RiskSettingsProps) {
+function PartialProfitTakingSection({ settings, onChange, mode }: RiskSettingsProps) {
+  const isDisabled = mode === 'standard';
   const carouselRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
@@ -60,21 +66,28 @@ function PartialProfitTakingSection({ settings, onChange }: RiskSettingsProps) {
   };
 
   return (
-    <div className={styles.section}>
+    <div className={`${styles.section} ${isDisabled ? styles.sectionDisabled : ''}`}>
       <div className={styles.sectionHeader}>
-        <div className={styles.cardTitle}>Partial Profit Taking</div>
+        <div className={styles.cardTitle}>
+          Partial Profit Taking
+          <InfoTooltip text={isDisabled ? DISABLED_REASONS.standard.partialExits : TOOLTIPS.riskManagement.partialExits.main} />
+        </div>
         <HudToggle
-          value={settings.partialExits?.enabled ?? false}
-          onChange={(value) => onChange({
-            partialExits: {
-              ...settings.partialExits,
-              enabled: value,
-              targets: targets.length > 0 ? targets : [
-                { id: '1', pnlPct: 10, sellPct: 50, trailingAfter: false },
-                { id: '2', pnlPct: 20, sellPct: 25, trailingAfter: true, trailingDistancePct: 5 }
-              ]
-            }
-          })}
+          value={isDisabled ? false : (settings.partialExits?.enabled ?? false)}
+          onChange={(value) => {
+            if (isDisabled) return;
+            onChange({
+              partialExits: {
+                ...settings.partialExits,
+                enabled: value,
+                targets: targets.length > 0 ? targets : [
+                  { id: '1', pnlPct: 10, sellPct: 50, trailingAfter: false },
+                  { id: '2', pnlPct: 20, sellPct: 25, trailingAfter: true, trailingDistancePct: 5 }
+                ]
+              }
+            });
+          }}
+          disabled={isDisabled}
         />
       </div>
       <div className={styles.sectionContent}>
@@ -116,7 +129,11 @@ function PartialProfitTakingSection({ settings, onChange }: RiskSettingsProps) {
                   </div>
 
                   <div className={styles.tpTargetInputs}>
-                    <ControlRow label="At Profit" helper="Trigger %">
+                    <ControlRow
+                      label="At Profit"
+                      helper="Trigger %"
+                      tooltip={TOOLTIPS.riskManagement.partialExits.atProfit}
+                    >
                       <MetallicDial
                         value={target.pnlPct}
                         onChange={(value) => {
@@ -135,7 +152,11 @@ function PartialProfitTakingSection({ settings, onChange }: RiskSettingsProps) {
                         size={90}
                       />
                     </ControlRow>
-                    <ControlRow label="Sell Amount" helper="% of position">
+                    <ControlRow
+                      label="Sell Amount"
+                      helper="% of position"
+                      tooltip={TOOLTIPS.riskManagement.partialExits.sellPercent}
+                    >
                       <MetallicDial
                         value={target.sellPct}
                         onChange={(value) => {
@@ -158,7 +179,10 @@ function PartialProfitTakingSection({ settings, onChange }: RiskSettingsProps) {
 
                   <div className={styles.tpTrailingRow}>
                     <div className={styles.tpTrailingToggle}>
-                      <span className={styles.tpTrailingLabel}>Trailing Stop</span>
+                      <span className={styles.tpTrailingLabel}>
+                        Trailing Stop
+                        <InfoTooltip text={TOOLTIPS.riskManagement.partialExits.trailingStopAfter} size={12} />
+                      </span>
                       <HudToggle
                         value={target.trailingAfter ?? false}
                         onChange={(value) => {
@@ -344,13 +368,17 @@ function PartialProfitTakingSection({ settings, onChange }: RiskSettingsProps) {
  *
  * Sections:
  * - Recent Buy Guard: Hold time, profit unlock, emergency stop (global)
- * - Edge-After-Cost Gate: Net edge validation before trades
+ * - Edge-After-Cost Gate: Net edge validation before trades (disabled in Standard)
  * - Liquidity Guard: Market impact and liquidity checks
- * - Cooldowns: Per-asset trade spacing rules
+ * - Cooldowns: Per-asset trade spacing rules (disabled in Standard)
  * - Portfolio Risk: Overall position and loss limits
  * - Dry Run: Testing mode with virtual funds
+ * - Partial Profit Taking (disabled in Standard)
  */
-export function RiskSettings({ settings, onChange }: RiskSettingsProps) {
+export function RiskSettings({ settings, onChange, mode }: RiskSettingsProps) {
+  // Standard mode disables Edge Gate, Cooldowns, and Partial Exits
+  const isStandardMode = mode === 'standard';
+
   return (
     <div className={styles.unifiedBoard}>
       {/* Angular frame overlay */}
@@ -367,19 +395,30 @@ export function RiskSettings({ settings, onChange }: RiskSettingsProps) {
       {/* Recent Buy Guard (Full Width) - Primary risk settings */}
       <div className={styles.section}>
         <div className={styles.sectionHeader}>
-          <div className={styles.cardTitle}>Recent Buy Guard</div>
+          <div className={styles.cardTitle}>
+            Recent Buy Guard
+            <InfoTooltip text={TOOLTIPS.safety.recentBuyGuard.main} />
+          </div>
         </div>
         <div className={styles.sectionContent}>
           {/* 4 controls = 4-col (responsive: 2x2 on smaller) */}
           <div className={styles.grid4col}>
-            <ControlRow label="Min Hold Time" helper="Hold period after buy">
+            <ControlRow
+              label="Min Hold Time"
+              helper="Hold period after buy"
+              tooltip={TOOLTIPS.safety.recentBuyGuard.holdWindow}
+            >
               <TimeAdjuster
                 value={settings.minHoldTime ?? 30}
                 onChange={(value) => onChange({ minHoldTime: value })}
                 min={1} max={120} step={1} unit="min" size="large"
               />
             </ControlRow>
-            <ControlRow label="Profit Unlock" helper="Bypasses hold time">
+            <ControlRow
+              label="Profit Unlock"
+              helper="Bypasses hold time"
+              tooltip={TOOLTIPS.safety.recentBuyGuard.profitUnlock}
+            >
               <MetallicDial
                 value={settings.profitUnlock ?? 20}
                 onChange={(value) => onChange({ profitUnlock: value })}
@@ -387,7 +426,11 @@ export function RiskSettings({ settings, onChange }: RiskSettingsProps) {
                 size={140}
               />
             </ControlRow>
-            <ControlRow label="Emergency Stop" helper="Loss % triggers sell">
+            <ControlRow
+              label="Emergency Stop"
+              helper="Loss % triggers sell"
+              tooltip={TOOLTIPS.safety.recentBuyGuard.emergencyStop}
+            >
               <MetallicDial
                 value={settings.emergencyStop ?? 6}
                 onChange={(value) => onChange({ emergencyStop: value })}
@@ -410,12 +453,19 @@ export function RiskSettings({ settings, onChange }: RiskSettingsProps) {
       {/* Row: Edge-After-Cost Gate & Liquidity Guard */}
       <div className={styles.sectionRow}>
         {/* Edge-After-Cost Gate */}
-        <div className={styles.section}>
+        <div className={`${styles.section} ${isStandardMode ? styles.sectionDisabled : ''}`}>
           <div className={styles.sectionHeader}>
-            <div className={styles.cardTitle}>Edge-After-Cost Gate</div>
+            <div className={styles.cardTitle}>
+              Edge-After-Cost Gate
+              <InfoTooltip text={isStandardMode ? DISABLED_REASONS.standard.edgeGate : TOOLTIPS.riskManagement.edgeGate.main} />
+            </div>
             <HudToggle
-              value={settings.edgeGateEnabled ?? false}
-              onChange={(value) => onChange({ edgeGateEnabled: value })}
+              value={isStandardMode ? false : (settings.edgeGateEnabled ?? false)}
+              onChange={(value) => {
+                if (isStandardMode) return;
+                onChange({ edgeGateEnabled: value });
+              }}
+              disabled={isStandardMode}
             />
           </div>
           <div className={styles.sectionContent}>
@@ -423,6 +473,7 @@ export function RiskSettings({ settings, onChange }: RiskSettingsProps) {
               <ControlRow
                 label="Min Net Edge"
                 helper="Minimum profit margin required"
+                tooltip={TOOLTIPS.riskManagement.edgeGate.minNetEdge}
               >
                 <MetallicDial
                   value={settings.minNetEdge ?? 0.5}
@@ -433,7 +484,11 @@ export function RiskSettings({ settings, onChange }: RiskSettingsProps) {
                   unit="%"
                 />
               </ControlRow>
-              <ControlRow label="Log Skips" helper="Record skipped trades">
+              <ControlRow
+                label="Log Skips"
+                helper="Record skipped trades"
+                tooltip={TOOLTIPS.riskManagement.edgeGate.logSkippedTrades}
+              >
                 <HudToggle
                   value={settings.logSkippedEdge ?? true}
                   onChange={(value) => onChange({ logSkippedEdge: value })}
@@ -446,7 +501,10 @@ export function RiskSettings({ settings, onChange }: RiskSettingsProps) {
         {/* Liquidity Guard */}
         <div className={styles.section}>
           <div className={styles.sectionHeader}>
-            <div className={styles.cardTitle}>Liquidity Guard</div>
+            <div className={styles.cardTitle}>
+              Liquidity Guard
+              <InfoTooltip text={TOOLTIPS.riskManagement.liquidityGuard.main} />
+            </div>
             <HudToggle
               value={settings.liquidityGuardEnabled ?? true}
               onChange={(value) => onChange({ liquidityGuardEnabled: value })}
@@ -454,14 +512,22 @@ export function RiskSettings({ settings, onChange }: RiskSettingsProps) {
           </div>
           <div className={styles.sectionContent}>
             <div className={styles.denseGrid} style={{ gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px 24px' }}>
-              <ControlRow label="Max Impact" helper="Max slippage impact">
+              <ControlRow
+                label="Max Impact"
+                helper="Max slippage impact"
+                tooltip={TOOLTIPS.riskManagement.liquidityGuard.maxPriceImpact}
+              >
                 <MetallicDial
                   value={settings.maxImpact ?? 3.0}
                   onChange={(value) => onChange({ maxImpact: value })}
                   min={0.5} max={20} step={0.5} unit="%"
                 />
               </ControlRow>
-              <ControlRow label="Auto Downsize" helper="Reduce size if impact high">
+              <ControlRow
+                label="Auto Downsize"
+                helper="Reduce size if impact high"
+                tooltip={TOOLTIPS.riskManagement.liquidityGuard.autoDownsize}
+              >
                 <HudToggle
                   value={settings.autoDownsize ?? true}
                   onChange={(value) => onChange({ autoDownsize: value })}
@@ -473,32 +539,51 @@ export function RiskSettings({ settings, onChange }: RiskSettingsProps) {
       </div>
 
       {/* Cooldown Rules (Full Width) */}
-      <div className={styles.section}>
+      <div className={`${styles.section} ${isStandardMode ? styles.sectionDisabled : ''}`}>
         <div className={styles.sectionHeader}>
-          <div className={styles.cardTitle}>Cooldown Rules</div>
+          <div className={styles.cardTitle}>
+            Cooldown Rules
+            <InfoTooltip text={isStandardMode ? DISABLED_REASONS.standard.cooldowns : TOOLTIPS.riskManagement.cooldowns.main} />
+          </div>
           <HudToggle
-            value={settings.perAssetCooldownEnabled ?? true}
-            onChange={(value) => onChange({ perAssetCooldownEnabled: value })}
+            value={isStandardMode ? false : (settings.perAssetCooldownEnabled ?? true)}
+            onChange={(value) => {
+              if (isStandardMode) return;
+              onChange({ perAssetCooldownEnabled: value });
+            }}
+            disabled={isStandardMode}
           />
         </div>
         <div className={styles.sectionContent}>
           {/* 3 controls = 3-col (responsive: 2+1 centered on smaller) */}
           <div className={styles.grid3col}>
-            <ControlRow label="Win Cooldown" helper="Wait after profitable trade">
+            <ControlRow
+              label="Win Cooldown"
+              helper="Wait after profitable trade"
+              tooltip={TOOLTIPS.riskManagement.cooldowns.winCooldown}
+            >
               <TimeAdjuster
                 value={settings.winCooldown ?? 15}
                 onChange={(value) => onChange({ winCooldown: value })}
                 min={0} max={60} step={5} unit="min" size="large"
               />
             </ControlRow>
-            <ControlRow label="Loss Cooldown" helper="Wait after losing trade">
+            <ControlRow
+              label="Loss Cooldown"
+              helper="Wait after losing trade"
+              tooltip={TOOLTIPS.riskManagement.cooldowns.lossCooldown}
+            >
               <TimeAdjuster
                 value={settings.lossCooldown ?? 60}
                 onChange={(value) => onChange({ lossCooldown: value })}
                 min={0} max={120} step={5} unit="min" size="large"
               />
             </ControlRow>
-            <ControlRow label="Scratch Cooldown" helper="Wait after break-even">
+            <ControlRow
+              label="Scratch Cooldown"
+              helper="Wait after break-even"
+              tooltip={TOOLTIPS.riskManagement.cooldowns.scratchCooldown}
+            >
               <TimeAdjuster
                 value={settings.scratchCooldown ?? 30}
                 onChange={(value) => onChange({ scratchCooldown: value })}
@@ -514,10 +599,17 @@ export function RiskSettings({ settings, onChange }: RiskSettingsProps) {
         {/* Portfolio Risk */}
         <div className={styles.section}>
           <div className={styles.sectionHeader}>
-            <div className={styles.cardTitle}>Portfolio Risk</div>
+            <div className={styles.cardTitle}>
+              Portfolio Risk
+              <InfoTooltip text={TOOLTIPS.riskManagement.portfolioRisk.main} />
+            </div>
           </div>
           <div className={styles.sectionContent}>
-            <ControlRow label="Max Open Positions" helper="Concurrent position limit">
+            <ControlRow
+              label="Max Open Positions"
+              helper="Concurrent position limit"
+              tooltip={TOOLTIPS.riskManagement.portfolioRisk.maxOpenPositions}
+            >
               <TimeAdjuster
                 value={settings.maxOpenPositions ?? 10}
                 onChange={(value) => onChange({ maxOpenPositions: value })}
@@ -525,14 +617,20 @@ export function RiskSettings({ settings, onChange }: RiskSettingsProps) {
               />
             </ControlRow>
             <div className={styles.denseGrid} style={{ gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px 24px', marginTop: '16px' }}>
-              <ControlRow label="Max Position %">
+              <ControlRow
+                label="Max Position %"
+                tooltip={TOOLTIPS.riskManagement.portfolioRisk.maxSinglePosition}
+              >
                 <MetallicDial
                   value={settings.maxSinglePosition ?? 20}
                   onChange={(value) => onChange({ maxSinglePosition: value })}
                   min={1} max={100} unit="%"
                 />
               </ControlRow>
-              <ControlRow label="Max Daily Loss">
+              <ControlRow
+                label="Max Daily Loss"
+                tooltip={TOOLTIPS.riskManagement.portfolioRisk.maxDailyLoss}
+              >
                 <MetallicDial
                   value={settings.maxDailyLoss ?? 10}
                   onChange={(value) => onChange({ maxDailyLoss: value })}
@@ -546,7 +644,10 @@ export function RiskSettings({ settings, onChange }: RiskSettingsProps) {
         {/* Simulation Mode */}
         <div className={styles.section}>
           <div className={styles.sectionHeader}>
-            <div className={styles.cardTitle}>Simulation Mode</div>
+            <div className={styles.cardTitle}>
+              Simulation Mode
+              <InfoTooltip text={TOOLTIPS.safety.paperTrading.main} />
+            </div>
             <HudToggle
               value={settings.dryRunEnabled ?? false}
               onChange={(value) => onChange({ dryRunEnabled: value })}
@@ -573,7 +674,7 @@ export function RiskSettings({ settings, onChange }: RiskSettingsProps) {
       </div>
 
       {/* Partial Profit Taking (Full Width) */}
-      <PartialProfitTakingSection settings={settings} onChange={onChange} />
+      <PartialProfitTakingSection settings={settings} onChange={onChange} mode={mode} />
     </div>
   );
 }

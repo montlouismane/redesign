@@ -4,6 +4,7 @@
   align-items: center;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
+  overflow: visible;
 }
 
 .icon {
@@ -28,151 +29,167 @@
   border-radius: 50%;
 }
 
+/* Tooltip - rendered via portal to body */
 .tooltip {
-  position: absolute;
-  z-index: 1000;
-  padding: 8px 12px;
-  background: rgba(20, 18, 16, 0.95);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  color: var(--text);
-  font-family: var(--font-body, sans-serif);
-  font-size: 11px;
-  font-weight: 500;
-  line-height: 1.4;
-  text-transform: none;
-  max-width: 250px;
-  white-space: normal;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(20px);
+  /* Fixed positioning since it's portaled to body */
+  position: fixed;
+  z-index: 99999;
   pointer-events: none;
   animation: fadeIn 0.15s ease-out;
+
+  /* Asymmetric corner sizes - small on TL/BR, large on TR/BL */
+  --cut-s: 6px;
+  --cut-l: 12px;
+  --tl: var(--cut-s);
+  --tr: var(--cut-l);
+  --br: var(--cut-s);
+  --bl: var(--cut-l);
+
+  /* Corner line widths - thicker on large corners */
+  --tlW: 1px;
+  --trW: 2px;
+  --brW: 1px;
+  --blW: 2px;
+
+  /* Border color */
+  --border-color: rgba(196, 124, 72, 0.5);
+}
+
+.tooltipInner {
+  display: block;
+  padding: 10px 14px;
+  background: rgba(12, 12, 14, 0.98);
+  color: rgba(232, 232, 238, 0.9);
+  font-family: var(--font-jetbrains-mono), 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.5;
+  letter-spacing: 0.01em;
+  text-transform: none;
+  /* Wider for better horizontal readability */
+  min-width: 280px;
+  max-width: 380px;
+  width: max-content;
+  white-space: normal;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.6),
+    0 0 1px rgba(196, 124, 72, 0.3);
+  backdrop-filter: blur(24px);
+
+  /* Asymmetric octagonal cut corners */
+  clip-path: polygon(
+    var(--tl) 0,
+    calc(100% - var(--tr)) 0,
+    100% var(--tr),
+    100% calc(100% - var(--br)),
+    calc(100% - var(--br)) 100%,
+    var(--bl) 100%,
+    0 calc(100% - var(--bl)),
+    0 var(--tl)
+  );
+}
+
+/* Edge lines (straight borders) */
+.edgeLine {
+  position: absolute;
+  background: var(--border-color);
+}
+
+/* Top edge - between TL and TR corners */
+.edgeTop {
+  height: 1px;
+  top: 0;
+  left: var(--tl);
+  right: var(--tr);
+}
+
+/* Right edge - between TR and BR corners */
+.edgeRight {
+  width: 1px;
+  right: 0;
+  top: var(--tr);
+  bottom: var(--br);
+}
+
+/* Bottom edge - between BR and BL corners */
+.edgeBottom {
+  height: 1px;
+  bottom: 0;
+  left: var(--bl);
+  right: var(--br);
+}
+
+/* Left edge - between BL and TL corners */
+.edgeLeft {
+  width: 1px;
+  left: 0;
+  top: var(--tl);
+  bottom: var(--bl);
+}
+
+/* Corner outline lines (diagonal cuts) */
+.cornerLine {
+  position: absolute;
+  background: var(--border-color);
+  transform-origin: center;
+}
+
+/* Top-left corner - small */
+.cornerTL {
+  width: calc(var(--tl) * 1.4142);
+  height: var(--tlW);
+  top: calc(var(--tl) / 2);
+  left: calc(var(--tl) / 2);
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+/* Top-right corner - large */
+.cornerTR {
+  width: calc(var(--tr) * 1.4142);
+  height: var(--trW);
+  top: calc(var(--tr) / 2);
+  right: calc(var(--tr) / 2);
+  transform: translate(50%, -50%) rotate(45deg);
+}
+
+/* Bottom-left corner - large */
+.cornerBL {
+  width: calc(var(--bl) * 1.4142);
+  height: var(--blW);
+  bottom: calc(var(--bl) / 2);
+  left: calc(var(--bl) / 2);
+  transform: translate(-50%, 50%) rotate(45deg);
+}
+
+/* Bottom-right corner - small */
+.cornerBR {
+  width: calc(var(--br) * 1.4142);
+  height: var(--brW);
+  bottom: calc(var(--br) / 2);
+  right: calc(var(--br) / 2);
+  transform: translate(50%, 50%) rotate(-45deg);
 }
 
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(4px);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
   }
-}
-
-/* Position: Top (default) */
-.tooltip.top {
-  bottom: calc(100% + 8px);
-  left: 50%;
-  transform: translateX(-50%);
-}
-
-.tooltip.top .arrow {
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  border-left: 6px solid transparent;
-  border-right: 6px solid transparent;
-  border-top: 6px solid var(--border);
-}
-
-.tooltip.top .arrow::after {
-  content: '';
-  position: absolute;
-  top: -7px;
-  left: -5px;
-  border-left: 5px solid transparent;
-  border-right: 5px solid transparent;
-  border-top: 5px solid rgba(20, 18, 16, 0.95);
-}
-
-/* Position: Bottom */
-.tooltip.bottom {
-  top: calc(100% + 8px);
-  left: 50%;
-  transform: translateX(-50%);
-}
-
-.tooltip.bottom .arrow {
-  position: absolute;
-  bottom: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  border-left: 6px solid transparent;
-  border-right: 6px solid transparent;
-  border-bottom: 6px solid var(--border);
-}
-
-.tooltip.bottom .arrow::after {
-  content: '';
-  position: absolute;
-  bottom: -7px;
-  left: -5px;
-  border-left: 5px solid transparent;
-  border-right: 5px solid transparent;
-  border-bottom: 5px solid rgba(20, 18, 16, 0.95);
-}
-
-/* Position: Left */
-.tooltip.left {
-  right: calc(100% + 8px);
-  top: 50%;
-  transform: translateY(-50%);
-}
-
-.tooltip.left .arrow {
-  position: absolute;
-  left: 100%;
-  top: 50%;
-  transform: translateY(-50%);
-  border-top: 6px solid transparent;
-  border-bottom: 6px solid transparent;
-  border-left: 6px solid var(--border);
-}
-
-.tooltip.left .arrow::after {
-  content: '';
-  position: absolute;
-  left: -7px;
-  top: -5px;
-  border-top: 5px solid transparent;
-  border-bottom: 5px solid transparent;
-  border-left: 5px solid rgba(20, 18, 16, 0.95);
-}
-
-/* Position: Right */
-.tooltip.right {
-  left: calc(100% + 8px);
-  top: 50%;
-  transform: translateY(-50%);
-}
-
-.tooltip.right .arrow {
-  position: absolute;
-  right: 100%;
-  top: 50%;
-  transform: translateY(-50%);
-  border-top: 6px solid transparent;
-  border-bottom: 6px solid transparent;
-  border-right: 6px solid var(--border);
-}
-
-.tooltip.right .arrow::after {
-  content: '';
-  position: absolute;
-  right: -7px;
-  top: -5px;
-  border-top: 5px solid transparent;
-  border-bottom: 5px solid transparent;
-  border-right: 5px solid rgba(20, 18, 16, 0.95);
 }
 
 /* Mobile adjustments */
 @media (max-width: 640px) {
   .tooltip {
-    max-width: 200px;
-    font-size: 12px;
-    padding: 10px 14px;
+    --cut-s: 4px;
+    --cut-l: 8px;
+  }
+
+  .tooltipInner {
+    min-width: 200px;
+    max-width: 280px;
+    font-size: 11px;
+    padding: 8px 12px;
   }
 }

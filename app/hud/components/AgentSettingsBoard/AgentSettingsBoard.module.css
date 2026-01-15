@@ -488,12 +488,57 @@
 }
 
 .modeSelectorTitle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   font-family: var(--font-display, sans-serif);
   font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.14em;
   color: var(--textMuted);
   text-transform: uppercase;
+}
+
+/* FAQ Button */
+.faqButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid var(--borderLight);
+  border-radius: 4px;
+  background: rgba(196, 124, 72, 0.05);
+  color: var(--copper);
+  font-family: var(--font-display, sans-serif);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.faqButton:hover {
+  background: rgba(196, 124, 72, 0.12);
+  border-color: var(--copper);
+  box-shadow: 0 0 12px rgba(196, 124, 72, 0.15);
+}
+
+.faqButton:active {
+  transform: scale(0.98);
+}
+
+.faqButton span {
+  /* Hide text on very small screens */
+}
+
+@media (max-width: 400px) {
+  .faqButton span {
+    display: none;
+  }
+  .faqButton {
+    padding: 6px 8px;
+  }
 }
 
 .paperTradingToggle {
@@ -706,6 +751,7 @@
 
 .collapsibleContent.expanded {
   max-height: 2000px;
+  overflow: visible;
 }
 
 .collapsibleBody {
@@ -988,6 +1034,9 @@
 }
 
 .cardTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-family: var(--font-display, sans-serif);
   font-size: 11px;
   font-weight: 800;
@@ -1106,6 +1155,20 @@
 
 .section:not(:last-child) {
   border-bottom: 1px solid var(--borderLight);
+}
+
+/* Disabled section state - for features not available in current mode */
+.sectionDisabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.sectionDisabled .sectionHeader {
+  pointer-events: auto; /* Allow clicking the tooltip even when section is disabled */
+}
+
+.sectionDisabled .cardTitle {
+  pointer-events: auto;
 }
 
 .sectionRow {

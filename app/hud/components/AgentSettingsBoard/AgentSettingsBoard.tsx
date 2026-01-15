@@ -8,11 +8,13 @@ import { PredictionSettings } from './ModeSettings/PredictionSettings';
 import { PerpetualsSettings } from './ModeSettings/PerpetualsSettings';
 import { RiskSettings } from './RiskSettings';
 import { ActivityTab } from './ActivityTab/ActivityTab';
+import { FaqModal } from './FaqModal';
 import { HudToggle } from '../controls/HudToggle';
 import { InfoTooltip } from '../controls/InfoTooltip';
-import { Save, AlertTriangle } from 'lucide-react';
+import { Save, AlertTriangle, HelpCircle } from 'lucide-react';
 import styles from './AgentSettingsBoard.module.css';
 import { useControlSound } from '../controls/useControlSound';
+import type { FaqCategory } from '../../constants/faqs';
 
 export interface AgentSettings {
   // Mode-specific settings are managed by each mode component
@@ -124,9 +126,23 @@ export function AgentSettingsBoard({
   const { playTick: playConfirmSound } = useControlSound('confirm');
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
+  /* FAQ Modal State */
+  const [showFaqModal, setShowFaqModal] = useState(false);
+
   /* Mode Change Alert State */
   const [showModeAlert, setShowModeAlert] = useState(false);
   const previousModeRef = useRef<AgentMode>(agent.mode);
+
+  // Map agent mode to FAQ category
+  const getFaqCategory = (mode: AgentMode): FaqCategory => {
+    const modeMap: Record<AgentMode, FaqCategory> = {
+      standard: 'standard',
+      't-mode': 't-mode',
+      prediction: 'prediction',
+      perpetuals: 'perpetuals',
+    };
+    return modeMap[mode] || 'standard';
+  };
 
   // Detect mode changes (skip initial render)
   useEffect(() => {
@@ -231,7 +247,17 @@ export function AgentSettingsBoard({
               </div>
             </div>
             <div className={styles.modeSelectorHeader}>
-              <div className={styles.modeSelectorTitle}>Trading Mode</div>
+              <div className={styles.modeSelectorTitle}>
+                Trading Mode
+                <button
+                  className={styles.faqButton}
+                  onClick={() => setShowFaqModal(true)}
+                  title="View FAQ"
+                >
+                  <HelpCircle size={16} />
+                  <span>FAQ</span>
+                </button>
+              </div>
               <div className={styles.paperTradingToggle}>
                 <span className={styles.paperTradingLabel}>
                   Paper Trading
@@ -341,6 +367,7 @@ export function AgentSettingsBoard({
           <RiskSettings
             settings={riskSettings}
             onChange={handleRiskSettingsChange}
+            mode={agent.mode}
           />
         </div>
       )}
@@ -363,6 +390,13 @@ export function AgentSettingsBoard({
         <Save size={16} />
         Save Changes
       </button>
+
+      {/* FAQ Modal */}
+      <FaqModal
+        isOpen={showFaqModal}
+        onClose={() => setShowFaqModal(false)}
+        mode={getFaqCategory(agent.mode)}
+      />
     </div>
   );
 }

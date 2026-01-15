@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { ChevronDown } from 'lucide-react';
+import { InfoTooltip } from '../controls/InfoTooltip';
 import styles from './AgentSettingsBoard.module.css';
 
 export interface CollapsibleSectionProps {
@@ -82,18 +83,23 @@ export function CollapsibleSection({
 export interface ControlRowProps {
   label: string;
   helper?: string;
+  /** Detailed tooltip text shown on hover */
+  tooltip?: string;
   children: React.ReactNode;
 }
 
 /**
  * Control Row Component
  *
- * Standardized layout for a control with label and optional help text
+ * Standardized layout for a control with label, optional help text, and tooltip
  */
-export function ControlRow({ label, helper, children }: ControlRowProps) {
+export function ControlRow({ label, helper, tooltip, children }: ControlRowProps) {
   return (
     <div className={styles.controlRow}>
-      <label className={styles.controlLabel}>{label}</label>
+      <label className={styles.controlLabel}>
+        {label}
+        {tooltip && <InfoTooltip text={tooltip} />}
+      </label>
       {children}
       {helper && <span className={styles.controlHelper}>{helper}</span>}
     </div>
