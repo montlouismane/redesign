@@ -1,0 +1,42 @@
+/* SettingsView - Desktop 2-column, Mobile single-column layout */
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+    padding-bottom: 40px;
+}
+
+.content {
+    padding: 20px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.column {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Mobile: Stack columns vertically */
+@media (max-width: 767px) {
+    .content {
+        grid-template-columns: 1fr;
+        padding: 12px;
+        gap: 16px;
+    }
+
+    .column {
+        gap: 16px;
+    }
+}
+
+/* Tablet: Slightly tighter spacing */
+@media (min-width: 768px) and (max-width: 1023px) {
+    .content {
+        padding: 16px;
+        gap: 16px;
+    }
+}

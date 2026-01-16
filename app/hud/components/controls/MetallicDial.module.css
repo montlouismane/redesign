@@ -1,0 +1,263 @@
+/* MetallicDial - Premium Copper Rotary Knob
+   ===========================================
+   Inspired by https://codepen.io/bbx/pen/QBKYOy
+   Colors: #b87333 (copper), #e2a76f (highlight), #8b4513 (shadow)
+*/
+
+/* CSS Variables */
+.metallicDial {
+  --copper: #b87333;
+  --copper-light: #e2a76f;
+  --copper-dark: #8b4513;
+  --copper-glow: rgba(184, 115, 51, 0.5);
+  --safe-color: #35ff9b;
+  --dial-size: 120px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.metallicDial[data-disabled="true"] {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* Label */
+.dialLabel {
+  font-family: var(--font-display, 'Orbitron', sans-serif);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(167, 167, 181, 0.9);
+  text-align: center;
+}
+
+/* Knob container */
+.knobContainer {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Tick marks container */
+.ticks {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* Individual tick */
+.tick {
+  position: absolute;
+  width: 2px;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 1px;
+  transition: box-shadow 0.3s ease, background 0.3s ease;
+}
+
+/* Active tick - glowing copper */
+.tick[data-active="true"] {
+  background: var(--copper);
+  box-shadow:
+    inset 0 0 5px 2px var(--copper-light),
+    0 0 8px 1px var(--copper-glow);
+}
+
+/* Safe zone tick */
+.tick[data-safe="true"] {
+  background: rgba(53, 255, 155, 0.3);
+}
+
+.tick[data-safe="true"][data-active="true"] {
+  background: var(--safe-color);
+  box-shadow:
+    inset 0 0 5px 2px rgba(100, 255, 180, 0.8),
+    0 0 8px 1px rgba(53, 255, 155, 0.5);
+}
+
+/* Outer knob */
+.knobOuter {
+  position: absolute;
+  width: calc(100% - var(--dial-size) * 0.3);
+  height: calc(100% - var(--dial-size) * 0.3);
+  border-radius: 50%;
+  cursor: grab;
+  user-select: none;
+
+  /* 3D metallic effect */
+  background-image:
+    radial-gradient(
+      100% 70%,
+      rgba(140, 100, 60, 0.9) 6%,
+      rgba(80, 50, 30, 0.95) 90%
+    );
+  border: 1px solid rgba(60, 40, 20, 0.8);
+  border-bottom: 4px solid rgba(40, 25, 15, 0.9);
+  box-shadow:
+    0 5px 15px 2px rgba(0, 0, 0, 0.6),
+    0 0 5px 3px rgba(0, 0, 0, 0.4),
+    0 0 0 8px rgba(60, 45, 35, 0.8),
+    inset 0 2px 4px rgba(255, 200, 150, 0.15);
+}
+
+.knobOuter:active {
+  cursor: grabbing;
+}
+
+/* Safe zone outer knob tint - REMOVED: keep copper throughout
+   Green is only used for safe zone tick marks */
+
+/* Inner knob (rotates) */
+.knobInner {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  position: relative;
+  transition: transform 0.05s ease-out;
+}
+
+/* Grip indicator dot - positioned on outer edge of knob */
+.grip {
+  position: absolute;
+  width: 7%;
+  height: 7%;
+  bottom: 2%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: var(--copper-light);
+  box-shadow:
+    0 0 6px 2px var(--copper-glow),
+    inset 0 1px 2px rgba(255, 255, 255, 0.4);
+}
+
+/* Grip stays copper - REMOVED green safe zone styling */
+
+/* Value overlay in center */
+.valueOverlay {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+  z-index: 10;
+}
+
+/* Value button (clickable to edit) */
+.valueButton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.7);
+  border: 1px solid rgba(184, 115, 51, 0.3);
+  border-radius: 50%;
+  width: calc(var(--dial-size) * 0.48);
+  height: calc(var(--dial-size) * 0.48);
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  padding: 0;
+}
+
+.valueButton:hover:not(:disabled) {
+  background: rgba(184, 115, 51, 0.15);
+  border-color: var(--copper);
+  box-shadow: 0 0 12px var(--copper-glow);
+}
+
+.valueButton:disabled {
+  cursor: not-allowed;
+}
+
+/* Value button stays copper - REMOVED green safe zone styling */
+
+/* Value number */
+.valueNumber {
+  font-family: var(--font-display, 'Orbitron', sans-serif);
+  font-size: calc(var(--dial-size) * 0.14);
+  font-weight: 700;
+  color: var(--copper-light);
+  letter-spacing: 0.05em;
+  line-height: 1;
+}
+
+/* Smaller font for decimal values */
+.valueNumber[data-decimal="true"] {
+  font-size: calc(var(--dial-size) * 0.12);
+  letter-spacing: 0.02em;
+}
+
+/* Value number stays copper - REMOVED green safe zone styling */
+
+/* Value unit */
+.valueUnit {
+  font-family: var(--font-display, 'Orbitron', sans-serif);
+  font-size: calc(var(--dial-size) * 0.08);
+  font-weight: 600;
+  color: rgba(167, 167, 181, 0.7);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+/* Smaller unit for decimal values */
+.valueUnit[data-decimal="true"] {
+  font-size: calc(var(--dial-size) * 0.07);
+  letter-spacing: 0.08em;
+  margin-top: 1px;
+}
+
+/* Value input (edit mode) */
+.valueInput {
+  width: calc(var(--dial-size) * 0.42);
+  height: calc(var(--dial-size) * 0.42);
+  background: rgba(0, 0, 0, 0.8);
+  border: 1px solid var(--copper);
+  border-radius: 50%;
+  font-family: var(--font-display, 'Orbitron', sans-serif);
+  font-size: calc(var(--dial-size) * 0.12);
+  font-weight: 700;
+  color: #fff;
+  text-align: center;
+  outline: none;
+  padding: 0;
+}
+
+.valueInput:focus-visible {
+  background: rgba(184, 115, 51, 0.2);
+  box-shadow: 0 0 0 2px rgba(184, 115, 51, 0.5);
+}
+
+.valueInput:focus {
+  box-shadow: 0 0 12px var(--copper-glow);
+}
+
+/* Dragging state */
+.metallicDial[data-dragging="true"] .knobOuter {
+  cursor: grabbing;
+  box-shadow:
+    0 8px 20px 4px rgba(0, 0, 0, 0.7),
+    0 0 8px 4px rgba(0, 0, 0, 0.5),
+    0 0 0 8px rgba(60, 45, 35, 0.9),
+    inset 0 2px 4px rgba(255, 200, 150, 0.2);
+}
+
+.metallicDial[data-dragging="true"] .grip {
+  box-shadow:
+    0 0 12px 4px var(--copper-glow),
+    inset 0 1px 2px rgba(255, 255, 255, 0.5);
+}
+
+/* Hover effects */
+.knobOuter:hover .grip {
+  box-shadow:
+    0 0 10px 3px var(--copper-glow),
+    inset 0 1px 2px rgba(255, 255, 255, 0.5);
+}
+
+/* Knob hover stays copper - REMOVED green safe zone hover styling */

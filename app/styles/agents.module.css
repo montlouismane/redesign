@@ -1,0 +1,270 @@
+/* Ported from HudDashboard.module.css */
+
+.panelAgents {
+    grid-area: agents;
+    display: flex;
+    flex-direction: column;
+    min-height: 0; /* Desktop: fit to grid */
+}
+
+.panelLoaded {
+    /* Class to handle loaded state if needed, though mostly inline styles in original */
+}
+
+.agentsTop {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    position: relative;
+    z-index: 1;
+    margin-bottom: 12px;
+}
+
+.agentsTop .filter {
+    border: 1px solid rgba(var(--tintR), var(--tintG), var(--tintB), 0.14);
+    background: rgba(0, 0, 0, 0.18);
+    color: rgba(232, 232, 238, 0.85);
+    padding: 8px 10px;
+    border-radius: 2px;
+    letter-spacing: 0.1em;
+    font-family: var(--font);
+    cursor: pointer;
+}
+
+.agentList {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 2px 2px 0 0;
+}
+
+.agentItem {
+    display: grid;
+    grid-template-columns: 44px 1fr auto;
+    gap: 16px;
+    align-items: center;
+    padding: 14px 16px;
+    border-radius: 2px;
+    border: 1px solid rgba(var(--tintR), var(--tintG), var(--tintB), 0.14);
+    background: rgba(0, 0, 0, 0.18);
+    cursor: pointer;
+    transition: transform 0.1s ease, border-color 0.1s ease, box-shadow 0.1s ease;
+}
+
+/* ... existing hover styles ... */
+
+.agentItem:hover {
+    transform: translateY(-1px);
+    border-color: rgba(var(--tintR), var(--tintG), var(--tintB), 0.26);
+    box-shadow: 0 0 24px rgba(var(--tintR), var(--tintG), var(--tintB), 0.08);
+}
+
+.agentItem.isActive {
+    border-color: rgba(var(--tintR), var(--tintG), var(--tintB), 0.34);
+    background: rgba(var(--tintR), var(--tintG), var(--tintB), 0.05);
+}
+
+.agentIcon {
+    width: 44px;
+    height: 44px;
+    border-radius: 2px;
+    display: grid;
+    place-items: center;
+    border: 1px solid rgba(var(--tintR), var(--tintG), var(--tintB), 0.2);
+    background: rgba(var(--tintR), var(--tintG), var(--tintB), 0.06);
+    box-shadow: 0 0 calc(18px * var(--hudGlowBoost)) rgba(var(--tintR), var(--tintG), var(--tintB), 0.1);
+    font-weight: 800;
+}
+
+.agentName {
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: 0.1em;
+}
+
+.agentSub {
+    font-size: 11px;
+    color: rgba(232, 232, 238, 0.6);
+    margin-top: 4px;
+    letter-spacing: 0.08em;
+}
+
+.agentRight {
+    text-align: right;
+}
+
+.agentPnl {
+    font-weight: 700;
+    letter-spacing: 0.08em;
+}
+
+.agentAum {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 4px;
+}
+
+.dot {
+    display: inline-block;
+    width: 9px;
+    height: 9px;
+    border-radius: 999px;
+    margin-right: 8px;
+    transform: translateY(-1px);
+}
+
+.dotRunning {
+    background: rgba(53, 255, 155, 0.92);
+    box-shadow: 0 0 14px rgba(53, 255, 155, 0.18);
+}
+
+.dotIdle {
+    background: rgba(var(--tintR), var(--tintG), var(--tintB), 0.92);
+    box-shadow: 0 0 14px rgba(var(--tintR), var(--tintG), var(--tintB), 0.16);
+}
+
+.dotAlert {
+    background: rgba(255, 59, 59, 0.92);
+    box-shadow: 0 0 14px rgba(255, 59, 59, 0.16);
+}
+
+.dotStopped {
+    background: #666;
+}
+
+.pos {
+    color: var(--ok);
+}
+
+.neg {
+    color: var(--danger);
+}
+
+.muted {
+    color: var(--muted);
+}
+
+/* Deploy New Agent Card - matches agent item size */
+.deployBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    min-height: 76px; /* Match agent item height */
+    padding: 14px 16px;
+    border: 2px dashed rgba(var(--tintR), var(--tintG), var(--tintB), 0.35);
+    background: rgba(var(--tintR), var(--tintG), var(--tintB), 0.04);
+    color: rgba(var(--tintR), var(--tintG), var(--tintB), 0.85);
+    border-radius: 2px;
+    font-family: var(--font-display);
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Subtle shimmer effect on idle */
+.deployBtn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        135deg,
+        transparent 0%,
+        rgba(var(--tintR), var(--tintG), var(--tintB), 0.05) 50%,
+        transparent 100%
+    );
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.deployBtn:hover {
+    background: rgba(var(--tintR), var(--tintG), var(--tintB), 0.1);
+    color: rgba(var(--tintR), var(--tintG), var(--tintB), 1);
+    border-color: rgba(var(--tintR), var(--tintG), var(--tintB), 0.6);
+    border-style: solid;
+    transform: translateY(-1px);
+    box-shadow:
+        0 0 24px rgba(var(--tintR), var(--tintG), var(--tintB), 0.15),
+        inset 0 0 20px rgba(var(--tintR), var(--tintG), var(--tintB), 0.05);
+}
+
+.deployBtn:hover::before {
+    opacity: 1;
+}
+
+.deployBtn:active {
+    transform: translateY(0);
+}
+
+/* ========================================
+   RESPONSIVE BREAKPOINTS
+   ======================================== */
+
+/* Tablet */
+@media (max-width: 1279px) and (min-width: 768px) {
+    .panelAgents {
+        min-height: 280px;
+    }
+    .agentItem {
+        gap: 12px;
+        padding: 12px 14px;
+    }
+    .agentIcon {
+        width: 40px;
+        height: 40px;
+    }
+    .agentName {
+        font-size: 12px;
+    }
+    .agentSub {
+        font-size: 10px;
+    }
+}
+
+/* Mobile */
+@media (max-width: 767px) {
+    .panelAgents {
+        min-height: 300px;
+    }
+    .agentList {
+        gap: 10px;
+    }
+    .agentItem {
+        grid-template-columns: 44px 1fr auto;
+        gap: 12px;
+        padding: 12px 14px;
+        min-height: 72px;
+    }
+    .agentIcon {
+        width: 44px;
+        height: 44px;
+        font-size: 14px;
+    }
+    .agentName {
+        font-size: 13px;
+        letter-spacing: 0.08em;
+    }
+    .agentSub {
+        font-size: 11px;
+        margin-top: 2px;
+    }
+    .agentPnl {
+        font-size: 13px;
+    }
+    .agentAum {
+        font-size: 10px;
+    }
+    .deployBtn {
+        min-height: 60px;
+        padding: 12px 14px;
+        font-size: 12px;
+    }
+}

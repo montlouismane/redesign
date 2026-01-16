@@ -1,0 +1,392 @@
+/* MetallicVerticalSlider - Premium Copper Aesthetic (Vertical)
+   ==============================================================
+   Uses native range input as foundation with custom visual overlay.
+   Colors: #b87333 (copper), #e2a76f (highlight), #8b4513 (shadow)
+*/
+
+/* CSS Variables */
+.metallicVerticalSlider {
+  --copper: #b87333;
+  --copper-light: #e2a76f;
+  --copper-dark: #8b4513;
+  --copper-glow: rgba(184, 115, 51, 0.5);
+  --track-width: 6px;
+  /* Fader Dimensions: Vertical Rectangle (User refined) */
+  --thumb-width: 18px;
+  --thumb-height: 30px;
+  --tick-width: 8px;
+  --tick-width-major: 14px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 80px;
+  padding: 0;
+}
+
+.metallicVerticalSlider[data-disabled="true"] {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* Label */
+.sliderLabel {
+  font-family: var(--font-display, 'Orbitron', sans-serif);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(167, 167, 181, 0.9);
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* Main slider container */
+.sliderContainer {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 160px;
+  width: 100%;
+  cursor: pointer;
+}
+
+/* Track Area - defines the travel boundaries */
+.trackArea {
+  position: absolute;
+  top: 16px;
+  bottom: 16px;
+  width: 100%;
+  /* This ensures the travel range is inset, so the thumb doesn't overshoot the container */
+}
+
+/* Track background with brushed metal effect */
+.trackBackground {
+  position: absolute;
+  left: 50%;
+  top: -6px;
+  /* Extend track slightly beyond travel range */
+  bottom: -6px;
+  /* Extend track slightly beyond travel range */
+  width: var(--track-width);
+  transform: translateX(-50%);
+  border-radius: calc(var(--track-width) / 2);
+  overflow: visible;
+  /* Allow glow to spill */
+
+  /* 3D brushed copper track */
+  background:
+    linear-gradient(90deg,
+      rgba(0, 0, 0, 0.6) 0%,
+      rgba(30, 20, 10, 0.8) 20%,
+      rgba(50, 35, 20, 0.6) 50%,
+      rgba(30, 20, 10, 0.8) 80%,
+      rgba(0, 0, 0, 0.6) 100%);
+  box-shadow:
+    inset 1px 0 2px rgba(0, 0, 0, 0.8),
+    1px 0 0 rgba(226, 167, 111, 0.1);
+  border: 1px solid rgba(139, 69, 19, 0.3);
+}
+
+/* Filled portion of track (from bottom) */
+.trackFill {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  border-radius: 0 0 calc(var(--track-width) / 2) calc(var(--track-width) / 2);
+  transition: height 0.05s ease-out;
+
+  /* Brushed copper fill with highlight */
+  background:
+    linear-gradient(90deg,
+      var(--copper-dark) 0%,
+      var(--copper) 30%,
+      var(--copper-light) 50%,
+      var(--copper) 70%,
+      var(--copper-dark) 100%);
+  box-shadow:
+    inset 1px 0 0 rgba(255, 255, 255, 0.3),
+    inset -1px 0 0 rgba(0, 0, 0, 0.3),
+    0 0 8px var(--copper-glow);
+}
+
+/* Safe zone highlight on track */
+.safeZone {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  background: rgba(53, 255, 155, 0.15);
+  pointer-events: none;
+}
+
+/* Tick marks container (on the right side) */
+.tickContainer {
+  position: absolute;
+  left: calc(50% + var(--track-width) / 2 + 6px);
+  top: 0;
+  bottom: 0;
+  width: var(--tick-width-major);
+  pointer-events: none;
+}
+
+/* Individual tick mark */
+.tick {
+  position: absolute;
+  left: 0;
+  height: 1px;
+  width: var(--tick-width);
+  transform: translateY(50%);
+  transition: background 0.15s ease, box-shadow 0.15s ease;
+
+  /* Inactive tick */
+  background: rgba(139, 69, 19, 0.5);
+}
+
+/* Active tick (value passed) */
+.tick[data-active="true"] {
+  background: var(--copper-light);
+  box-shadow: 0 0 4px var(--copper-glow);
+}
+
+/* Major ticks (start, middle, end) */
+.tick[data-major="true"] {
+  width: var(--tick-width-major);
+  height: 2px;
+  background: var(--copper);
+}
+
+/* Floating value label (on the left side) - HIDDEN per user request */
+.valueLabel {
+  display: none;
+}
+
+.valueLabel[data-visible="true"] {
+  display: none;
+}
+
+.valueLabelText {
+  font-family: var(--font-display, 'Orbitron', sans-serif);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--copper-light);
+}
+
+.valueLabelUnit {
+  font-size: 8px;
+  font-weight: 600;
+  margin-left: 2px;
+  opacity: 0.7;
+}
+
+.valueLabelArrow {
+  position: absolute;
+  right: -5px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+  border-left: 5px solid var(--copper);
+}
+
+/* Custom thumb visual overlay */
+.thumbVisual {
+  position: absolute;
+  left: 50%;
+  width: var(--thumb-width);
+  height: var(--thumb-height);
+  transform: translate(-50%, 50%);
+  pointer-events: none;
+  z-index: 50;
+  /* Ensure it's above everything */
+  transition: transform 0.05s ease;
+}
+
+.thumbVisual[data-dragging="true"] {
+  transform: translate(-50%, 50%) scale(1.05);
+}
+
+.thumbInner {
+  width: 100%;
+  height: 100%;
+  border-radius: 2px;
+  /* Rectangular fader */
+  position: relative;
+  overflow: hidden;
+
+  /* Fader style: Brushed copper block */
+  background:
+    linear-gradient(180deg,
+      #cf8f53 0%,
+      #b87333 45%,
+      #8b4513 55%,
+      #5c3210 100%);
+  box-shadow:
+    0 4px 8px rgba(0, 0, 0, 0.7),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.6);
+  border: 1px solid #703a15;
+}
+
+/* Center groove line on fader */
+.thumbHighlight {
+  position: absolute;
+  top: 50%;
+  left: 5%;
+  right: 5%;
+  height: 2px;
+  background: rgba(0, 0, 0, 0.8);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  transform: translateY(-50%);
+}
+
+/* Grip texture lines */
+.thumbGroove {
+  display: none;
+  /* Simplified fader look */
+}
+
+/* Native range input */
+.rangeInput {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: var(--thumb-width);
+  transform: translateX(-50%);
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+  z-index: 20;
+
+  /* Vertical orientation standard props */
+  writing-mode: vertical-lr;
+  direction: rtl;
+  -webkit-appearance: slider-vertical;
+  appearance: slider-vertical;
+  opacity: 0;
+  /* Fully invisible overlay */
+}
+
+/* Value display button */
+.valueDisplay {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 3px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(184, 115, 51, 0.2);
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  min-width: 60px;
+}
+
+.valueDisplay:hover:not(:disabled) {
+  border-color: var(--copper);
+  box-shadow: 0 0 8px rgba(184, 115, 51, 0.2);
+}
+
+.valueNumber {
+  font-family: var(--font-display, 'Orbitron', sans-serif);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--copper-light);
+}
+
+.valueUnit {
+  font-family: var(--font-display, 'Orbitron', sans-serif);
+  font-size: 9px;
+  font-weight: 600;
+  color: rgba(184, 115, 51, 0.7);
+}
+
+/* Inline Edit */
+.valueEditContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--copper);
+  min-width: 60px;
+}
+
+.valueInput {
+  width: 40px;
+  background: transparent;
+  border: none;
+  font-family: var(--font-display, 'Orbitron', sans-serif);
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  text-align: center;
+  outline: none;
+}
+
+.valueInput:focus-visible {
+  background: rgba(184, 115, 51, 0.15);
+  box-shadow: inset 0 0 0 1px rgba(184, 115, 51, 0.5);
+  border-radius: 2px;
+}
+
+.metallicVerticalSlider[data-disabled="true"] {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* Label */
+.sliderLabel {
+  font-family: var(--font-display, 'Orbitron', sans-serif);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(167, 167, 181, 0.9);
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* End of MetallicVerticalSlider styles */
+
+/* ============================================
+   Hover & Dragging Effects
+   ============================================ */
+
+.sliderContainer:hover .trackFill {
+  box-shadow:
+    inset 1px 0 0 rgba(255, 255, 255, 0.4),
+    inset -1px 0 0 rgba(0, 0, 0, 0.3),
+    0 0 12px var(--copper-glow);
+}
+
+.sliderContainer:hover .thumbInner {
+  box-shadow:
+    0 0 16px var(--copper-glow),
+    0 4px 8px rgba(0, 0, 0, 0.4),
+    inset 0 2px 4px rgba(255, 255, 255, 0.4),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.metallicVerticalSlider[data-dragging="true"] .trackFill {
+  box-shadow:
+    inset 1px 0 0 rgba(255, 255, 255, 0.5),
+    inset -1px 0 0 rgba(0, 0, 0, 0.3),
+    0 0 20px rgba(184, 115, 51, 0.6);
+}
+
+.metallicVerticalSlider[data-dragging="true"] .thumbInner {
+  box-shadow:
+    0 0 24px rgba(184, 115, 51, 0.7),
+    0 6px 12px rgba(0, 0, 0, 0.5),
+    inset 0 2px 4px rgba(255, 255, 255, 0.5),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.4);
+}

@@ -1,0 +1,270 @@
+/* TimeAdjuster - Numeric Timer Control with +/- Buttons
+   =====================================================
+   A compact control for timer/cooldown values with satisfying click feedback.
+   Uses 5-minute increments. Copper metallic aesthetic.
+*/
+
+.timeAdjuster {
+  --copper: #b87333;
+  --copper-light: #e2a76f;
+  --copper-dark: #8b4513;
+  --copper-glow: rgba(184, 115, 51, 0.5);
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+}
+
+.timeAdjuster[data-disabled="true"] {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* Label */
+.label {
+  font-family: var(--font-display, 'Orbitron', sans-serif);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(167, 167, 181, 0.9);
+  text-align: center;
+}
+
+/* Main control container */
+.controlContainer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  overflow: visible;
+}
+
+/* Stepper buttons (- and +) */
+.stepperButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(184, 115, 51, 0.3);
+  border-radius: 3px;
+  cursor: pointer;
+  color: var(--copper-light);
+  font-size: 18px;
+  font-weight: 700;
+  transition: background 0.1s ease, border-color 0.1s ease, transform 0.1s ease;
+  user-select: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.stepperButton::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg,
+      rgba(184, 115, 51, 0.1) 0%,
+      rgba(184, 115, 51, 0.05) 100%);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.stepperButton:hover {
+  border-color: var(--copper);
+  /* No glow - blends poorly with dark background */
+}
+
+.stepperButton:hover::before {
+  opacity: 1;
+}
+
+.stepperButton:active {
+  transform: scale(0.95);
+}
+
+/* Click ripple effect */
+.stepperButton:active::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, var(--copper-glow) 0%, transparent 70%);
+  animation: ripple 0.3s ease-out;
+}
+
+@keyframes ripple {
+  0% {
+    opacity: 0.6;
+    transform: scale(0.5);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(1.5);
+  }
+}
+
+/* Metallic press effect for satisfying click */
+.stepperButton:active .stepperIcon {
+  transform: translateY(1px);
+  text-shadow: 0 0 8px var(--copper-glow);
+}
+
+.stepperIcon {
+  position: relative;
+  z-index: 1;
+  transition: background 0.1s ease, border-color 0.1s ease, transform 0.1s ease;
+  font-family: var(--font-display, 'Orbitron', sans-serif);
+  line-height: 1;
+}
+
+/* Divider removal - using gap instead */
+.stepperButton:first-child {
+  border-right: 1px solid rgba(184, 115, 51, 0.3);
+}
+
+.stepperButton:last-child {
+  border-left: 1px solid rgba(184, 115, 51, 0.3);
+}
+
+/* Value display in center */
+.valueDisplay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 60px;
+  height: 48px;
+  padding: 0 8px;
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+  border: none;
+}
+
+.valueDisplay:hover {
+  background: rgba(184, 115, 51, 0.05);
+  border-radius: 4px;
+}
+
+.valueNumber {
+  font-family: var(--font-display, 'Orbitron', sans-serif);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--copper-light);
+  letter-spacing: 0.05em;
+  line-height: 1.1;
+}
+
+.valueUnit {
+  font-family: var(--font-display, 'Orbitron', sans-serif);
+  font-size: 9px;
+  font-weight: 600;
+  color: rgba(184, 115, 51, 0.6);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+/* Edit mode */
+.editContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 70px;
+  height: 48px;
+  padding: 0 8px;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.valueInput {
+  width: 50px;
+  padding: 4px;
+  background: transparent;
+  border: none;
+  font-family: var(--font-display, 'Orbitron', sans-serif);
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+  text-align: center;
+  outline: none;
+  letter-spacing: 0.05em;
+}
+
+.valueInput:focus {
+  color: var(--copper-light);
+}
+
+.valueInput:focus-visible {
+  background: rgba(184, 115, 51, 0.15);
+  box-shadow: inset 0 0 0 1px rgba(184, 115, 51, 0.5);
+  border-radius: 2px;
+}
+
+/* Focus ring on entire container when focused */
+.controlContainer:focus-within {
+  border-color: var(--copper);
+  /* No glow - blends poorly with dark background */
+}
+
+/* Increment indicator (shows +5 or -5 on hover) */
+.incrementHint {
+  font-family: var(--font-display, 'Orbitron', sans-serif);
+  font-size: 8px;
+  font-weight: 600;
+  color: rgba(184, 115, 51, 0.5);
+  letter-spacing: 0.05em;
+  margin-top: 2px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.timeAdjuster:hover .incrementHint {
+  opacity: 1;
+}
+
+/* Large size variant - matches dial height better */
+.timeAdjuster[data-size="large"] {
+  /* Add top margin to align with dial visual center */
+  margin-top: 16px;
+}
+
+.timeAdjuster[data-size="large"] .stepperButton {
+  width: 44px;
+  height: 44px;
+  font-size: 22px;
+}
+
+.timeAdjuster[data-size="large"] .valueDisplay {
+  min-width: 80px;
+  height: 64px;
+  padding: 0 12px;
+}
+
+.timeAdjuster[data-size="large"] .valueNumber {
+  font-size: 24px;
+}
+
+.timeAdjuster[data-size="large"] .valueUnit {
+  font-size: 10px;
+  margin-top: 2px;
+}
+
+.timeAdjuster[data-size="large"] .editContainer {
+  min-width: 90px;
+  height: 64px;
+}
+
+.timeAdjuster[data-size="large"] .valueInput {
+  width: 70px;
+  font-size: 24px;
+}
+
+.timeAdjuster[data-size="large"] .incrementHint {
+  font-size: 9px;
+  margin-top: 4px;
+}

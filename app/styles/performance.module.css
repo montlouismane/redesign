@@ -1,0 +1,194 @@
+/* Ported from HudDashboard.module.css */
+
+.panelPerformance {
+    grid-area: performance;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    min-height: 0; /* Desktop: fit to grid */
+    z-index: 5;
+    overflow: hidden;
+}
+
+.perfTop {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.seg {
+    display: flex;
+    border: 1px solid rgba(var(--tintR), var(--tintG), var(--tintB), 0.14);
+    border-radius: 2px;
+    overflow: hidden;
+    background: rgba(0, 0, 0, 0.18);
+}
+
+.segBtn {
+    border: 0;
+    background: transparent;
+    color: rgba(232, 232, 238, 0.7);
+    padding: 12px 14px;
+    min-height: 44px;
+    font-family: var(--font);
+    letter-spacing: 0.12em;
+    cursor: pointer;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.segBtn.isOn {
+    color: var(--text);
+    background: linear-gradient(180deg, rgba(var(--tintR), var(--tintG), var(--tintB), 0.14), rgba(var(--tintR), var(--tintG), var(--tintB), 0.06));
+}
+
+.kpis {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+    justify-content: center;
+    padding-left: 16px;
+    padding-right: 16px;
+}
+
+.kpi {
+    border: 1px solid rgba(var(--tintR), var(--tintG), var(--tintB), 0.12);
+    background: rgba(0, 0, 0, 0.16);
+    border-radius: 2px;
+    padding: 10px 12px;
+    min-width: 160px;
+}
+
+.kpiKey {
+    font-family: var(--font-display);
+    color: var(--muted);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+}
+
+.kpiVal {
+    font-family: var(--font-display);
+    margin-top: 7px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+}
+
+.chartWrap {
+    position: relative;
+    z-index: 1;
+    border: 1px solid rgba(var(--tintR), var(--tintG), var(--tintB), 0.12);
+    background: rgba(0, 0, 0, 0.12);
+    border-radius: 2px;
+    padding: 12px;
+    min-height: 120px; /* Minimum size for chart readability */
+    overflow: hidden;
+    flex: 1; /* Fill remaining space */
+}
+
+.chartCanvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+.chartTooltip {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    padding: 10px 12px;
+    border-radius: 2px;
+    border: 1px solid rgba(var(--tintR), var(--tintG), var(--tintB), 0.14);
+    background: rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(6px);
+    display: none;
+    pointer-events: none;
+    box-shadow: 0 18px 55px rgba(0, 0, 0, 0.45);
+}
+
+.chartTooltip .tKey {
+    color: var(--muted);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+}
+
+.chartTooltip .tVal {
+    margin-top: 6px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+}
+
+.pos {
+    color: var(--ok);
+}
+
+.neg {
+    color: var(--danger);
+}
+
+.muted {
+    color: var(--muted);
+}
+
+/* ========================================
+   RESPONSIVE BREAKPOINTS
+   ======================================== */
+
+/* Tablet */
+@media (max-width: 1279px) and (min-width: 768px) {
+    .chartWrap {
+        height: auto;
+        min-height: 160px;
+    }
+    .kpi {
+        min-width: 140px;
+        padding: 8px 10px;
+    }
+}
+
+/* Mobile */
+@media (max-width: 767px) {
+    .panelPerformance {
+        min-height: 280px;
+    }
+    .chartWrap {
+        height: auto;
+        min-height: 180px;
+    }
+    .perfTop {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    .seg {
+        flex-wrap: wrap;
+    }
+    .segBtn {
+        padding: 10px 12px;
+        font-size: 10px;
+        min-height: 44px;
+    }
+    .kpis {
+        gap: 8px;
+        padding-left: 8px;
+        padding-right: 8px;
+    }
+    .kpi {
+        min-width: 100px;
+        flex: 1 1 calc(50% - 8px);
+        padding: 10px;
+    }
+    .kpiKey {
+        font-size: 9px;
+    }
+    .kpiVal {
+        font-size: 14px;
+    }
+}

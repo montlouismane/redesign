@@ -1,0 +1,134 @@
+/* Ported from HudDashboard.module.css */
+
+.allocWrap {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: minmax(120px, 160px) 1fr;
+    gap: 14px;
+    align-items: center;
+    padding: 4px;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+.donut {
+    width: 130px;
+    height: 130px;
+    box-sizing: content-box;
+    text-align: left;
+    aspect-ratio: 1;
+    border-radius: 999px;
+    background: conic-gradient(rgba(var(--tintR), var(--tintG), var(--tintB), 0.95) 0% 52%,
+            rgba(45, 212, 191, 0.92) 52% 83%,
+            rgba(42, 48, 60, 0.92) 83% 100%);
+    box-shadow: 0 0 calc(40px * var(--hudGlowBoost)) rgba(var(--tintR), var(--tintG), var(--tintB), 0.12);
+    border: 1px solid rgba(var(--tintR), var(--tintG), var(--tintB), 0.16);
+    position: relative;
+    flex-shrink: 0;
+    margin: 0 auto;
+    overflow: visible;
+}
+
+.donut::after {
+    content: "";
+    position: absolute;
+    inset: 20%;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.55);
+    border: 1px solid rgba(var(--tintR), var(--tintG), var(--tintB), 0.12);
+}
+
+.legend {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 0;
+    flex: 1;
+}
+
+.legendItem {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    min-width: 0;
+}
+
+.swatch {
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+    margin-right: 10px;
+    display: inline-block;
+    flex-shrink: 0;
+}
+
+.liLeft {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: rgba(232, 232, 238, 0.88);
+    min-width: 0;
+    flex: 1;
+}
+
+.liRight {
+    color: rgba(232, 232, 238, 0.78);
+    flex-shrink: 0;
+    font-weight: 600;
+}
+
+.mono {
+    font-family: var(--mono);
+    letter-spacing: 0.02em;
+}
+
+/* ========================================
+   RESPONSIVE BREAKPOINTS
+   ======================================== */
+
+/* Tablet */
+@media (max-width: 1279px) and (min-width: 768px) {
+    .allocWrap {
+        grid-template-columns: minmax(100px, 140px) 1fr;
+        gap: 12px;
+    }
+    .donut {
+        width: 110px;
+        height: 110px;
+    }
+    .legendItem {
+        font-size: 11px;
+    }
+}
+
+/* Mobile */
+@media (max-width: 767px) {
+    .allocWrap {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto;
+        gap: 16px;
+        padding: 8px;
+    }
+    .donut {
+        width: 140px;
+        height: 140px;
+        margin: 0 auto;
+    }
+    .legend {
+        gap: 8px;
+    }
+    .legendItem {
+        font-size: 12px;
+        padding: 8px 0;
+        min-height: 44px;
+    }
+    .swatch {
+        width: 12px;
+        height: 12px;
+    }
+}

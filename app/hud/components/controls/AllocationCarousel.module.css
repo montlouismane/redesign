@@ -1,0 +1,408 @@
+/* AllocationCarousel - Horizontal scrolling token allocation carousel
+   Matches Partial Profit Taking carousel pattern
+*/
+
+.allocationCarousel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.allocationCarousel[data-disabled="true"] {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* Header with total */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px;
+}
+
+.headerTitle {
+  font-family: var(--font-display, 'Orbitron', sans-serif);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--textMuted, #a7a7b5);
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.totalBadge {
+  font-family: var(--font-display, 'Orbitron', sans-serif);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 4px 10px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(184, 115, 51, 0.22);
+  color: #f59e0b; /* Amber - under-allocated */
+  transition: all 0.2s ease;
+}
+
+.totalBadge[data-valid="true"] {
+  color: #35ff9b; /* Green - exactly 100% */
+  border-color: rgba(53, 255, 155, 0.3);
+  background: rgba(53, 255, 155, 0.08);
+}
+
+.totalBadge[data-over="true"] {
+  color: #ff3b3b; /* Red - over-allocated */
+  border-color: rgba(255, 59, 59, 0.3);
+  background: rgba(255, 59, 59, 0.08);
+}
+
+.autoBalanceBtn {
+  font-family: var(--font-display, 'Orbitron', sans-serif);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 5px 12px;
+  background: rgba(184, 115, 51, 0.15);
+  border: 1px solid rgba(184, 115, 51, 0.4);
+  border-radius: 4px;
+  color: #c47c48;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.autoBalanceBtn:hover:not(:disabled) {
+  background: rgba(184, 115, 51, 0.25);
+  border-color: #c47c48;
+}
+
+.autoBalanceBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Carousel Container */
+.carousel {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.carouselTrack {
+  flex: 1;
+  overflow: hidden;
+}
+
+.cardList {
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  padding: 4px 2px;
+  /* Hide scrollbar */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.cardList::-webkit-scrollbar {
+  display: none;
+}
+
+/* Navigation Buttons */
+.carouselBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(184, 115, 51, 0.22);
+  border-radius: 4px;
+  color: var(--textMuted, #a7a7b5);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.carouselBtn:hover:not(:disabled) {
+  border-color: #c47c48;
+  color: #c47c48;
+  background: rgba(196, 124, 72, 0.1);
+}
+
+.carouselBtn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* Token Card - 320px fixed width */
+.tokenCard {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(184, 115, 51, 0.18);
+  border-radius: 4px;
+  min-width: 320px;
+  max-width: 320px;
+  flex-shrink: 0;
+  scroll-snap-align: start;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.tokenCard:hover {
+  border-color: rgba(184, 115, 51, 0.35);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.tokenHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.tokenSymbol {
+  font-family: var(--font-display, 'Orbitron', sans-serif);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: #c47c48;
+  text-transform: uppercase;
+}
+
+.removeBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  color: var(--textMuted, #a7a7b5);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.removeBtn:hover:not(:disabled) {
+  background: rgba(255, 59, 59, 0.1);
+  border-color: rgba(255, 59, 59, 0.3);
+  color: #ff3b3b;
+}
+
+.removeBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.tokenContent {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sliderLabel {
+  font-family: var(--font-display, 'Orbitron', sans-serif);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--textMuted, #a7a7b5);
+}
+
+/* Add Token Card - Same size as token cards, dashed when inactive */
+.addTokenCard {
+  border-style: dashed;
+  border-color: rgba(184, 115, 51, 0.3);
+}
+
+.addTokenCard[data-selecting="false"],
+.addTokenCard:not([data-selecting]) {
+  border-style: dashed;
+}
+
+.addTokenCard[data-selecting="true"] {
+  border-style: solid;
+}
+
+.addTokenBtn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  height: 100%;
+  min-height: 120px;
+  background: transparent;
+  border: none;
+  color: rgba(184, 115, 51, 0.6);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: var(--font-display, 'Orbitron', sans-serif);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+
+.addTokenBtn:hover:not(:disabled) {
+  color: #c47c48;
+  background: rgba(196, 124, 72, 0.08);
+}
+
+.addTokenBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Selector content inside the card */
+.selectorContent {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 10px 12px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(184, 115, 51, 0.25);
+  border-radius: 4px;
+  font-family: var(--font-body, sans-serif);
+  font-size: 13px;
+  color: #e8e8ee;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.searchInput:focus {
+  border-color: #c47c48;
+}
+
+.searchInput::placeholder {
+  color: var(--textMuted, #a7a7b5);
+}
+
+/* Token options grid inside the card */
+.tokenList {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+  max-height: 120px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(184, 115, 51, 0.3) transparent;
+}
+
+.tokenList::-webkit-scrollbar {
+  width: 4px;
+}
+
+.tokenList::-webkit-scrollbar-thumb {
+  background: rgba(184, 115, 51, 0.3);
+  border-radius: 2px;
+}
+
+.tokenOption {
+  padding: 8px 10px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(184, 115, 51, 0.15);
+  border-radius: 3px;
+  font-family: var(--font-display, 'Orbitron', sans-serif);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: #e8e8ee;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: center;
+}
+
+.tokenOption:hover {
+  background: rgba(184, 115, 51, 0.15);
+  border-color: rgba(184, 115, 51, 0.4);
+  color: #c47c48;
+}
+
+.dropdownEmpty {
+  padding: 16px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--textMuted, #a7a7b5);
+  grid-column: 1 / -1;
+}
+
+/* Empty State */
+.emptyState {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 320px;
+  height: 120px;
+  background: rgba(0, 0, 0, 0.15);
+  border: 1px dashed rgba(184, 115, 51, 0.2);
+  border-radius: 4px;
+  font-size: 12px;
+  color: var(--textMuted, #a7a7b5);
+  text-align: center;
+  padding: 16px;
+}
+
+/* Validation Message */
+.validationMessage {
+  font-family: var(--font-display, 'Orbitron', sans-serif);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  padding: 8px 12px;
+  border-radius: 4px;
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  color: #f59e0b;
+  text-align: center;
+}
+
+.validationMessage[data-over="true"] {
+  background: rgba(255, 59, 59, 0.1);
+  border-color: rgba(255, 59, 59, 0.3);
+  color: #ff3b3b;
+}
+
+/* Mobile Responsive */
+@media (max-width: 480px) {
+  .tokenCard {
+    min-width: 280px;
+    max-width: 280px;
+  }
+
+  .addTokenCard {
+    min-width: 160px;
+    max-width: 160px;
+  }
+
+  .addTokenBtn {
+    height: 120px;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .headerRight {
+    width: 100%;
+    justify-content: space-between;
+  }
+}

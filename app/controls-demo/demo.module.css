@@ -1,0 +1,492 @@
+/* Controls Demo Page Styles */
+/* Placeholder styling until real controls are built */
+
+.demoPage {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #0a0a0f 0%, #12121a 100%);
+    color: #e8e8ee;
+    padding: 2rem;
+    font-family: var(--font-sans, system-ui, sans-serif);
+}
+
+.header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.header h1 {
+    font-size: 2rem;
+    color: #c47c48;
+    margin-bottom: 0.5rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.header p {
+    color: #a7a7b5;
+    font-size: 0.9rem;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.demoSection {
+    background: rgba(20, 20, 30, 0.8);
+    border: 1px solid rgba(196, 124, 72, 0.2);
+    border-radius: 8px;
+    padding: 1.5rem;
+    backdrop-filter: blur(10px);
+}
+
+.demoSection h2 {
+    font-size: 1rem;
+    color: #c47c48;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.description {
+    font-size: 0.75rem;
+    color: #a7a7b5;
+    margin-bottom: 1.5rem;
+}
+
+.controlWrapper {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 1rem;
+}
+
+.placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.label {
+    font-size: 0.7rem;
+    color: #a7a7b5;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+.safeZone {
+    font-size: 0.65rem;
+    color: rgba(53, 255, 155, 0.7);
+}
+
+.stateDisplay {
+    font-size: 0.75rem;
+    color: #666;
+    text-align: center;
+    padding-top: 0.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.stateDisplay code {
+    color: #35ff9b;
+    font-family: var(--font-mono, monospace);
+}
+
+/* Dial Placeholder */
+.dialPlaceholder {
+    position: relative;
+    width: 100px;
+    height: 100px;
+}
+
+.dialRing {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: conic-gradient(
+        from -135deg,
+        rgba(196, 124, 72, 0.3) 0deg,
+        rgba(196, 124, 72, 0.6) 135deg,
+        rgba(196, 124, 72, 0.3) 270deg,
+        transparent 270deg
+    );
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.dialRing::before {
+    content: '';
+    position: absolute;
+    inset: 8px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #1a1a25 0%, #0f0f15 100%);
+}
+
+.dialIndicator {
+    position: absolute;
+    width: 4px;
+    height: 30px;
+    background: #c47c48;
+    border-radius: 2px;
+    top: 10px;
+    left: 50%;
+    transform-origin: bottom center;
+    margin-left: -2px;
+    box-shadow: 0 0 8px rgba(196, 124, 72, 0.8);
+}
+
+.dialValue {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #e8e8ee;
+    font-family: var(--font-mono, monospace);
+    cursor: pointer;
+    z-index: 1;
+}
+
+.dialValue:hover {
+    color: #c47c48;
+}
+
+.steppers {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.steppers button,
+.stepper {
+    width: 28px;
+    height: 28px;
+    border: 1px solid rgba(196, 124, 72, 0.3);
+    background: rgba(196, 124, 72, 0.1);
+    color: #c47c48;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: all 0.15s ease;
+}
+
+.steppers button:hover,
+.stepper:hover {
+    background: rgba(196, 124, 72, 0.2);
+    border-color: rgba(196, 124, 72, 0.5);
+}
+
+/* Horizontal Slider Placeholder */
+.hSliderContainer {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    max-width: 250px;
+}
+
+.hSliderTrack {
+    flex: 1;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    position: relative;
+    overflow: hidden;
+}
+
+.safeZoneBar {
+    position: absolute;
+    height: 100%;
+    background: rgba(53, 255, 155, 0.15);
+    border-left: 1px solid rgba(53, 255, 155, 0.3);
+    border-right: 1px solid rgba(53, 255, 155, 0.3);
+}
+
+.hSliderFill {
+    position: absolute;
+    height: 100%;
+    background: linear-gradient(90deg, rgba(196, 124, 72, 0.6), rgba(196, 124, 72, 0.9));
+    border-radius: 4px;
+}
+
+.hSliderInput {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.sliderValue {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #e8e8ee;
+    font-family: var(--font-mono, monospace);
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+}
+
+.sliderValue:hover {
+    color: #c47c48;
+    background: rgba(196, 124, 72, 0.1);
+}
+
+/* Vertical Slider Placeholder */
+.vSliderContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    height: 150px;
+}
+
+.vSliderTrack {
+    flex: 1;
+    width: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    position: relative;
+    overflow: hidden;
+}
+
+.vSliderFill {
+    position: absolute;
+    width: 100%;
+    bottom: 0;
+    background: linear-gradient(0deg, rgba(196, 124, 72, 0.6), rgba(196, 124, 72, 0.9));
+    border-radius: 4px;
+}
+
+.vSliderInput {
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    opacity: 0;
+    cursor: pointer;
+}
+
+/* Toggle Switch Placeholder */
+.toggleSwitch {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+    position: relative;
+}
+
+.toggleTrack {
+    width: 50px;
+    height: 26px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 13px;
+    position: relative;
+    transition: background 0.2s ease;
+}
+
+.toggleOn .toggleTrack {
+    background: rgba(53, 255, 155, 0.3);
+}
+
+.toggleThumb {
+    position: absolute;
+    width: 22px;
+    height: 22px;
+    background: #666;
+    border-radius: 50%;
+    top: 2px;
+    left: 2px;
+    transition: all 0.2s ease;
+}
+
+.toggleOn .toggleThumb {
+    left: 26px;
+    background: #35ff9b;
+    box-shadow: 0 0 12px rgba(53, 255, 155, 0.6);
+}
+
+.toggleLabel {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #a7a7b5;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+.toggleOn .toggleLabel {
+    color: #35ff9b;
+}
+
+.ledGlow {
+    position: absolute;
+    right: -20px;
+    width: 8px;
+    height: 8px;
+    background: #35ff9b;
+    border-radius: 50%;
+    box-shadow: 0 0 10px #35ff9b;
+}
+
+/* Segment Selector Placeholder */
+.segmentSelector {
+    display: flex;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+    overflow: hidden;
+    border: 1px solid rgba(196, 124, 72, 0.2);
+}
+
+.segment {
+    padding: 0.6rem 1rem;
+    background: transparent;
+    border: none;
+    color: #666;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.segment:hover {
+    color: #a7a7b5;
+    background: rgba(196, 124, 72, 0.05);
+}
+
+.segmentActive {
+    color: #c47c48;
+    background: rgba(196, 124, 72, 0.15);
+    box-shadow: inset 0 -2px 0 #c47c48;
+}
+
+/* Tag Input Placeholder */
+.tagInput {
+    width: 100%;
+    max-width: 250px;
+}
+
+.tagList {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.tag {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.5rem;
+    background: rgba(196, 124, 72, 0.15);
+    border: 1px solid rgba(196, 124, 72, 0.3);
+    border-radius: 4px;
+    font-size: 0.75rem;
+    color: #c47c48;
+    font-family: var(--font-mono, monospace);
+}
+
+.tag button {
+    background: none;
+    border: none;
+    color: #c47c48;
+    cursor: pointer;
+    font-size: 0.9rem;
+    line-height: 1;
+    opacity: 0.6;
+}
+
+.tag button:hover {
+    opacity: 1;
+}
+
+.tagInput input {
+    width: 100%;
+    padding: 0.5rem;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    color: #e8e8ee;
+    font-size: 0.8rem;
+}
+
+.tagInput input:focus {
+    outline: none;
+    border-color: rgba(196, 124, 72, 0.5);
+}
+
+/* Collapsible Section Placeholder */
+.collapsibleSection {
+    width: 100%;
+    max-width: 280px;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(196, 124, 72, 0.2);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.collapsibleHeader {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background: rgba(196, 124, 72, 0.1);
+    cursor: pointer;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #c47c48;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.collapsibleHeader:hover {
+    background: rgba(196, 124, 72, 0.15);
+}
+
+.helpBtn {
+    margin-left: auto;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: rgba(196, 124, 72, 0.2);
+    border: 1px solid rgba(196, 124, 72, 0.4);
+    color: #c47c48;
+    font-size: 0.7rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.helpBtn:hover {
+    background: rgba(196, 124, 72, 0.3);
+}
+
+.collapsibleContent {
+    padding: 1rem;
+    font-size: 0.8rem;
+    color: #a7a7b5;
+}
+
+/* Footer */
+.footer {
+    margin-top: 3rem;
+    text-align: center;
+    padding: 1.5rem;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.footer p {
+    font-size: 0.8rem;
+    color: #666;
+}

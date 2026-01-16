@@ -1,0 +1,91 @@
+/* Ported from HudDashboard.module.css */
+
+.panelMarket {
+    grid-area: market;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    min-height: 0;
+    z-index: 5;
+    overflow: hidden;
+}
+
+.panelMarket>*:not(.panelHeader) {
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+.marketList {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 2px 0 0 0;
+    width: 100%;
+}
+
+.marketCard {
+    border: 1px solid rgba(var(--tintR), var(--tintG), var(--tintB), 0.14);
+    background: rgba(0, 0, 0, 0.18);
+    border-radius: 2px;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+}
+
+.mLeft {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+}
+
+.mTicker {
+    font-family: var(--font-display);
+    font-weight: 800;
+    letter-spacing: 0.14em;
+}
+
+.mSub {
+    color: var(--muted);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+}
+
+.mRight {
+    text-align: right;
+    min-width: 0;
+}
+
+.mPrice {
+    font-family: var(--font-display);
+    font-weight: 800;
+    letter-spacing: 0.1em;
+}
+
+.mChg {
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    margin-top: 6px;
+}
+
+.pos {
+    color: rgba(53, 255, 155, 0.92);
+}
+
+.neg {
+    color: rgba(255, 59, 59, 0.92);
+}
+
+.panelHeader {
+    /* Used to exclude from flex 1 */
+}
+
+.mono {
+    font-family: var(--mono);
+    letter-spacing: 0.02em;
+}

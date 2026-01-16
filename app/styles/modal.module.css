@@ -1,0 +1,174 @@
+/* Ported from HudDashboard.module.css for Modals */
+
+.modalOverlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+.modalOverlay.isOpen {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.modalShell {
+    width: 90%;
+    /* Default width for generic modals like Shortcuts */
+    max-width: 1200px;
+    max-height: 90vh;
+    max-height: 90dvh;
+    display: flex;
+    flex-direction: column;
+}
+
+.modalPanel {
+    width: 100%;
+    max-height: 92vh;
+    max-height: 92dvh;
+    overflow: auto;
+    scrollbar-width: none;
+}
+
+.modalPanel::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+}
+
+.modalBody {
+    position: relative;
+    z-index: 1;
+}
+
+.modalGrid {
+    display: grid;
+    grid-template-columns: 1.35fr 0.65fr;
+    gap: 14px;
+}
+
+.subPanel {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid rgba(var(--tintR), var(--tintG), var(--tintB), 0.12);
+    background: rgba(0, 0, 0, 0.16);
+    border-radius: 2px;
+    padding: 14px;
+}
+
+.subTitle {
+    font-family: var(--font-display);
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    font-size: 12px;
+    color: rgba(232, 232, 238, 0.9);
+}
+
+.subNote {
+    color: var(--muted);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    margin-top: 8px;
+    line-height: 1.4;
+}
+
+/* Shortcuts specific styles */
+.shortcutsList {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.shortcutRow {
+    display: grid;
+    grid-template-columns: 120px 1fr auto;
+    gap: 16px;
+    align-items: center;
+    padding: 10px 12px;
+    border: 1px solid rgba(var(--tintR), var(--tintG), var(--tintB), 0.08);
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 2px;
+}
+
+.shortcutKey {
+    display: flex;
+    align-items: center;
+}
+
+.kbd {
+    display: inline-block;
+    padding: 4px 8px;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text);
+    background: rgba(var(--tintR), var(--tintG), var(--tintB), 0.15);
+    border: 1px solid rgba(var(--tintR), var(--tintG), var(--tintB), 0.25);
+    border-radius: 3px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    min-width: 32px;
+    text-align: center;
+    letter-spacing: 0.05em;
+}
+
+.shortcutAction {
+    font-size: 12px;
+    color: var(--text);
+    letter-spacing: 0.04em;
+}
+
+.shortcutContext {
+    color: var(--muted);
+    font-size: 11px;
+}
+
+/* ========================================
+   MOBILE MODAL ADJUSTMENTS
+   ======================================== */
+@media (max-width: 767px) {
+    .modalShell {
+        width: 95%;
+        max-height: 85vh;
+        max-height: 85dvh;
+    }
+
+    .modalPanel {
+        max-height: 85vh;
+        max-height: 85dvh;
+    }
+
+    .modalGrid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .subPanel {
+        padding: 10px;
+    }
+
+    .shortcutRow {
+        grid-template-columns: 80px 1fr;
+        gap: 10px;
+        padding: 8px 10px;
+    }
+
+    .shortcutContext {
+        display: none; /* Hide context on mobile to save space */
+    }
+
+    .kbd {
+        padding: 3px 6px;
+        font-size: 10px;
+        min-width: 28px;
+    }
+
+    .shortcutAction {
+        font-size: 11px;
+    }
+}
