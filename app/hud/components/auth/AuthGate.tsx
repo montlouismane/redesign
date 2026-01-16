@@ -18,11 +18,6 @@ const ADMIN_WALLET_ADDRESSES = [
   'addr1qxxejya96h5cc64t997sjrwsed8g2r8j8rznfd4fmkg8yyckq3z7pxf5q8pphlx9jk87w53utq45qd47j9xws4ps0h6s66eyw2'
 ];
 
-// Blockfrost API configuration
-const BLOCKFROST_API_KEY = process.env.NEXT_PUBLIC_BLOCKFROST_PROJECT_ID ||
-  process.env.NEXT_PUBLIC_BLOCKFROST_KEY ||
-  'mainnetXdMvEPp07a5GgSWtpSqUytnmtR4OvJzr';
-const BLOCKFROST_API_URL = 'https://cardano-mainnet.blockfrost.io/api/v0';
 
 // Phantom type definition
 type PhantomSolana = {
@@ -79,33 +74,6 @@ export default function AuthGate({ children }: AuthGateProps) {
     checkPhantom();
   }, []);
 
-  // Fetch with retry helper
-  const fetchWithRetry = useCallback(async (url: string, init: RequestInit, attempts = 3): Promise<Response> => {
-    let lastErr: Error | null = null;
-    for (let i = 0; i < attempts; i++) {
-      try {
-        const res = await fetch(url, init);
-        if (!res.ok) {
-          const status = res.status;
-          const transient = status === 429 || status === 408 || status >= 500;
-          if (transient && i < attempts - 1) {
-            await new Promise(r => setTimeout(r, 500 * Math.pow(2, i)));
-            continue;
-          }
-          throw new Error(`HTTP ${status}`);
-        }
-        return res;
-      } catch (e) {
-        lastErr = e as Error;
-        if (i < attempts - 1) {
-          await new Promise(r => setTimeout(r, 500 * Math.pow(2, i)));
-          continue;
-        }
-      }
-    }
-    throw lastErr || new Error('Request failed');
-  }, []);
-
   // Verify NFT ownership for Cardano wallet
   const verifyCardanoWallet = useCallback(async (address: string) => {
     setAuthState('verifying');
@@ -119,27 +87,14 @@ export default function AuthGate({ children }: AuthGateProps) {
     }
 
     try {
-      // Fetch wallet assets from Blockfrost
-      const response = await fetchWithRetry(
-        `${BLOCKFROST_API_URL}/addresses/${address}/utxos`,
-        { headers: { 'project_id': BLOCKFROST_API_KEY } }
-      );
+      // Fetch wallet assets via server-side API (protects Blockfrost key)
+      const response = await fetch('/api/wallet/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ address }),
+      });
 
-      const utxos = await response.json();
-
-      // Extract all assets from UTxOs
-      const assets: Array<{ unit: string; quantity: string }> = [];
-      if (Array.isArray(utxos)) {
-        utxos.forEach((utxo: any) => {
-          if (Array.isArray(utxo.amount)) {
-            utxo.amount.forEach((amt: any) => {
-              if (amt.unit !== 'lovelace') {
-                assets.push({ unit: amt.unit, quantity: amt.quantity });
-              }
-            });
-          }
-        });
-      }
+      const { assets } = await response.json() as { assets: Array<{ unit: string; quantity: string }> };
 
       // Validate NFTs
       const validation = validateT1AdamNfts(assets);
@@ -169,7 +124,7 @@ export default function AuthGate({ children }: AuthGateProps) {
       setError('Failed to verify wallet. Please try again.');
       setAuthState('denied');
     }
-  }, [fetchWithRetry]);
+  }, []);
 
   // Handle Cardano wallet connection
   const handleCardanoConnect = useCallback(async (wallet: BrowserWallet) => {

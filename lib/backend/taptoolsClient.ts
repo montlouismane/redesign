@@ -74,9 +74,6 @@ const PORTFOLIO_TTL_MS = Number(process.env.NEXT_PUBLIC_TAPTOOLS_PORTFOLIO_TTL_M
 const TOKEN_PRICE_TTL_MS = Number(process.env.NEXT_PUBLIC_TAPTOOLS_TOKEN_TTL_MS || 7500);
 const TRADE_HISTORY_TTL_MS = Number(process.env.NEXT_PUBLIC_TAPTOOLS_TRADE_TTL_MS || 10000);
 
-// Error cooldown - don't hammer backend when upstream is failing
-const ERROR_COOLDOWN_MS = Number(process.env.NEXT_PUBLIC_TAPTOOLS_ERROR_COOLDOWN_MS || 5000);
-
 // =============================================================================
 // Telemetry
 // =============================================================================
@@ -126,12 +123,6 @@ async function fetchWithCache<T>(
       recordTaptoolsMetric(`${kind}:cacheHit`);
       return cached.data;
     }
-
-    // If in error cooldown, re-throw the error
-    if (cached.error && age < ERROR_COOLDOWN_MS) {
-      recordTaptoolsMetric(`${kind}:errorCooldown`);
-      throw cached.error;
-    }
   }
 
   // Make network request
@@ -149,7 +140,7 @@ async function fetchWithCache<T>(
     })
     .catch((err) => {
       const error = err instanceof Error ? err : new Error(errorCode);
-      cache.set(key, { error, fetchedAt: Date.now() });
+      cache.delete(key); // Don't cache errors - allow immediate retry
       recordTaptoolsMetric(`${kind}:networkError`);
       throw error;
     });
@@ -162,8 +153,7 @@ function computeFlags<T>(entry: CacheEntry<T> | undefined, ttlMs: number) {
   if (!entry) return { stale: false, degraded: false };
   const age = Date.now() - entry.fetchedAt;
   const stale = !!entry.data && age > ttlMs;
-  const degraded = !!entry.error && age < ERROR_COOLDOWN_MS;
-  return { stale, degraded };
+  return { stale, degraded: false }; // degraded always false since errors aren't cached
 }
 
 // =============================================================================
