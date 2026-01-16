@@ -6,6 +6,7 @@ import { useUiStyle } from '../UiStyleProvider'; // Import from app root
 import { ThreeBackground } from './components/ThreeBackground';
 import { VideoBackground } from './components/VideoBackground';
 import { HudHeader } from './components/HudHeader';
+import { AdamLoader } from './components/AdamLoader';
 import { HudLayout } from './HudLayout';
 import { HudPanel } from './components/HudPanel';
 import { ChatDock } from './components/ChatDock';
@@ -43,6 +44,7 @@ export function HudView() {
     const [modalPanel, setModalPanel] = useState<PanelKey | null>(null);
     const [showShortcutsModal, setShowShortcutsModal] = useState(false);
     const [isLoaded, setIsLoaded] = useState(false);
+    const [showCoinLoader, setShowCoinLoader] = useState(false);
 
     // Data State
     const equitySeries = useEquitySeries(activeRange as EquityRange);
@@ -228,6 +230,10 @@ export function HudView() {
                     onNotificationsClick={() => updateSetting('notificationsEnabled', !settings.notificationsEnabled)}
                     onWalletClick={() => { }}
                     notificationsEnabled={settings.notificationsEnabled}
+                    onTestLoaderClick={() => {
+                        setShowCoinLoader(true);
+                        setTimeout(() => setShowCoinLoader(false), 3000);
+                    }}
                 />
             }
             background={
@@ -709,6 +715,9 @@ export function HudView() {
             {!isChatDockOpen && view !== 'chatFull' && (
                 <FloatingChatFab onClick={() => setIsChatDockOpen(true)} />
             )}
+
+            {/* ADAM Loader - click coin icon in header to test */}
+            <AdamLoader isLoading={showCoinLoader} message="Loading..." />
 
         </HudLayout>
     );

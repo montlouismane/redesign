@@ -1,5 +1,5 @@
 import React from 'react';
-import { Bell, BellOff, Wallet, Settings } from 'lucide-react';
+import { Bell, BellOff, Wallet, Settings, Coins } from 'lucide-react';
 import { UiStyleToggle } from '../../UiStyleToggle';
 import { useUiStyle } from '../../UiStyleProvider';
 import styles from '../../styles/header.module.css';
@@ -12,6 +12,8 @@ interface HudHeaderProps {
     onWalletClick?: () => void;
     onNotificationsClick?: () => void;
     notificationsEnabled?: boolean;
+    /** Temporary: test coin loader */
+    onTestLoaderClick?: () => void;
 }
 
 export const HudHeader = ({
@@ -21,7 +23,8 @@ export const HudHeader = ({
     setIsChatDockOpen,
     onWalletClick,
     onNotificationsClick,
-    notificationsEnabled = true
+    notificationsEnabled = true,
+    onTestLoaderClick,
 }: HudHeaderProps) => {
     return (
         <header className={styles.topbar}>
@@ -39,6 +42,19 @@ export const HudHeader = ({
             </button>
 
             <div className={styles.topRight}>
+                {/* Temporary: Test coin loader */}
+                {onTestLoaderClick && (
+                    <button
+                        type="button"
+                        className={styles.iconBtn}
+                        aria-label="Test Coin Loader"
+                        onClick={onTestLoaderClick}
+                        title="Test Coin Loader"
+                    >
+                        <Coins size={18} />
+                    </button>
+                )}
+
                 <button
                     type="button"
                     className={`${styles.iconBtn} ${view === 'settings' ? styles.isActive : ''}`}
